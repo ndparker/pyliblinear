@@ -28,7 +28,11 @@ def setup(args=None, _manifest=0):
         manifest_only=_manifest,
         ext=[
             Extension('pyliblinear._liblinear', [
+                "pyliblinear/util.c",
+
                 "pyliblinear/main.c",
+                "pyliblinear/model.c",
+                "pyliblinear/problem.c",
 
                 "pyliblinear/liblinear/blas/ddot.c",
                 "pyliblinear/liblinear/blas/dscal.c",
@@ -37,11 +41,14 @@ def setup(args=None, _manifest=0):
                 "pyliblinear/liblinear/linear.cpp",
                 "pyliblinear/liblinear/tron.cpp",
             ], depends=[
+                "pyliblinear/pyliblinear.h",
+
                 "pyliblinear/liblinear/linear.h",
                 "pyliblinear/liblinear/tron.h",
                 "pyliblinear/liblinear/blas/blasp.h",
                 "pyliblinear/liblinear/blas/blas.h",
             ], include_dirs=[
+                "pyliblinear",
                 "pyliblinear/liblinear",
                 "pyliblinear/liblinear/blas",
             ])
