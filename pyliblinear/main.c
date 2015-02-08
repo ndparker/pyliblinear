@@ -73,6 +73,17 @@ error:
     return NULL;
 }
 
+
+/*
+ * Null printer
+ */
+static void
+pl_null_print(const char *string)
+{
+    return;
+}
+
+
 /* ------------------------- END Helper Functions ------------------------ */
 
 /* ----------------------- BEGIN MODULE DEFINITION ----------------------- */
@@ -90,6 +101,8 @@ EXT_DEFINE(EXT_MODULE_NAME, EXT_METHODS_VAR, EXT_DOCS_VAR);
 
 EXT_INIT_FUNC {
     PyObject *m, *solvers;
+
+    set_print_string_function(pl_null_print);
 
     /* Create the module and populate stuff */
     if (!(m = EXT_CREATE(&EXT_DEFINE_VAR)))
