@@ -102,6 +102,35 @@ pl_problem_new(struct feature_node **, double *, double, int, int, int);
 /* ------------------------ BEGIN Helper Functions ----------------------- */
 
 /*
+ * Transform pl_problem_t into a (liblinear) struct problem
+ *
+ * Return -1 on error
+ */
+int
+pl_problem_as_problem(PyObject *self, struct problem *prob)
+{
+    pl_problem_t *problem;
+
+    if (!PL_ProblemType_CheckExact(self)
+        && !PL_ProblemType_Check(self)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "problem must be a " EXT_MODULE_PATH ".Problem "
+                        "instance.");
+        return -1;
+    }
+    problem = (pl_problem_t *)self;
+
+    prob->l = problem->height;
+    prob->n = problem->width;
+    prob->y = problem->labels;
+    prob->x = problem->vectors;
+    prob->bias = problem->bias;
+
+    return 0;
+}
+
+
+/*
  * Clear all feature blocks
  */
 static void

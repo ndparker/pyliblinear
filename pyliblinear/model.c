@@ -31,19 +31,26 @@ typedef struct {
 
 /*
  * Create new PL_ModelType
+ *
+ * model is stolen and free'd on error.
+ *
+ * Return NULL on error
  */
 static pl_model_t *
 pl_model_new(struct model *model)
 {
     pl_model_t *self;
 
-    if (!(self = GENERIC_ALLOC(&PL_ModelType)))
+    if (!(self = GENERIC_ALLOC(&PL_ModelType))) {
+        free_and_destroy_model(&model);
         return NULL;
+    }
 
     self->model = model;
 
     return self;
 }
+
 
 PyDoc_STRVAR(PL_ModelType_train__doc__,
 "train(cls, problem, solver=None)\n\
@@ -57,21 +64,27 @@ static PyObject *
 PL_ModelType_train(PyObject *cls, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"problem", "solver", NULL};
-    PyObject *problem_, *solver_;
-    pl_model_t *self;
+    struct problem prob;
+    struct parameter param;
+    PyObject *problem_, *solver_ = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
                                      &problem_, &solver_))
         return NULL;
 
-    self = pl_model_new(NULL);
-    return (PyObject *)self;
+    if (pl_problem_as_problem(problem_, &prob) == -1)
+        return NULL;
+
+    if (pl_solver_as_parameter(solver_, &param) == -1)
+        return NULL;
+
+    return (PyObject *)pl_model_new(train(&prob, &param));
 }
 
 PyDoc_STRVAR(PL_ModelType_load__doc__,
 "load(cls, file)\n\
 \n\
-Create model instance from an open strean (previously created by\n\
+Create model instance from an open stream (previously created by\n\
 Model.save())\n\
 \n\
 :Parameters:\n\

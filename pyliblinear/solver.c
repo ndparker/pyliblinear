@@ -87,6 +87,47 @@ typedef struct {
 /* ------------------------ BEGIN Helper Functions ----------------------- */
 
 /*
+ * Transform pl_solver_t to (liblinear) struct parameter
+ *
+ * NULL for self is accepted and results in the default solver's parameters.
+ *
+ * Return -1 on error
+ */
+int
+pl_solver_as_parameter(PyObject *self, struct parameter *param)
+{
+    pl_solver_t *solver;
+
+    if (self) {
+        if (!PL_SolverType_CheckExact(self)
+            && !PL_SolverType_Check(self)) {
+            PyErr_SetString(PyExc_TypeError,
+                            "solver must be a " EXT_MODULE_PATH ".Solver "
+                            "instance.");
+            return -1;
+        }
+        Py_INCREF(self);
+    }
+    else {
+        if (!(self = PyObject_CallFunction((PyObject *)&PL_SolverType, "()")))
+            return -1;
+    }
+    solver = (pl_solver_t *)self;
+
+    param->solver_type = solver->solver_type;
+    param->eps = solver->eps;
+    param->C = solver->C;
+    param->nr_weight = solver->nr_weight;
+    param->weight_label = solver->weight_label;
+    param->weight = solver->weight;
+    param->p = solver->p;
+
+    Py_DECREF(self);
+    return 0;
+}
+
+
+/*
  * Clear all weight node blocks
  */
 static void

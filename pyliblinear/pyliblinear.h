@@ -121,4 +121,24 @@ int
 pl_method(PyObject *, const char *, PyObject **);
 
 
+/*
+ * Transform pl_problem_t into a (liblinear) struct problem
+ *
+ * Return -1 on error
+ */
+int
+pl_problem_as_problem(PyObject *, struct problem *);
+
+
+/*
+ * Transform pl_solver_t to (liblinear) struct parameter
+ *
+ * NULL for self is accepted and results in the default solver's parameters.
+ *
+ * Return -1 on error
+ */
+int
+pl_solver_as_parameter(PyObject *, struct parameter *);
+
+
 #endif
