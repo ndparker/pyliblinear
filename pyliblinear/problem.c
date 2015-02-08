@@ -18,10 +18,6 @@
 #include "pyliblinear.h"
 
 
-/* Block size for feature streams */
-#define PL_BLOCK_LENGTH (4096)
-
-
 /* Number of features per block */
 #define PL_FEATURE_BLOCK_SIZE \
     ((size_t)((PL_BLOCK_LENGTH) / sizeof(struct feature_node)))
@@ -30,7 +26,7 @@ typedef struct pl_feature_block {
     struct pl_feature_block *prev;
     size_t size;
     struct feature_node feature[PL_FEATURE_BLOCK_SIZE];
-} pl_feature_block;
+} pl_feature_block_t;
 
 
 /*
@@ -41,17 +37,17 @@ typedef struct pl_vector {
     int array_size;
 
     int label;
-} pl_vector;
+} pl_vector_t;
 
 /* Number of vectors per block */
 #define PL_VECTOR_BLOCK_SIZE \
-    ((size_t)((PL_BLOCK_LENGTH) / sizeof(pl_vector)))
+    ((size_t)((PL_BLOCK_LENGTH) / sizeof(pl_vector_t)))
 
 typedef struct pl_vector_block {
     struct pl_vector_block *prev;
     size_t size;
-    pl_vector vector[PL_VECTOR_BLOCK_SIZE];
-} pl_vector_block;
+    pl_vector_t vector[PL_VECTOR_BLOCK_SIZE];
+} pl_vector_block_t;
 
 
 /*
@@ -109,9 +105,9 @@ pl_problem_new(struct feature_node **, double *, double, int, int, int);
  * Clear all feature blocks
  */
 static void
-pl_feature_block_clear(pl_feature_block **features_)
+pl_feature_block_clear(pl_feature_block_t **features_)
 {
-    pl_feature_block *block;
+    pl_feature_block_t *block;
 
     while ((block = *features_)) {
         *features_ = block->prev;
@@ -126,9 +122,9 @@ pl_feature_block_clear(pl_feature_block **features_)
  * Return NULL on error
  */
 static struct feature_node *
-pl_feature_next(pl_feature_block **features_)
+pl_feature_next(pl_feature_block_t **features_)
 {
-    pl_feature_block *block = *features_;
+    pl_feature_block_t *block = *features_;
 
     if (!block || !(block->size < (PL_FEATURE_BLOCK_SIZE - 1))) {
         if (!(block = PyMem_Malloc(sizeof *block))) {
@@ -148,10 +144,10 @@ pl_feature_next(pl_feature_block **features_)
  * Clear all feature vector blocks
  */
 static void
-pl_vector_block_clear(pl_vector_block **vectors_)
+pl_vector_block_clear(pl_vector_block_t **vectors_)
 {
-    pl_vector_block *block;
-    pl_vector *vector;
+    pl_vector_block_t *block;
+    pl_vector_t *vector;
     void *ptr;
 
     while ((block = *vectors_)) {
@@ -173,11 +169,11 @@ pl_vector_block_clear(pl_vector_block **vectors_)
  *
  * Return NULL on error
  */
-static pl_vector *
-pl_vector_next(pl_vector_block **vectors_)
+static pl_vector_t *
+pl_vector_next(pl_vector_block_t **vectors_)
 {
-    pl_vector_block *block = *vectors_;
-    pl_vector *vector;
+    pl_vector_block_t *block = *vectors_;
+    pl_vector_t *vector;
 
     if (!block || !(block->size < (PL_VECTOR_BLOCK_SIZE - 1))) {
         if (!(block = PyMem_Malloc(sizeof *block))) {
@@ -203,10 +199,10 @@ pl_vector_next(pl_vector_block **vectors_)
  * Return -1 on error
  */
 static int
-pl_vector_feature_as_array(pl_vector *vector, pl_feature_block **features,
+pl_vector_feature_as_array(pl_vector_t *vector, pl_feature_block_t **features,
                            double bias)
 {
-    pl_feature_block *block;
+    pl_feature_block_t *block;
     struct feature_node *array, *node;
     size_t no_features, idx_feature;
 
@@ -271,14 +267,11 @@ static int
 pl_vector_iterator_find(PyObject **vector_, PyObject **iter_, char *how)
 {
     PyObject *method, *item, *iter, *vector = *vector_;
-
-    /* TODO: better error handling */
+    int res;
 
     /* (key, value) iterator */
-    if ((method = PyObject_GetAttrString(vector, "iteritems"))
-        || (method = PyObject_GetAttrString(vector, "items"))) {
-        PyErr_Clear();
-
+    if ((!(res = pl_method(vector, "iteritems", &method)) && method)
+        || (!res && !(res = pl_method(vector, "items", &method)) && method)) {
         Py_DECREF(vector);
         item = PyObject_CallFunction(method, "()");
         Py_DECREF(method);
@@ -291,13 +284,12 @@ pl_vector_iterator_find(PyObject **vector_, PyObject **iter_, char *how)
         *iter_ = iter;
         *vector_ = NULL;
         *how = 'i';
+        return 0;
     }
 
     /* key iterator */
-    else if ((method = PyObject_GetAttrString(vector, "iterkeys"))
-             || (method = PyObject_GetAttrString(vector, "keys"))) {
-        PyErr_Clear();
-
+    else if ((!res && !(res = pl_method(vector, "iterkeys", &method)) && method)
+        || (!res && !(res = pl_method(vector, "keys", &method)) && method)) {
         item = PyObject_CallFunction(method, "()");
         Py_DECREF(method);
         if (!item) {
@@ -312,12 +304,11 @@ pl_vector_iterator_find(PyObject **vector_, PyObject **iter_, char *how)
         }
         *iter_ = iter;
         *how = 'k';
+        return 0;
     }
 
     /* value iterator */
-    else {
-        PyErr_Clear();
-
+    else if (!res) {
         iter = PyObject_GetIter(vector);
         Py_DECREF(vector);
         if (!iter)
@@ -325,9 +316,10 @@ pl_vector_iterator_find(PyObject **vector_, PyObject **iter_, char *how)
         *iter_ = iter;
         *vector_ = NULL;
         *how = 'v';
+        return 0;
     }
 
-    return 0;
+    return -1;
 }
 
 
@@ -339,11 +331,11 @@ pl_vector_iterator_find(PyObject **vector_, PyObject **iter_, char *how)
  * Return -1 on failure
  */
 static int
-pl_vector_features_load(PyObject *vector_, pl_vector *vector,
+pl_vector_features_load(PyObject *vector_, pl_vector_t *vector,
                         double bias, int *max_index)
 {
     PyObject *item, *iter, *tmp, *tmp2;
-    pl_feature_block *features_ = NULL;
+    pl_feature_block_t *features_ = NULL;
     struct feature_node *feature;
     double value;
     int index = 0;
@@ -447,12 +439,12 @@ pl_problem_clear_vectors(struct feature_node ***vectors_, int height,
  * Return -1 on error
  */
 static int
-pl_vectors_as_array(pl_vector_block **vectors_,
+pl_vectors_as_array(pl_vector_block_t **vectors_,
                     struct feature_node ***array_, double **labels_,
                     int height)
 {
-    pl_vector_block *block;
-    pl_vector *vector;
+    pl_vector_block_t *block;
+    pl_vector_t *vector;
     struct feature_node **array = NULL;
     double *labels = NULL;
     size_t idx_vector;
@@ -508,8 +500,8 @@ pl_problem_from_iterable(PyObject *iterable, PyObject *assign_labels_,
                          PyObject *bias_)
 {
     PyObject *iter, *item, *label_, *vector_;
-    pl_vector_block *vectors = NULL;
-    pl_vector *vector;
+    pl_vector_block_t *vectors = NULL;
+    pl_vector_t *vector;
     double *labels;
     struct feature_node **array;
     double bias = -1;
@@ -565,7 +557,7 @@ pl_problem_from_iterable(PyObject *iterable, PyObject *assign_labels_,
     Py_DECREF(iter);
 
     if (!(bias < 0)) {
-        pl_vector_block *block;
+        pl_vector_block_t *block;
         size_t idx_vector;
 
         if (width > (INT_MAX - 1)) {

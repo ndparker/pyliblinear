@@ -150,3 +150,33 @@ pl_as_index(PyObject *obj, int *result)
 
     return 0;
 }
+
+
+/*
+ * Find a particular pyobject method
+ *
+ * Return -1 on error
+ * Return 0 if no error occured. method will be NULL if it was simply not
+ * found.
+ */
+int
+pl_method(PyObject *obj, const char *name, PyObject **method)
+{
+    PyObject *result;
+
+    if ((result = PyObject_GetAttrString(obj, name))) {
+        *method = result;
+        return 0;
+    }
+    else if (!PyErr_Occurred()) {
+        *method = NULL;
+        return 0;
+    }
+    else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+        PyErr_Clear();
+        *method = NULL;
+        return 0;
+    }
+
+    return -1;
+}
