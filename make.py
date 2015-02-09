@@ -26,6 +26,7 @@ __author__ = "Andr\xe9 Malo"
 __author__ = getattr(__author__, 'decode', lambda x: __author__)('latin-1')
 __docformat__ = "restructuredtext en"
 
+import errno as _errno
 import os as _os
 import re as _re
 import sys as _sys
@@ -37,12 +38,20 @@ from _setup import term
 from _setup.make import targets
 
 if _sys.version_info[0] == 3:
+    py3 = 1
     cfgread = dict(encoding='utf-8')
     def textopen(*args):
         return open(*args, **cfgread)
+    exec ("def reraise(*e): raise e[1].with_traceback(e[2])")
 else:
+    py3 = 0
+    try:
+        True
+    except NameError:
+        exec ("True = 1; False = 0")
     textopen = open
     cfgread = {}
+    exec ("def reraise(*e): raise e[0], e[1], e[2]")
 
 
 class Target(make.Target):
@@ -393,7 +402,7 @@ class SVNRelease(Target):
                     text.append(node.data)
         finally:
             info.unlink()
-        return ''.join(text).encode('utf-8')
+        return (''.decode('ascii')).join(text).encode('utf-8')
 
     def _check_committed(self):
         """ Check if everything is committed """
@@ -591,9 +600,8 @@ class Version(Target):
 
     def _version_init(self, strversion, isdev, revision):
         """ Modify version in __init__ """
-        filename = _os.path.join(
-            self.dirs['lib'], 'pyliblinear', '__init__.py'
-        )
+        filename = _os.path.join(self.dirs['lib'], 'pyliblinear',
+                                 '__init__.py')
         fp = textopen(filename)
         try:
             initlines = fp.readlines()
@@ -669,9 +677,10 @@ class Version(Target):
             oldstable = []
             hasstable = False
             try:
-                fp = open(filename)
-            except IOError, e:
-                if e[0] != _errno.ENOENT:
+                fp = textopen(filename)
+            except IOError:
+                e = _sys.exc_info()[1]
+                if e.args[0] != _errno.ENOENT:
                     raise
             else:
                 try:
