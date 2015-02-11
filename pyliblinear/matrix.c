@@ -51,7 +51,7 @@ typedef struct pl_vector_block {
 
 
 /*
- * Object structure for ProblemType
+ * Object structure for FeatureMatrixType
  */
 typedef struct {
     PyObject_HEAD
@@ -67,7 +67,7 @@ typedef struct {
     int row_alloc;                 /* was .vectors allocated per vector or
                                       as a whole?. If true, it was allocated
                                       per vector */
-} pl_problem_t;
+} pl_matrix_t;
 
 
 /*
@@ -77,7 +77,7 @@ typedef struct {
     PyObject_HEAD
     PyObject *weakreflist;
 
-    pl_problem_t *problem;
+    pl_matrix_t *matrix;
     int j;
 } pl_feature_view_t;
 
@@ -89,42 +89,42 @@ typedef struct {
     PyObject_HEAD
     PyObject *weakreflist;
 
-    pl_problem_t *problem;
+    pl_matrix_t *matrix;
     int j;
 } pl_label_view_t;
 
 
 /* Forward declarations */
-static pl_problem_t *
-pl_problem_new(struct feature_node **, double *, double, int, int, int);
+static pl_matrix_t *
+pl_matrix_new(struct feature_node **, double *, double, int, int, int);
 
 
 /* ------------------------ BEGIN Helper Functions ----------------------- */
 
 /*
- * Transform pl_problem_t into a (liblinear) struct problem
+ * Transform pl_matrix_t into a (liblinear) struct problem
  *
  * Return -1 on error
  */
 int
-pl_problem_as_problem(PyObject *self, struct problem *prob)
+pl_matrix_as_problem(PyObject *self, struct problem *prob)
 {
-    pl_problem_t *problem;
+    pl_matrix_t *matrix;
 
-    if (!PL_ProblemType_CheckExact(self)
-        && !PL_ProblemType_Check(self)) {
+    if (!PL_FeatureMatrixType_CheckExact(self)
+        && !PL_FeatureMatrixType_Check(self)) {
         PyErr_SetString(PyExc_TypeError,
-                        "problem must be a " EXT_MODULE_PATH ".Problem "
-                        "instance.");
+                        "feature matrix must be a " EXT_MODULE_PATH
+                        ".FeatureMatrix instance.");
         return -1;
     }
-    problem = (pl_problem_t *)self;
+    matrix = (pl_matrix_t *)self;
 
-    prob->l = problem->height;
-    prob->n = problem->width;
-    prob->y = problem->labels;
-    prob->x = problem->vectors;
-    prob->bias = problem->bias;
+    prob->l = matrix->height;
+    prob->n = matrix->width;
+    prob->y = matrix->labels;
+    prob->x = matrix->vectors;
+    prob->bias = matrix->bias;
 
     return 0;
 }
@@ -444,8 +444,8 @@ error_iter:
  * Clear complete vector block list
  */
 static void
-pl_problem_clear_vectors(struct feature_node ***vectors_, int height,
-                         int row_alloc)
+pl_matrix_clear_vectors(struct feature_node ***vectors_, int height,
+                        int row_alloc)
 {
     struct feature_node **vectors;
     int j;
@@ -520,13 +520,13 @@ pl_vectors_as_array(pl_vector_block_t **vectors_,
 
 
 /*
- * Create pl_problem_t from iterable
+ * Create pl_matrix_t from iterable
  *
  * Return NULL on error
  */
-static pl_problem_t *
-pl_problem_from_iterable(PyObject *iterable, PyObject *assign_labels_,
-                         PyObject *bias_)
+static pl_matrix_t *
+pl_matrix_from_iterable(PyObject *iterable, PyObject *assign_labels_,
+                        PyObject *bias_)
 {
     PyObject *iter, *item, *label_, *vector_;
     pl_vector_block_t *vectors = NULL;
@@ -605,7 +605,7 @@ pl_problem_from_iterable(PyObject *iterable, PyObject *assign_labels_,
     if (pl_vectors_as_array(&vectors, &array, &labels, height) == -1)
         goto error;
 
-    return pl_problem_new(array, labels, bias, height, width, 1);
+    return pl_matrix_new(array, labels, bias, height, width, 1);
 
 error_vector:
     Py_DECREF(vector_);
@@ -628,16 +628,16 @@ PL_FeatureViewType_iternext(pl_feature_view_t *self)
     PyObject *result, *key, *value;
     struct feature_node *array;
 
-    if (!(self->j < self->problem->height))
+    if (!(self->j < self->matrix->height))
         return NULL;
 
-    array = self->problem->vectors[self->j++];
+    array = self->matrix->vectors[self->j++];
     if (!(result = PyDict_New()))
         return NULL;
 
     while (array->index != -1) {
         /* ignore bias feature */
-        if (!(self->problem->bias < 0) && (&array[1])->index == -1)
+        if (!(self->matrix->bias < 0) && (&array[1])->index == -1)
             break;
 
         if (!(key = PyInt_FromLong(array->index)))
@@ -668,7 +668,7 @@ static int
 PL_FeatureViewType_traverse(pl_feature_view_t *self, visitproc visit,
                             void *arg)
 {
-    Py_VISIT(self->problem);
+    Py_VISIT(self->matrix);
 
     return 0;
 }
@@ -679,7 +679,7 @@ PL_FeatureViewType_clear(pl_feature_view_t *self)
     if (self->weakreflist)
         PyObject_ClearWeakRefs((PyObject *)self);
 
-    Py_CLEAR(self->problem);
+    Py_CLEAR(self->matrix);
 
     return 0;
 }
@@ -715,7 +715,7 @@ PyTypeObject PL_FeatureViewType = {
     (traverseproc)PL_FeatureViewType_traverse,          /* tp_traverse */
     (inquiry)PL_FeatureViewType_clear,                  /* tp_clear */
     0,                                                  /* tp_richcompare */
-    offsetof(pl_problem_t, weakreflist),                /* tp_weaklistoffset */
+    offsetof(pl_matrix_t, weakreflist),                 /* tp_weaklistoffset */
     (getiterfunc)PL_FeatureViewType_iter,               /* tp_iter */
     (iternextfunc)PL_FeatureViewType_iternext,          /* tp_iternext */
 };
@@ -724,15 +724,15 @@ PyTypeObject PL_FeatureViewType = {
  * Create new feature_view object
  */
 static PyObject *
-pl_feature_view_new(pl_problem_t *problem)
+pl_feature_view_new(pl_matrix_t *matrix)
 {
     pl_feature_view_t *self;
 
     if (!(self = GENERIC_ALLOC(&PL_FeatureViewType)))
         return NULL;
 
-    Py_INCREF((PyObject *)problem);
-    self->problem = problem;
+    Py_INCREF((PyObject *)matrix);
+    self->matrix = matrix;
     self->j = 0;
 
     return (PyObject *)self;
@@ -747,16 +747,16 @@ pl_feature_view_new(pl_problem_t *problem)
 static PyObject *
 PL_LabelViewType_iternext(pl_label_view_t *self)
 {
-    if (!(self->j < self->problem->height))
+    if (!(self->j < self->matrix->height))
         return NULL;
 
-    return PyFloat_FromDouble(self->problem->labels[self->j++]);
+    return PyFloat_FromDouble(self->matrix->labels[self->j++]);
 }
 
 static int
 PL_LabelViewType_traverse(pl_label_view_t *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->problem);
+    Py_VISIT(self->matrix);
 
     return 0;
 }
@@ -767,7 +767,7 @@ PL_LabelViewType_clear(pl_label_view_t *self)
     if (self->weakreflist)
         PyObject_ClearWeakRefs((PyObject *)self);
 
-    Py_CLEAR(self->problem);
+    Py_CLEAR(self->matrix);
 
     return 0;
 }
@@ -803,7 +803,7 @@ PyTypeObject PL_LabelViewType = {
     (traverseproc)PL_LabelViewType_traverse,            /* tp_traverse */
     (inquiry)PL_LabelViewType_clear,                    /* tp_clear */
     0,                                                  /* tp_richcompare */
-    offsetof(pl_problem_t, weakreflist),                /* tp_weaklistoffset */
+    offsetof(pl_matrix_t, weakreflist),                 /* tp_weaklistoffset */
     (getiterfunc)PL_LabelViewType_iter,                 /* tp_iter */
     (iternextfunc)PL_LabelViewType_iternext,            /* tp_iternext */
 };
@@ -812,15 +812,15 @@ PyTypeObject PL_LabelViewType = {
  * Create new label_view object
  */
 static PyObject *
-pl_label_view_new(pl_problem_t *problem)
+pl_label_view_new(pl_matrix_t *matrix)
 {
     pl_label_view_t *self;
 
     if (!(self = GENERIC_ALLOC(&PL_LabelViewType)))
         return NULL;
 
-    Py_INCREF((PyObject *)problem);
-    self->problem = problem;
+    Py_INCREF((PyObject *)matrix);
+    self->matrix = matrix;
     self->j = 0;
 
     return (PyObject *)self;
@@ -895,7 +895,7 @@ DEFINE_GENERIC_DEALLOC(PL_ZipperType)
 PyTypeObject PL_ZipperType = {
     PyObject_HEAD_INIT(NULL)
     0,                                                  /* ob_size */
-    EXT_MODULE_PATH ".ProblemZipper",                   /* tp_name */
+    EXT_MODULE_PATH ".FeatureMatrixZipper",             /* tp_name */
     sizeof(pl_zipper_t),                                /* tp_basicsize */
     0,                                                  /* tp_itemsize */
     (destructor)PL_ZipperType_dealloc,                  /* tp_dealloc */
@@ -951,9 +951,9 @@ error:
 
 /* ------------------------ END Zipper DEFINITION ------------------------ */
 
-/* ----------------------- BEGIN Problem DEFINITION ---------------------- */
+/* -------------------- BEGIN FeatureMatrix DEFINITION ------------------- */
 
-PyDoc_STRVAR(PL_ProblemType_features__doc__,
+PyDoc_STRVAR(PL_FeatureMatrixType_features__doc__,
 "features(self)\n\
 \n\
 Return the features as iterator of dicts.\n\
@@ -962,12 +962,12 @@ Return the features as iterator of dicts.\n\
 :Rtype: iterable");
 
 static PyObject *
-PL_ProblemType_features(pl_problem_t *self, PyObject *args)
+PL_FeatureMatrixType_features(pl_matrix_t *self, PyObject *args)
 {
     return pl_feature_view_new(self);
 }
 
-PyDoc_STRVAR(PL_ProblemType_labels__doc__,
+PyDoc_STRVAR(PL_FeatureMatrixType_labels__doc__,
 "labels(self)\n\
 \n\
 Return the labels as iterator.\n\
@@ -976,12 +976,12 @@ Return the labels as iterator.\n\
 :Rtype: iterable");
 
 static PyObject *
-PL_ProblemType_labels(pl_problem_t *self, PyObject *args)
+PL_FeatureMatrixType_labels(pl_matrix_t *self, PyObject *args)
 {
     return pl_label_view_new(self);
 }
 
-PyDoc_STRVAR(PL_ProblemType_width__doc__,
+PyDoc_STRVAR(PL_FeatureMatrixType_width__doc__,
 "width(self)\n\
 \n\
 Return the matrix width (number of features).\n\
@@ -990,7 +990,7 @@ Return the matrix width (number of features).\n\
 :Rtype: ``int``");
 
 static PyObject *
-PL_ProblemType_width(pl_problem_t *self, PyObject *args)
+PL_FeatureMatrixType_width(pl_matrix_t *self, PyObject *args)
 {
     int width;
 
@@ -1001,7 +1001,7 @@ PL_ProblemType_width(pl_problem_t *self, PyObject *args)
     return PyInt_FromLong(width);
 }
 
-PyDoc_STRVAR(PL_ProblemType_height__doc__,
+PyDoc_STRVAR(PL_FeatureMatrixType_height__doc__,
 "height(self)\n\
 \n\
 Return the matrix height (number of labels and vectors).\n\
@@ -1010,12 +1010,12 @@ Return the matrix height (number of labels and vectors).\n\
 :Rtype: ``int``");
 
 static PyObject *
-PL_ProblemType_height(pl_problem_t *self, PyObject *args)
+PL_FeatureMatrixType_height(pl_matrix_t *self, PyObject *args)
 {
     return PyInt_FromLong(self->height);
 }
 
-PyDoc_STRVAR(PL_ProblemType_bias__doc__,
+PyDoc_STRVAR(PL_FeatureMatrixType_bias__doc__,
 "bias(self)\n\
 \n\
 Return the configured bias.\n\
@@ -1024,7 +1024,7 @@ Return the configured bias.\n\
 :Rtype: ``float``");
 
 static PyObject *
-PL_ProblemType_bias(pl_problem_t *self, PyObject *args)
+PL_FeatureMatrixType_bias(pl_matrix_t *self, PyObject *args)
 {
     if (self->bias < 0)
         Py_RETURN_NONE;
@@ -1032,10 +1032,10 @@ PL_ProblemType_bias(pl_problem_t *self, PyObject *args)
     return PyFloat_FromDouble(self->bias);
 }
 
-PyDoc_STRVAR(PL_ProblemType_from_iterables__doc__,
+PyDoc_STRVAR(PL_FeatureMatrixType_from_iterables__doc__,
 "from_iterables(cls, labels, features, bias=None)\n\
 \n\
-Create `Problem` instance from a two separated iterables - labels and\n\
+Create `FeatureMatrix` instance from a two separated iterables - labels and\n\
 features.\n\
 \n\
 :Parameters:\n\
@@ -1049,18 +1049,19 @@ features.\n\
     Bias to the hyperplane. If omitted or ``None``, no bias is applied. The\n\
     bias cannot be negative.\n\
 \n\
-:Return: New problem instance\n\
-:Rtype: `Problem`\n\
+:Return: New feature matrix instance\n\
+:Rtype: `FeatureMatrix`\n\
 \n\
 :Exceptions:\n\
   - `ValueError` : The lengths of the iterables differ");
 
 static PyObject *
-PL_ProblemType_from_iterables(PyObject *cls, PyObject *args, PyObject *kwds)
+PL_FeatureMatrixType_from_iterables(PyObject *cls, PyObject *args,
+                                    PyObject *kwds)
 {
     static char *kwlist[] = {"labels", "features", "bias", NULL};
     PyObject *zipped, *labels_, *features_ = NULL, *bias_ = NULL;
-    pl_problem_t *self;
+    pl_matrix_t *self;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|O", kwlist,
                                      &labels_, &features_, &bias_))
@@ -1068,17 +1069,17 @@ PL_ProblemType_from_iterables(PyObject *cls, PyObject *args, PyObject *kwds)
 
     if (!(zipped = pl_zipper_new(labels_, features_)))
         return NULL;
-    self = pl_problem_from_iterable(zipped, NULL, bias_);
+    self = pl_matrix_from_iterable(zipped, NULL, bias_);
     Py_DECREF(zipped);
 
     return (PyObject *)self;
 }
 
-PyDoc_STRVAR(PL_ProblemType_from_iterable__doc__,
+PyDoc_STRVAR(PL_FeatureMatrixType_from_iterable__doc__,
 "from_iterable(cls, iterable, assign_labels=None, bias=None)\n\
 \n\
-Create `Problem` instance from a single iterable. If `assign_labels` is\n\
-omitted or ``None``, the iterable is expected to provide 2-tuples,\n\
+Create `FeatureMatrix` instance from a single iterable. If `assign_labels`\n\
+is omitted or ``None``, the iterable is expected to provide 2-tuples,\n\
 containing the label and the accompanying feature vector. If\n\
 `assign_labels` is passed and not ``None``, the iterable should only\n\
 provide the feature vectors. All labels are then assigned to the value of\n\
@@ -1097,66 +1098,68 @@ provide the feature vectors. All labels are then assigned to the value of\n\
     Bias to the hyperplane. If omitted or ``None``, no bias is applied. The\n\
     bias cannot be negative.\n\
 \n\
-:Return: New problem instance\n\
-:Rtype: `Problem`");
+:Return: New feature matrix instance\n\
+:Rtype: `FeatureMatrix`");
 
 static PyObject *
-PL_ProblemType_from_iterable(PyObject *cls, PyObject *args, PyObject *kwds)
+PL_FeatureMatrixType_from_iterable(PyObject *cls, PyObject *args,
+                                   PyObject *kwds)
 {
     static char *kwlist[] = {"iterable", "assign_labels", "bias", NULL};
     PyObject *iterable_, *assign_labels_ = NULL, *bias_ = NULL;
-    pl_problem_t *self;
+    pl_matrix_t *self;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OO", kwlist,
                                      &iterable_, &assign_labels_, &bias_))
         return NULL;
 
-    self = pl_problem_from_iterable(iterable_, assign_labels_, bias_);
+    self = pl_matrix_from_iterable(iterable_, assign_labels_, bias_);
     return (PyObject *)self;
 }
 
-static struct PyMethodDef PL_ProblemType_methods[] = {
+static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
     {"features",
-     (PyCFunction)PL_ProblemType_features,      METH_NOARGS,
-     PL_ProblemType_features__doc__},
+     (PyCFunction)PL_FeatureMatrixType_features,  METH_NOARGS,
+     PL_FeatureMatrixType_features__doc__},
 
     {"labels",
-     (PyCFunction)PL_ProblemType_labels,        METH_NOARGS,
-     PL_ProblemType_labels__doc__},
+     (PyCFunction)PL_FeatureMatrixType_labels,    METH_NOARGS,
+     PL_FeatureMatrixType_labels__doc__},
 
     {"width",
-     (PyCFunction)PL_ProblemType_width,         METH_NOARGS,
-     PL_ProblemType_width__doc__},
+     (PyCFunction)PL_FeatureMatrixType_width,     METH_NOARGS,
+     PL_FeatureMatrixType_width__doc__},
 
     {"height",
-     (PyCFunction)PL_ProblemType_height,        METH_NOARGS,
-     PL_ProblemType_height__doc__},
+     (PyCFunction)PL_FeatureMatrixType_height,    METH_NOARGS,
+     PL_FeatureMatrixType_height__doc__},
 
     {"bias",
-     (PyCFunction)PL_ProblemType_bias,          METH_NOARGS,
-     PL_ProblemType_bias__doc__},
+     (PyCFunction)PL_FeatureMatrixType_bias,      METH_NOARGS,
+     PL_FeatureMatrixType_bias__doc__},
 
     {"from_iterables",
-     (PyCFunction)PL_ProblemType_from_iterables,
-                                                METH_KEYWORDS | METH_CLASS,
-     PL_ProblemType_from_iterables__doc__},
+     (PyCFunction)PL_FeatureMatrixType_from_iterables,
+                                                  METH_KEYWORDS | METH_CLASS,
+     PL_FeatureMatrixType_from_iterables__doc__},
 
     {"from_iterable",
-     (PyCFunction)PL_ProblemType_from_iterable, METH_KEYWORDS | METH_CLASS,
-     PL_ProblemType_from_iterable__doc__},
+     (PyCFunction)PL_FeatureMatrixType_from_iterable,
+                                                  METH_KEYWORDS | METH_CLASS,
+     PL_FeatureMatrixType_from_iterable__doc__},
 
     {NULL, NULL}  /* Sentinel */
 };
 
 static int
-PL_ProblemType_clear(pl_problem_t *self)
+PL_FeatureMatrixType_clear(pl_matrix_t *self)
 {
     void *ptr;
 
     if (self->weakreflist)
         PyObject_ClearWeakRefs((PyObject *)self);
 
-    pl_problem_clear_vectors(&self->vectors, self->height, self->row_alloc);
+    pl_matrix_clear_vectors(&self->vectors, self->height, self->row_alloc);
     if ((ptr = self->labels)) {
         self->labels = NULL;
         PyMem_Free(ptr);
@@ -1165,21 +1168,22 @@ PL_ProblemType_clear(pl_problem_t *self)
     return 0;
 }
 
-DEFINE_GENERIC_DEALLOC(PL_ProblemType)
+DEFINE_GENERIC_DEALLOC(PL_FeatureMatrixType)
 
-PyDoc_STRVAR(PL_ProblemType__doc__,
-"Problem()\n\
+PyDoc_STRVAR(PL_FeatureMatrixType__doc__,
+"FeatureMatrix\n\
 \n\
-Problem matrix to solve. Use Problem.from_iterable or Problem.from_iterables\n\
+Feature matrix to be used for training or prediction. Use\n\
+FeatureMatrix.from_iterable or FeatureMatrix.from_iterables\n\
 to construct a new instance.");
 
-PyTypeObject PL_ProblemType = {
+PyTypeObject PL_FeatureMatrixType = {
     PyObject_HEAD_INIT(NULL)
     0,                                                  /* ob_size */
-    EXT_MODULE_PATH ".Problem",                         /* tp_name */
-    sizeof(pl_problem_t),                               /* tp_basicsize */
+    EXT_MODULE_PATH ".FeatureMatrix",                   /* tp_name */
+    sizeof(pl_matrix_t),                                /* tp_basicsize */
     0,                                                  /* tp_itemsize */
-    (destructor)PL_ProblemType_dealloc,                 /* tp_dealloc */
+    (destructor)PL_FeatureMatrixType_dealloc,           /* tp_dealloc */
     0,                                                  /* tp_print */
     0,                                                  /* tp_getattr */
     0,                                                  /* tp_setattr */
@@ -1197,14 +1201,14 @@ PyTypeObject PL_ProblemType = {
     Py_TPFLAGS_HAVE_CLASS                               /* tp_flags */
     | Py_TPFLAGS_HAVE_WEAKREFS
     | Py_TPFLAGS_BASETYPE,
-    PL_ProblemType__doc__,                              /* tp_doc */
+    PL_FeatureMatrixType__doc__,                        /* tp_doc */
     0,                                                  /* tp_traverse */
     0,                                                  /* tp_clear */
     0,                                                  /* tp_richcompare */
-    offsetof(pl_problem_t, weakreflist),                /* tp_weaklistoffset */
+    offsetof(pl_matrix_t, weakreflist),                 /* tp_weaklistoffset */
     0,                                                  /* tp_iter */
     0,                                                  /* tp_iternext */
-    PL_ProblemType_methods,                             /* tp_methods */
+    PL_FeatureMatrixType_methods,                       /* tp_methods */
     0,                                                  /* tp_members */
     0,                                                  /* tp_getset */
     0,                                                  /* tp_base */
@@ -1218,20 +1222,20 @@ PyTypeObject PL_ProblemType = {
 };
 
 /*
- * Create new PL_ProblemType
+ * Create new PL_FeatureMatrixType
  *
  * vectors and labels are stolen (and free'd on error)
  *
  * Return NULL on error
  */
-static pl_problem_t *
-pl_problem_new(struct feature_node **vectors, double *labels, double bias,
-               int height, int width, int row_alloc)
+static pl_matrix_t *
+pl_matrix_new(struct feature_node **vectors, double *labels, double bias,
+              int height, int width, int row_alloc)
 {
-    pl_problem_t *self;
+    pl_matrix_t *self;
 
-    if (!(self = GENERIC_ALLOC(&PL_ProblemType))) {
-        pl_problem_clear_vectors(&vectors, height, row_alloc);
+    if (!(self = GENERIC_ALLOC(&PL_FeatureMatrixType))) {
+        pl_matrix_clear_vectors(&vectors, height, row_alloc);
         if (labels)
             PyMem_Free(labels);
         return NULL;
@@ -1247,4 +1251,4 @@ pl_problem_new(struct feature_node **vectors, double *labels, double bias,
     return self;
 }
 
-/* ------------------------ END Problem DEFINITION ----------------------- */
+/* --------------------- END FeatureMatrix DEFINITION -------------------- */

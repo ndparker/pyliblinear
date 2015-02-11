@@ -31,8 +31,8 @@ def setup(args=None, _manifest=0):
                 "pyliblinear/util.c",
 
                 "pyliblinear/main.c",
+                "pyliblinear/matrix.c",
                 "pyliblinear/model.c",
-                "pyliblinear/problem.c",
                 "pyliblinear/solver.c",
 
                 "pyliblinear/liblinear/blas/ddot.c",

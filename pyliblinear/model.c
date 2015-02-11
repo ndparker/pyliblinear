@@ -53,7 +53,7 @@ pl_model_new(struct model *model)
 
 
 PyDoc_STRVAR(PL_ModelType_train__doc__,
-"train(cls, problem, solver=None)\n\
+"train(cls, matrix, solver=None)\n\
 \n\
 Create model instance from a training run\n\
 \n\
@@ -63,16 +63,16 @@ Create model instance from a training run\n\
 static PyObject *
 PL_ModelType_train(PyObject *cls, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"problem", "solver", NULL};
+    static char *kwlist[] = {"matrix", "solver", NULL};
     struct problem prob;
     struct parameter param;
-    PyObject *problem_, *solver_ = NULL;
+    PyObject *matrix_, *solver_ = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
-                                     &problem_, &solver_))
+                                     &matrix_, &solver_))
         return NULL;
 
-    if (pl_problem_as_problem(problem_, &prob) == -1)
+    if (pl_matrix_as_problem(matrix_, &prob) == -1)
         return NULL;
 
     if (pl_solver_as_parameter(solver_, &param) == -1)

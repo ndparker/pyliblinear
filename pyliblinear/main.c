@@ -65,13 +65,13 @@ EXT_INIT_FUNC {
     EXT_INIT_TYPE(m, &PL_FeatureViewType);
     EXT_INIT_TYPE(m, &PL_LabelViewType);
     EXT_INIT_TYPE(m, &PL_ZipperType);
-    EXT_INIT_TYPE(m, &PL_ProblemType);
+    EXT_INIT_TYPE(m, &PL_FeatureMatrixType);
 
     EXT_INIT_TYPE(m, &PL_SolverType);
 
     EXT_INIT_TYPE(m, &PL_ModelType);
 
-    EXT_ADD_TYPE(m, "Problem", &PL_ProblemType);
+    EXT_ADD_TYPE(m, "FeatureMatrix", &PL_FeatureMatrixType);
     EXT_ADD_TYPE(m, "Solver", &PL_SolverType);
     EXT_ADD_TYPE(m, "Model", &PL_ModelType);
 

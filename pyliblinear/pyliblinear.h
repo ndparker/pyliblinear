@@ -32,7 +32,7 @@
 PyTypeObject PL_FeatureViewType;
 PyTypeObject PL_LabelViewType;
 PyTypeObject PL_ZipperType;
-PyTypeObject PL_ProblemType;
+PyTypeObject PL_FeatureMatrixType;
 
 PyTypeObject PL_SolverType;
 
@@ -46,11 +46,11 @@ PyTypeObject PL_ModelType;
     ((op)->ob_type == &PL_SolverType)
 
 
-#define PL_ProblemType_Check(op) \
-    PyObject_TypeCheck(op, &PL_ProblemType)
+#define PL_FeatureMatrixType_Check(op) \
+    PyObject_TypeCheck(op, &PL_FeatureMatrixType)
 
-#define PL_ProblemType_CheckExact(op) \
-    ((op)->ob_type == &PL_ProblemType)
+#define PL_FeatureMatrixType_CheckExact(op) \
+    ((op)->ob_type == &PL_FeatureMatrixType)
 
 
 #define PL_ModelType_CheckExact(op) \
@@ -122,12 +122,12 @@ pl_method(PyObject *, const char *, PyObject **);
 
 
 /*
- * Transform pl_problem_t into a (liblinear) struct problem
+ * Transform pl_matrix_t into a (liblinear) struct problem
  *
  * Return -1 on error
  */
 int
-pl_problem_as_problem(PyObject *, struct problem *);
+pl_matrix_as_problem(PyObject *, struct problem *);
 
 
 /*
