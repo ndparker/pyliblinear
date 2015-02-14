@@ -63,19 +63,30 @@ Create model instance from a training run\n\
 static PyObject *
 PL_ModelType_train(PyObject *cls, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"matrix", "solver", NULL};
+    static char *kwlist[] = {"matrix", "solver", "bias", NULL};
     struct problem prob;
     struct parameter param;
-    PyObject *matrix_, *solver_ = NULL;
+    PyObject *matrix_, *solver_ = NULL, *bias_ = NULL;
+    double bias = -1.0;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
-                                     &matrix_, &solver_))
-        return NULL;
-
-    if (pl_matrix_as_problem(matrix_, &prob) == -1)
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OO", kwlist,
+                                     &matrix_, &solver_, &bias_))
         return NULL;
 
     if (pl_solver_as_parameter(solver_, &param) == -1)
+        return NULL;
+
+    if (bias_ && bias_ != Py_None) {
+        Py_INCREF(bias_);
+        if (pl_as_double(bias_, &bias) == -1)
+            return NULL;
+        if (bias < 0) {
+            PyErr_SetString(PyExc_ValueError, "bias must be >= 0");
+            return NULL;
+        }
+    }
+
+    if (pl_matrix_as_problem(matrix_, bias, &prob) == -1)
         return NULL;
 
     return (PyObject *)pl_model_new(train(&prob, &param));

@@ -127,7 +127,7 @@ pl_method(PyObject *, const char *, PyObject **);
  * Return -1 on error
  */
 int
-pl_matrix_as_problem(PyObject *, struct problem *);
+pl_matrix_as_problem(PyObject *, double, struct problem *);
 
 
 /*
