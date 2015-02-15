@@ -70,7 +70,7 @@ typedef struct {
 
 
 /*
- * Object structure or FeatureView
+ * Object structure for FeatureView
  */
 typedef struct {
     PyObject_HEAD
@@ -82,7 +82,7 @@ typedef struct {
 
 
 /*
- * Object structure or LabelView
+ * Object structure for LabelView
  */
 typedef struct {
     PyObject_HEAD
@@ -696,9 +696,9 @@ PyTypeObject PL_FeatureViewType = {
     (traverseproc)PL_FeatureViewType_traverse,          /* tp_traverse */
     (inquiry)PL_FeatureViewType_clear,                  /* tp_clear */
     0,                                                  /* tp_richcompare */
-    offsetof(pl_matrix_t, weakreflist),                 /* tp_weaklistoffset */
+    offsetof(pl_feature_view_t, weakreflist),           /* tp_weaklistoffset */
     (getiterfunc)PL_FeatureViewType_iter,               /* tp_iter */
-    (iternextfunc)PL_FeatureViewType_iternext,          /* tp_iternext */
+    (iternextfunc)PL_FeatureViewType_iternext           /* tp_iternext */
 };
 
 /*
@@ -784,9 +784,9 @@ PyTypeObject PL_LabelViewType = {
     (traverseproc)PL_LabelViewType_traverse,            /* tp_traverse */
     (inquiry)PL_LabelViewType_clear,                    /* tp_clear */
     0,                                                  /* tp_richcompare */
-    offsetof(pl_matrix_t, weakreflist),                 /* tp_weaklistoffset */
+    offsetof(pl_label_view_t, weakreflist),             /* tp_weaklistoffset */
     (getiterfunc)PL_LabelViewType_iter,                 /* tp_iter */
-    (iternextfunc)PL_LabelViewType_iternext,            /* tp_iternext */
+    (iternextfunc)PL_LabelViewType_iternext             /* tp_iternext */
 };
 
 /*
@@ -903,7 +903,7 @@ PyTypeObject PL_ZipperType = {
     0,                                                  /* tp_richcompare */
     0,                                                  /* tp_weaklistoffset */
     (getiterfunc)PL_ZipperType_iter,                    /* tp_iter */
-    (iternextfunc)PL_ZipperType_iternext,               /* tp_iternext */
+    (iternextfunc)PL_ZipperType_iternext                /* tp_iternext */
 };
 
 /*

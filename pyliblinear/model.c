@@ -18,7 +18,7 @@
 #include "pyliblinear.h"
 
 /*
- * Object structure for ModelType
+ * Object structure for Model
  */
 typedef struct {
     PyObject_HEAD
@@ -26,6 +26,117 @@ typedef struct {
 
     struct model *model;
 } pl_model_t;
+
+
+/*
+ * Object structure for PredictIterator
+ */
+typedef struct {
+    PyObject_HEAD
+    PyObject *weakreflist;
+
+    struct problem prob;
+
+    pl_model_t *model;
+    PyObject *matrix;
+
+    int j;
+} pl_predict_iter_t;
+
+
+/* ------------------------ BEGIN Helper Functions ----------------------- */
+
+/* ------------------------- END Helper Functions ------------------------ */
+
+/* ------------------- BEGIN PredictIterator DEFINITION ------------------ */
+
+#define PL_PredictIteratorType_iter PyObject_SelfIter
+
+static PyObject *
+PL_PredictIteratorType_iternext(pl_predict_iter_t *self)
+{
+    return NULL;
+}
+
+static int
+PL_PredictIteratorType_traverse(pl_predict_iter_t *self, visitproc visit,
+                                void *arg)
+{
+    Py_VISIT(self->model);
+    Py_VISIT(self->matrix);
+
+    return 0;
+}
+
+static int
+PL_PredictIteratorType_clear(pl_predict_iter_t *self)
+{
+    if (self->weakreflist)
+        PyObject_ClearWeakRefs((PyObject *)self);
+
+    Py_CLEAR(self->model);
+    Py_CLEAR(self->matrix);
+
+    return 0;
+}
+
+DEFINE_GENERIC_DEALLOC(PL_PredictIteratorType)
+
+PyTypeObject PL_PredictIteratorType = {
+    PyObject_HEAD_INIT(NULL)
+    0,                                                  /* ob_size */
+    EXT_MODULE_PATH ".PredictIterator",                 /* tp_name */
+    sizeof(pl_predict_iter_t),                          /* tp_basicsize */
+    0,                                                  /* tp_itemsize */
+    (destructor)PL_PredictIteratorType_dealloc,         /* tp_dealloc */
+    0,                                                  /* tp_print */
+    0,                                                  /* tp_getattr */
+    0,                                                  /* tp_setattr */
+    0,                                                  /* tp_compare */
+    0,                                                  /* tp_repr */
+    0,                                                  /* tp_as_number */
+    0,                                                  /* tp_as_sequence */
+    0,                                                  /* tp_as_mapping */
+    0,                                                  /* tp_hash */
+    0,                                                  /* tp_call */
+    0,                                                  /* tp_str */
+    0,                                                  /* tp_getattro */
+    0,                                                  /* tp_setattro */
+    0,                                                  /* tp_as_buffer */
+    Py_TPFLAGS_HAVE_CLASS                               /* tp_flags */
+    | Py_TPFLAGS_HAVE_WEAKREFS
+    | Py_TPFLAGS_HAVE_ITER
+    | Py_TPFLAGS_HAVE_GC,
+    0,                                                  /* tp_doc */
+    (traverseproc)PL_PredictIteratorType_traverse,      /* tp_traverse */
+    (inquiry)PL_PredictIteratorType_clear,              /* tp_clear */
+    0,                                                  /* tp_richcompare */
+    offsetof(pl_predict_iter_t, weakreflist),           /* tp_weaklistoffset */
+    (getiterfunc)PL_PredictIteratorType_iter,           /* tp_iter */
+    (iternextfunc)PL_PredictIteratorType_iternext       /* tp_iternext */
+};
+
+/*
+ * Create new predict iterator object
+ */
+static PyObject *
+pl_predict_iter_new(pl_model_t *model, PyObject *matrix)
+{
+    pl_predict_iter_t *self;
+
+    if (!(self = GENERIC_ALLOC(&PL_PredictIteratorType)))
+        return NULL;
+
+    Py_INCREF((PyObject *)model);
+    self->model = model;
+    Py_INCREF(matrix);
+    self->matrix = matrix;
+    self->j = 0;
+
+    return (PyObject *)self;
+}
+
+/* -------------------- END PredictIterator DEFINITION ------------------- */
 
 /* ------------------------ BEGIN Model DEFINITION ----------------------- */
 
@@ -155,9 +266,13 @@ PL_ModelType_save(pl_model_t *self, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(PL_ModelType_predict__doc__,
-"predict(self, )\n\
+"predict(self, matrix)\n\
 \n\
-Predict\n\
+Run the model on `matrix` and predict labels.\n\
+\n\
+:Parameters:\n\
+  `matrix` : `pyliblinear.FeatureMatrix`\n\
+    Feature matrix to inspect and predict upon\n\
 \n\
 :Return: Return values\n\
 :Rtype: ``tuple``");
@@ -165,13 +280,14 @@ Predict\n\
 static PyObject *
 PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {NULL};
+    static char *kwlist[] = {"matrix", NULL};
+    PyObject *matrix_;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist
-                                     ))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
+                                     &matrix_))
         return NULL;
 
-    Py_RETURN_NONE;
+    return pl_predict_iter_new(self, matrix_);
 }
 
 PyDoc_STRVAR(PL_ModelType_solver__doc__,
