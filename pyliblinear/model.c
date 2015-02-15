@@ -33,7 +33,6 @@ typedef struct {
  * Create new PL_ModelType
  *
  * model is stolen and free'd on error.
- * If model is NULL, an error to pass through is assumed and NULL is returned.
  *
  * Return NULL on error
  */
@@ -41,9 +40,6 @@ static pl_model_t *
 pl_model_new(struct model *model)
 {
     pl_model_t *self;
-
-    if (!model)
-        return NULL;
 
     if (!(self = GENERIC_ALLOC(&PL_ModelType))) {
         free_and_destroy_model(&model);

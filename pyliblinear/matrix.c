@@ -962,34 +962,6 @@ PL_FeatureMatrixType_labels(pl_matrix_t *self, PyObject *args)
     return pl_label_view_new(self);
 }
 
-PyDoc_STRVAR(PL_FeatureMatrixType_width__doc__,
-"width(self)\n\
-\n\
-Return the matrix width (number of features).\n\
-\n\
-:Return: The width\n\
-:Rtype: ``int``");
-
-static PyObject *
-PL_FeatureMatrixType_width(pl_matrix_t *self, PyObject *args)
-{
-    return PyInt_FromLong(self->width);
-}
-
-PyDoc_STRVAR(PL_FeatureMatrixType_height__doc__,
-"height(self)\n\
-\n\
-Return the matrix height (number of labels and vectors).\n\
-\n\
-:Return: The height\n\
-:Rtype: ``int``");
-
-static PyObject *
-PL_FeatureMatrixType_height(pl_matrix_t *self, PyObject *args)
-{
-    return PyInt_FromLong(self->height);
-}
-
 PyDoc_STRVAR(PL_FeatureMatrixType_from_iterables__doc__,
 "from_iterables(cls, labels, features)\n\
 \n\
@@ -1076,14 +1048,6 @@ static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
      (PyCFunction)PL_FeatureMatrixType_labels,    METH_NOARGS,
      PL_FeatureMatrixType_labels__doc__},
 
-    {"width",
-     (PyCFunction)PL_FeatureMatrixType_width,     METH_NOARGS,
-     PL_FeatureMatrixType_width__doc__},
-
-    {"height",
-     (PyCFunction)PL_FeatureMatrixType_height,    METH_NOARGS,
-     PL_FeatureMatrixType_height__doc__},
-
     {"from_iterables",
      (PyCFunction)PL_FeatureMatrixType_from_iterables,
                                                   METH_KEYWORDS | METH_CLASS,
@@ -1095,6 +1059,45 @@ static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
      PL_FeatureMatrixType_from_iterable__doc__},
 
     {NULL, NULL}  /* Sentinel */
+};
+
+PyDoc_STRVAR(PL_FeatureMatrixType_width_doc,
+"The matrix width (number of features).\n\
+\n\
+:Type: ``int``");
+
+static PyObject *
+PL_FeatureMatrixType_width_get(pl_matrix_t *self, void *closure)
+{
+    return PyInt_FromLong(self->width);
+}
+
+PyDoc_STRVAR(PL_FeatureMatrixType_height_doc,
+"The matrix height (number of labels and vectors).\n\
+\n\
+:Type: ``int``");
+
+static PyObject *
+PL_FeatureMatrixType_height_get(pl_matrix_t *self, void *closure)
+{
+    return PyInt_FromLong(self->height);
+}
+
+
+static PyGetSetDef PL_FeatureMatrixType_getset[] = {
+    {"width",
+     (getter)PL_FeatureMatrixType_width_get,
+     NULL,
+     PL_FeatureMatrixType_width_doc,
+     NULL},
+
+    {"height",
+     (getter)PL_FeatureMatrixType_height_get,
+     NULL,
+     PL_FeatureMatrixType_height_doc,
+     NULL},
+
+    {NULL}  /* Sentinel */
 };
 
 static int
@@ -1160,7 +1163,7 @@ PyTypeObject PL_FeatureMatrixType = {
     0,                                                  /* tp_iternext */
     PL_FeatureMatrixType_methods,                       /* tp_methods */
     0,                                                  /* tp_members */
-    0,                                                  /* tp_getset */
+    PL_FeatureMatrixType_getset,                        /* tp_getset */
     0,                                                  /* tp_base */
     0,                                                  /* tp_dict */
     0,                                                  /* tp_descr_get */

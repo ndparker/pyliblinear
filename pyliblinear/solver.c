@@ -512,71 +512,6 @@ error_result:
     return NULL;
 }
 
-PyDoc_STRVAR(PL_SolverType_p__doc__,
-"p(self)\n\
-\n\
-Return the configured p parameter.\n\
-\n\
-:Return: The p parameter\n\
-:Rtype: ``float``");
-
-static PyObject *
-PL_SolverType_p(pl_solver_t *self, PyObject *args)
-{
-    return PyFloat_FromDouble(self->p);
-}
-
-PyDoc_STRVAR(PL_SolverType_eps__doc__,
-"eps(self)\n\
-\n\
-Return the configured eps parameter.\n\
-\n\
-:Return: The eps parameter\n\
-:Rtype: ``float``");
-
-static PyObject *
-PL_SolverType_eps(pl_solver_t *self, PyObject *args)
-{
-    return PyFloat_FromDouble(self->eps);
-}
-
-PyDoc_STRVAR(PL_SolverType_C__doc__,
-"C(self)\n\
-\n\
-Return the configured C parameter.\n\
-\n\
-:Return: The C parameter\n\
-:Rtype: ``float``");
-
-static PyObject *
-PL_SolverType_C(pl_solver_t *self, PyObject *args)
-{
-    return PyFloat_FromDouble(self->C);
-}
-
-PyDoc_STRVAR(PL_SolverType_type__doc__,
-"type(self)\n\
-\n\
-Return the configured solver type.\n\
-\n\
-:Return: The solver type\n\
-:Rtype: ``str``");
-
-static PyObject *
-PL_SolverType_type(pl_solver_t *self, PyObject *args)
-{
-    pl_solver_type_t *stype;
-
-    for (stype = pl_solver_type_list; stype->name; ++stype) {
-        if (stype->type == self->solver_type)
-            return PyString_FromString(stype->name);
-    }
-
-    PyErr_SetString(PyExc_AssertionError,
-                    "Solver type unknown. This should not happen (TM).");
-    return NULL;
-}
-
 #ifdef METH_COEXIST
 PyDoc_STRVAR(PL_SolverType_new__doc__,
 "__new__(cls, type=None, C=None, eps=None, p=None, weights=None)\n\
@@ -620,22 +555,6 @@ static struct PyMethodDef PL_SolverType_methods[] = {
      (PyCFunction)PL_SolverType_weights,      METH_NOARGS,
      PL_SolverType_weights__doc__},
 
-    {"p",
-     (PyCFunction)PL_SolverType_p,            METH_NOARGS,
-     PL_SolverType_p__doc__},
-
-    {"eps",
-     (PyCFunction)PL_SolverType_eps,          METH_NOARGS,
-     PL_SolverType_eps__doc__},
-
-    {"C",
-     (PyCFunction)PL_SolverType_C,            METH_NOARGS,
-     PL_SolverType_C__doc__},
-
-    {"type",
-     (PyCFunction)PL_SolverType_type,         METH_NOARGS,
-     PL_SolverType_type__doc__},
-
 #ifdef METH_COEXIST
     {"__new__",
      (PyCFunction)PL_SolverType_new,          METH_KEYWORDS | METH_COEXIST,
@@ -643,6 +562,87 @@ static struct PyMethodDef PL_SolverType_methods[] = {
 #endif
 
     {NULL, NULL}  /* Sentinel */
+};
+
+PyDoc_STRVAR(PL_SolverType_p_doc,
+"The configured p parameter.\n\
+\n\
+:Type: ``float``");
+
+static PyObject *
+PL_SolverType_p_get(pl_solver_t *self, void *closure)
+{
+    return PyFloat_FromDouble(self->p);
+}
+
+PyDoc_STRVAR(PL_SolverType_eps_doc,
+"The configured eps parameter.\n\
+\n\
+:Type: ``float``");
+
+static PyObject *
+PL_SolverType_eps_get(pl_solver_t *self, void *closure)
+{
+    return PyFloat_FromDouble(self->eps);
+}
+
+PyDoc_STRVAR(PL_SolverType_C_doc,
+"The configured C parameter.\n\
+\n\
+:Type: ``float``");
+
+static PyObject *
+PL_SolverType_C_get(pl_solver_t *self, void *closure)
+{
+    return PyFloat_FromDouble(self->C);
+}
+
+PyDoc_STRVAR(PL_SolverType_type_doc,
+"The configured solver type.\n\
+\n\
+:Type: ``str``");
+
+static PyObject *
+PL_SolverType_type_get(pl_solver_t *self, void *closure)
+{
+    pl_solver_type_t *stype;
+
+    for (stype = pl_solver_type_list; stype->name; ++stype) {
+        if (stype->type == self->solver_type)
+            return PyString_FromString(stype->name);
+    }
+
+    PyErr_SetString(PyExc_AssertionError,
+                    "Solver type unknown. This should not happen (TM).");
+    return NULL;
+}
+
+static PyGetSetDef PL_SolverType_getset[] = {
+    {"p",
+     (getter)PL_SolverType_p_get,
+     NULL,
+     PL_SolverType_p_doc,
+     NULL},
+
+    {"eps",
+     (getter)PL_SolverType_eps_get,
+     NULL,
+     PL_SolverType_eps_doc,
+     NULL},
+
+    {"C",
+     (getter)PL_SolverType_C_get,
+     NULL,
+     PL_SolverType_C_doc,
+     NULL},
+
+    {"type",
+     (getter)PL_SolverType_type_get,
+     NULL,
+     PL_SolverType_type_doc,
+     NULL},
+
+    {NULL}  /* Sentinel */
 };
 
 static int
@@ -784,7 +784,7 @@ PyTypeObject PL_SolverType = {
     0,                                                  /* tp_iternext */
     PL_SolverType_methods,                              /* tp_methods */
     0,                                                  /* tp_members */
-    0,                                                  /* tp_getset */
+    PL_SolverType_getset,                               /* tp_getset */
     0,                                                  /* tp_base */
     0,                                                  /* tp_dict */
     0,                                                  /* tp_descr_get */

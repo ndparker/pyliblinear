@@ -39,10 +39,10 @@ def test_solver_default():
     """ Solver initializes with default arguments """
     solver = _pyliblinear.Solver()
 
-    assert_equals(solver.type(), 'L2R_L2LOSS_SVC_DUAL')
-    assert_equals(solver.C(), 1.0)
-    assert_equals(solver.eps(), 0.1)
-    assert_equals(solver.p(), 0.1)
+    assert_equals(solver.type, 'L2R_L2LOSS_SVC_DUAL')
+    assert_equals(solver.C, 1.0)
+    assert_equals(solver.eps, 0.1)
+    assert_equals(solver.p, 0.1)
     assert_equals(solver.weights(), {})
 
 
@@ -63,10 +63,10 @@ def test_solver_types():
     ]
     for stype in tests:
         solver = _pyliblinear.Solver(_pyliblinear.SOLVER_TYPES[stype])
-        assert_equals(solver.type(), stype)
+        assert_equals(solver.type, stype)
 
         solver = _pyliblinear.Solver(stype)
-        assert_equals(solver.type(), stype)
+        assert_equals(solver.type, stype)
 
 
 def test_solver_eps_defaults():
@@ -87,10 +87,10 @@ def test_solver_eps_defaults():
     for solver_type, eps in tests:
         solver = _pyliblinear.Solver(solver_type)
 
-        assert_equals(solver.type(), solver_type)
-        assert_equals(solver.C(), 1.0)
-        assert_equals(solver.eps(), eps)
-        assert_equals(solver.p(), 0.1)
+        assert_equals(solver.type, solver_type)
+        assert_equals(solver.C, 1.0)
+        assert_equals(solver.eps, eps)
+        assert_equals(solver.p, 0.1)
         assert_equals(solver.weights(), {})
 
 
@@ -99,8 +99,8 @@ def test_solver_param():
     solver = _pyliblinear.Solver('L1R_LR', C=0.25, eps=0.0001, p=3,
                                  weights={2: 5, 3: 4, 6: 9.5})
 
-    assert_equals(solver.type(), 'L1R_LR')
-    assert_equals(solver.C(), 0.25)
-    assert_equals(solver.eps(), 0.0001)
-    assert_equals(solver.p(), 3.0)
+    assert_equals(solver.type, 'L1R_LR')
+    assert_equals(solver.C, 0.25)
+    assert_equals(solver.eps, 0.0001)
+    assert_equals(solver.p, 3.0)
     assert_equals(solver.weights(), {2: 5.0, 3: 4.0, 6: 9.5})

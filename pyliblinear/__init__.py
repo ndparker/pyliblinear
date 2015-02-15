@@ -34,8 +34,8 @@ __version__ = ('0.1.0', False, 1)
 from pyliblinear import _util
 from pyliblinear import _version
 from pyliblinear._exceptions import *  # noqa
+from pyliblinear._liblinear import FeatureMatrix  # noqa
 from pyliblinear._liblinear import Model  # noqa
-from pyliblinear._liblinear import Problem  # noqa
 from pyliblinear._liblinear import Solver  # noqa
 from pyliblinear._liblinear import SOLVER_TYPES  # noqa
 
