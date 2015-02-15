@@ -33,6 +33,7 @@ typedef struct {
  * Create new PL_ModelType
  *
  * model is stolen and free'd on error.
+ * If model is NULL, an error to pass through is assumed and NULL is returned.
  *
  * Return NULL on error
  */
@@ -40,6 +41,9 @@ static pl_model_t *
 pl_model_new(struct model *model)
 {
     pl_model_t *self;
+
+    if (!model)
+        return NULL;
 
     if (!(self = GENERIC_ALLOC(&PL_ModelType))) {
         free_and_destroy_model(&model);
@@ -53,9 +57,20 @@ pl_model_new(struct model *model)
 
 
 PyDoc_STRVAR(PL_ModelType_train__doc__,
-"train(cls, matrix, solver=None)\n\
+"train(cls, matrix, solver=None, bias=None)\n\
 \n\
 Create model instance from a training run\n\
+\n\
+:Parameters:\n\
+  `matrix` : `pyliblinear.FeatureMatrix`\n\
+    Feature matrix to use for training\n\
+\n\
+  `solver` : `pyliblinear.Solver`\n\
+    Solver instance. If omitted or ``None``, a default solver is picked.\n\
+\n\
+  `bias` : ``float``\n\
+    Bias to the hyperplane. Of omitted or ``None``, no bias is applied.\n\
+    ``bias >= 0``.\n\
 \n\
 :Return: New model instance\n\
 :Rtype: `Model`");
@@ -73,9 +88,6 @@ PL_ModelType_train(PyObject *cls, PyObject *args, PyObject *kwds)
                                      &matrix_, &solver_, &bias_))
         return NULL;
 
-    if (pl_solver_as_parameter(solver_, &param) == -1)
-        return NULL;
-
     if (bias_ && bias_ != Py_None) {
         Py_INCREF(bias_);
         if (pl_as_double(bias_, &bias) == -1)
@@ -87,6 +99,9 @@ PL_ModelType_train(PyObject *cls, PyObject *args, PyObject *kwds)
     }
 
     if (pl_matrix_as_problem(matrix_, bias, &prob) == -1)
+        return NULL;
+
+    if (pl_solver_as_parameter(solver_, &param) == -1)
         return NULL;
 
     return (PyObject *)pl_model_new(train(&prob, &param));
