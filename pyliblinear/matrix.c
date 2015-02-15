@@ -1083,7 +1083,6 @@ PL_FeatureMatrixType_height_get(pl_matrix_t *self, void *closure)
     return PyInt_FromLong(self->height);
 }
 
-
 static PyGetSetDef PL_FeatureMatrixType_getset[] = {
     {"width",
      (getter)PL_FeatureMatrixType_width_get,

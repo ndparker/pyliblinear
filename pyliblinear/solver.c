@@ -128,6 +128,56 @@ pl_solver_as_parameter(PyObject *self, struct parameter *param)
 
 
 /*
+ * Transform (liblinear) struct parameter to pl_solver_t
+ *
+ * Weights are copied.
+ *
+ * Return NULL on error
+ */
+PyObject *
+pl_parameter_as_solver(struct parameter *param)
+{
+    pl_solver_t *self;
+    int j;
+
+    if (!(self = GENERIC_ALLOC(&PL_SolverType)))
+        return NULL;
+    self->weight = NULL;
+    self->weight_label = NULL;
+
+    if (param->nr_weight > 0) {
+        self->weight = PyMem_Malloc(param->nr_weight * (sizeof *self->weight));
+        if (!self->weight) {
+            PyErr_SetNone(PyExc_MemoryError);
+            goto error_self;
+        }
+        self->weight_label = PyMem_Malloc(param->nr_weight
+                                          * (sizeof *self->weight_label));
+        if (!self->weight_label) {
+            PyErr_SetNone(PyExc_MemoryError);
+            goto error_self;
+        }
+        for (j = param->nr_weight - 1; j >= 0 ; --j) {
+            self->weight[j] = param->weight[j];
+            self->weight_label[j] = param->weight_label[j];
+        }
+    }
+
+    self->solver_type = param->solver_type;
+    self->C = param->C;
+    self->eps = param->eps;
+    self->p = param->p;
+    self->nr_weight = param->nr_weight;
+
+    return (PyObject *)self;
+
+error_self:
+    Py_DECREF(self);
+    return NULL;
+}
+
+
+/*
  * Clear all weight node blocks
  */
 static void

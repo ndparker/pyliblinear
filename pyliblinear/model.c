@@ -174,6 +174,20 @@ PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)
     Py_RETURN_NONE;
 }
 
+PyDoc_STRVAR(PL_ModelType_solver__doc__,
+"solver(self)\n\
+\n\
+Return solver instance from model parameters\n\
+\n\
+:Return: New solver instance\n\
+:Rtype: `pyliblinear.Solver`");
+
+static PyObject *
+PL_ModelType_solver(pl_model_t *self, PyObject *args)
+{
+    return pl_parameter_as_solver(&self->model->param);
+}
+
 static struct PyMethodDef PL_ModelType_methods[] = {
     {"train",
      (PyCFunction)PL_ModelType_train,           METH_KEYWORDS | METH_CLASS,
@@ -191,7 +205,55 @@ static struct PyMethodDef PL_ModelType_methods[] = {
      (PyCFunction)PL_ModelType_predict,         METH_KEYWORDS,
      PL_ModelType_predict__doc__},
 
+    {"solver",
+     (PyCFunction)PL_ModelType_solver,          METH_NOARGS,
+     PL_ModelType_solver__doc__},
+
     {NULL, NULL}  /* Sentinel */
+};
+
+PyDoc_STRVAR(PL_ModelType_is_probability_doc,
+"Is model a probability model?.\n\
+\n\
+:Type: ``bool``");
+
+static PyObject *
+PL_ModelType_is_probability_get(pl_model_t *self, void *closure)
+{
+    if (check_probability_model(self->model))
+        Py_RETURN_TRUE;
+
+    Py_RETURN_FALSE;
+}
+
+PyDoc_STRVAR(PL_ModelType_is_regression_doc,
+"Is model a regression model?.\n\
+\n\
+:Type: ``bool``");
+
+static PyObject *
+PL_ModelType_is_regression_get(pl_model_t *self, void *closure)
+{
+    if (check_regression_model(self->model))
+        Py_RETURN_TRUE;
+
+    Py_RETURN_FALSE;
+}
+
+static PyGetSetDef PL_ModelType_getset[] = {
+    {"is_probability",
+     (getter)PL_ModelType_is_probability_get,
+     NULL,
+     PL_ModelType_is_probability_doc,
+     NULL},
+
+    {"is_regression",
+     (getter)PL_ModelType_is_regression_get,
+     NULL,
+     PL_ModelType_is_regression_doc,
+     NULL},
+
+    {NULL}  /* Sentinel */
 };
 
 static int
@@ -215,8 +277,8 @@ DEFINE_GENERIC_DEALLOC(PL_ModelType)
 PyDoc_STRVAR(PL_ModelType__doc__,
 "Model()\n\
 \n\
-Classification model. Use its Model.load or Model.train to construct as new\n\
-instance");
+Classification model. Use its Model.load or Model.train methods to construct\n\
+a new instance");
 
 PyTypeObject PL_ModelType = {
     PyObject_HEAD_INIT(NULL)
@@ -251,7 +313,7 @@ PyTypeObject PL_ModelType = {
     0,                                                  /* tp_iternext */
     PL_ModelType_methods,                               /* tp_methods */
     0,                                                  /* tp_members */
-    0,                                                  /* tp_getset */
+    PL_ModelType_getset,                                /* tp_getset */
     0,                                                  /* tp_base */
     0,                                                  /* tp_dict */
     0,                                                  /* tp_descr_get */
