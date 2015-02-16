@@ -18,6 +18,36 @@
 #include "pyliblinear.h"
 
 /*
+ * Structure for vector iterator
+ */
+typedef struct {
+    int (*next)(void *, struct feature_node **);
+    void (*clear)(void *);
+    int (*visit)(void *, visitproc, void *);
+    void *ctx;
+} pl_iter_t;
+
+
+#define PL_ITER_VISIT(op) do {                         \
+    if ((op) && (op)->visit) {                         \
+        int vret = (op)->visit((op)->ctx, visit, arg); \
+        if (vret) return vret;                         \
+    }                                                  \
+} while (0)
+
+
+/*
+ * Structure for iter_matrix
+ */
+typedef struct {
+    struct problem prob;
+    PyObject *matrix;
+
+    int j;
+} pl_iter_matrix_ctx_t;
+
+
+/*
  * Object structure for Model
  */
 typedef struct {
@@ -35,16 +65,247 @@ typedef struct {
     PyObject_HEAD
     PyObject *weakreflist;
 
-    struct problem prob;
+    pl_iter_t iter;
 
     pl_model_t *model;
-    PyObject *matrix;
 
     int j;
 } pl_predict_iter_t;
 
 
 /* ------------------------ BEGIN Helper Functions ----------------------- */
+
+/*
+ * Safely clear a pl_iter_t
+ */
+static void
+pl_iter_clear(pl_iter_t *iter)
+{
+    void (*clear)(void *);
+    void *ctx;
+
+    if ((clear = iter->clear))
+        ctx = iter->ctx;
+
+    iter->next = NULL;
+    iter->clear = NULL;
+    iter->visit = NULL;
+    iter->ctx = NULL;
+
+    if (clear)
+        clear(ctx);
+}
+
+
+typedef struct {
+    PyObject *iter;
+    struct feature_node *array;
+    double bias;
+    int bias_index;
+} pl_iter_iterable_ctx_t;
+
+/*
+ * iter_iterable -> next()
+ */
+static int
+pl_iter_iterable_next(void *ctx_, struct feature_node **array_)
+{
+    pl_iter_iterable_ctx_t *ctx = ctx_;
+    PyObject *vector;
+    int size, max = 0;
+
+    if (ctx) {
+        if (ctx->array) {
+            PyMem_Free(ctx->array);
+            ctx->array = NULL;
+        }
+        if (ctx->iter) {
+            if ((vector = PyIter_Next(ctx->iter))) {
+                if (pl_vector_load(vector, &ctx->array, &size, &max) == -1)
+                    return -1;
+
+                if (ctx->bias < 0) {
+                    *array_ = ctx->array + 1;
+                }
+                else {
+                    *array_ = ctx->array;
+                    ctx->array[0].value = ctx->bias;
+                    ctx->array[0].index = ctx->bias_index;
+                }
+                return 0;
+            }
+            else if (PyErr_Occurred())
+                return -1;
+        }
+    }
+
+    *array_ = NULL;
+    return 0;
+}
+
+
+/*
+ * iter_iterable -> clear()
+ */
+static void
+pl_iter_iterable_clear(void *ctx_)
+{
+    pl_iter_iterable_ctx_t *ctx = ctx_;
+
+    if (ctx) {
+        Py_CLEAR(ctx->iter);
+        if (ctx->array) {
+            PyMem_Free(ctx->array);
+            ctx->array = NULL;
+        }
+        PyMem_Free(ctx);
+    }
+}
+
+
+/*
+ * iter_iterable -> visit()
+ */
+static int
+pl_iter_iterable_visit(void *ctx_, visitproc visit, void *arg)
+{
+    pl_iter_iterable_ctx_t *ctx = ctx_;
+
+    if (ctx)
+        Py_VISIT(ctx->iter);
+
+    return 0;
+}
+
+
+
+/*
+ * Create pl_iter_t from python iterable of vectors
+ *
+ * Return -1 on error
+ */
+static int
+pl_iter_iterable_new(PyObject *iterable, double bias, int max_feature,
+                     pl_iter_t *iter_)
+{
+    pl_iter_iterable_ctx_t *ctx;
+    PyObject *iter;
+
+    if (!(iter = PyObject_GetIter(iterable)))
+        return -1;
+
+    if (!(bias < 0) && max_feature == INT_MAX) {
+        PyErr_SetNone(PyExc_OverflowError);
+        goto error_iter;
+    }
+
+    if (!(ctx = PyMem_Malloc(sizeof *ctx)))
+        goto error_iter;
+
+    ctx->bias_index = max_feature + 1;
+    ctx->bias = bias;
+    ctx->iter = iter;
+    ctx->array = NULL;
+
+    iter_->ctx = ctx;
+    iter_->next = pl_iter_iterable_next;
+    iter_->clear = pl_iter_iterable_clear;
+    iter_->visit = pl_iter_iterable_visit;
+
+    return 0;
+
+error_iter:
+    Py_DECREF(iter);
+    return -1;
+}
+
+
+/*
+ * iter_matrix -> next()
+ */
+static int
+pl_iter_matrix_next(void *ctx_, struct feature_node **array_)
+{
+    pl_iter_matrix_ctx_t *ctx = ctx_;
+
+    if (ctx && ctx->matrix && ctx->j < ctx->prob.l) {
+        *array_ = ctx->prob.x[ctx->j++];
+    }
+    else {
+        *array_ = NULL;
+    }
+
+    return 0;
+}
+
+
+/*
+ * iter_matrix -> clear()
+ */
+static void
+pl_iter_matrix_clear(void *ctx_)
+{
+    pl_iter_matrix_ctx_t *ctx = ctx_;
+
+    if (ctx) {
+        Py_CLEAR(ctx->matrix);
+        PyMem_Free(ctx);
+    }
+}
+
+
+/*
+ * iter_matrix -> visit()
+ */
+static int
+pl_iter_matrix_visit(void *ctx_, visitproc visit, void *arg)
+{
+    pl_iter_matrix_ctx_t *ctx = ctx_;
+
+    if (ctx)
+        Py_VISIT(ctx->matrix);
+
+    return 0;
+}
+
+
+/*
+ * Create pl_iter_t from feature matrix
+ *
+ * Return -1 on error
+ */
+static int
+pl_iter_matrix_new(PyObject *matrix, double bias, pl_iter_t *iter_)
+{
+    pl_iter_matrix_ctx_t *ctx;
+
+    Py_INCREF(matrix);
+
+    if (!(ctx = PyMem_Malloc(sizeof *ctx))) {
+        PyErr_SetNone(PyExc_MemoryError);
+        goto error_matrix;
+    }
+
+    if (pl_matrix_as_problem(matrix, bias, &ctx->prob) == -1)
+        goto error_ctx;
+
+    ctx->matrix = matrix;
+    ctx->j = 0;
+
+    iter_->ctx = ctx;
+    iter_->next = pl_iter_matrix_next;
+    iter_->clear = pl_iter_matrix_clear;
+    iter_->visit = pl_iter_matrix_visit;
+
+    return 0;
+
+error_ctx:
+    PyMem_Free(ctx);
+
+error_matrix:
+    Py_DECREF(matrix);
+    return -1;
+}
 
 /* ------------------------- END Helper Functions ------------------------ */
 
@@ -63,7 +324,7 @@ PL_PredictIteratorType_traverse(pl_predict_iter_t *self, visitproc visit,
                                 void *arg)
 {
     Py_VISIT(self->model);
-    Py_VISIT(self->matrix);
+    PL_ITER_VISIT(&self->iter);
 
     return 0;
 }
@@ -75,7 +336,7 @@ PL_PredictIteratorType_clear(pl_predict_iter_t *self)
         PyObject_ClearWeakRefs((PyObject *)self);
 
     Py_CLEAR(self->model);
-    Py_CLEAR(self->matrix);
+    pl_iter_clear(&self->iter);
 
     return 0;
 }
@@ -129,11 +390,29 @@ pl_predict_iter_new(pl_model_t *model, PyObject *matrix)
 
     Py_INCREF((PyObject *)model);
     self->model = model;
-    Py_INCREF(matrix);
-    self->matrix = matrix;
-    self->j = 0;
+    self->iter.next = NULL;
+    self->iter.clear = NULL;
+    self->iter.visit = NULL;
+    self->iter.ctx = NULL;
+
+    if (PL_FeatureMatrixType_CheckExact(matrix)
+        || PL_FeatureMatrixType_Check(matrix)) {
+        if (-1 == pl_iter_matrix_new(matrix, self->model->model->bias,
+                                     &self->iter))
+            goto error_self;
+    }
+    else {
+        if (-1 == pl_iter_iterable_new(matrix, self->model->model->bias,
+                                       self->model->model->nr_feature,
+                                       &self->iter))
+            goto error_self;
+    }
 
     return (PyObject *)self;
+
+error_self:
+    Py_DECREF(self);
+    return NULL;
 }
 
 /* -------------------- END PredictIterator DEFINITION ------------------- */
