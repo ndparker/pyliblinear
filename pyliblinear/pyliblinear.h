@@ -152,4 +152,15 @@ PyObject *
 pl_parameter_as_solver(struct parameter *);
 
 
+/*
+ * Load a pythonic feature vector into our own structures
+ *
+ * Reference to vector is stolen
+ *
+ * Return -1 on failure
+ */
+int
+pl_vector_load(PyObject *, struct feature_node **, int *, int *);
+
+
 #endif

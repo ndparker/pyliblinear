@@ -34,6 +34,7 @@ def setup(args=None, _manifest=0):
                 "pyliblinear/matrix.c",
                 "pyliblinear/model.c",
                 "pyliblinear/solver.c",
+                "pyliblinear/vector.c",
 
                 "pyliblinear/liblinear/blas/ddot.c",
                 "pyliblinear/liblinear/blas/dscal.c",
