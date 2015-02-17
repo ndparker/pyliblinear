@@ -549,6 +549,9 @@ PL_SolverType_weights(pl_solver_t *self, PyObject *args)
             goto error_key;
         if (PyDict_SetItem(result, key, value) == -1)
             goto error_value;
+
+        Py_DECREF(value);
+        Py_DECREF(key);
     }
 
     return result;

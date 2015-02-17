@@ -17,11 +17,12 @@
 
 #include "pyliblinear.h"
 
+
 /*
  * Structure for vector iterator
  */
 typedef struct {
-    int (*next)(void *, struct feature_node **);
+    int (*next)(void *, void *);
     void (*clear)(void *);
     int (*visit)(void *, visitproc, void *);
     void *ctx;
@@ -37,7 +38,18 @@ typedef struct {
 
 
 /*
- * Structure for iter_matrix
+ * Context for iter_iterable
+ */
+typedef struct {
+    PyObject *iter;
+    struct feature_node *array;
+    double bias;
+    int bias_index;
+} pl_iter_iterable_ctx_t;
+
+
+/*
+ * Context for iter_matrix
  */
 typedef struct {
     struct problem prob;
@@ -68,6 +80,7 @@ typedef struct {
     pl_iter_t iter;
 
     pl_model_t *model;
+    double *dec_values;
 
     int j;
 } pl_predict_iter_t;
@@ -97,20 +110,14 @@ pl_iter_clear(pl_iter_t *iter)
 }
 
 
-typedef struct {
-    PyObject *iter;
-    struct feature_node *array;
-    double bias;
-    int bias_index;
-} pl_iter_iterable_ctx_t;
-
 /*
  * iter_iterable -> next()
  */
 static int
-pl_iter_iterable_next(void *ctx_, struct feature_node **array_)
+pl_iter_iterable_next(void *ctx_, void *array__)
 {
     pl_iter_iterable_ctx_t *ctx = ctx_;
+    struct feature_node **array_ = array__;
     PyObject *vector;
     int size, max = 0;
 
@@ -178,7 +185,6 @@ pl_iter_iterable_visit(void *ctx_, visitproc visit, void *arg)
 }
 
 
-
 /*
  * Create pl_iter_t from python iterable of vectors
  *
@@ -224,9 +230,10 @@ error_iter:
  * iter_matrix -> next()
  */
 static int
-pl_iter_matrix_next(void *ctx_, struct feature_node **array_)
+pl_iter_matrix_next(void *ctx_, void *array__)
 {
     pl_iter_matrix_ctx_t *ctx = ctx_;
+    struct feature_node **array_ = array__;
 
     if (ctx && ctx->matrix && ctx->j < ctx->prob.l) {
         *array_ = ctx->prob.x[ctx->j++];
@@ -307,6 +314,45 @@ error_matrix:
     return -1;
 }
 
+/*
+ * Create decision dict from model + dec_values
+ *
+ * Return NULL on error
+ */
+static PyObject *
+pl_dec_values_as_dict(struct model *model, double *dec_values)
+{
+    PyObject *result;
+    PyObject *key, *value;
+    int j;
+
+    if (!(result = PyDict_New()))
+        return NULL;
+
+    for (j = model->nr_class - 1; j >= 0; --j) {
+        if (!(key = PyFloat_FromDouble((double)model->label[j])))
+            goto error_result;
+        if (!(value = PyFloat_FromDouble(dec_values[j])))
+            goto error_key;
+
+        if (PyDict_SetItem(result, key, value) == -1)
+            goto error_value;
+
+        Py_DECREF(value);
+        Py_DECREF(key);
+    }
+
+    return result;
+
+error_value:
+    Py_DECREF(value);
+error_key:
+    Py_DECREF(key);
+error_result:
+    Py_DECREF(result);
+    return NULL;
+}
+
 /* ------------------------- END Helper Functions ------------------------ */
 
 /* ------------------- BEGIN PredictIterator DEFINITION ------------------ */
@@ -316,6 +362,38 @@ error_matrix:
 static PyObject *
 PL_PredictIteratorType_iternext(pl_predict_iter_t *self)
 {
+    PyObject *result, *dict_, *label_;
+    struct feature_node *array;
+    double label;
+
+    if (self->iter.next
+        && self->iter.next(self->iter.ctx, &array) == 0
+        && array) {
+
+        label = predict_values(self->model->model, array, self->dec_values);
+
+        if (!(dict_ = pl_dec_values_as_dict(self->model->model,
+                                            self->dec_values)))
+            return NULL;
+
+        if (!(label_ = PyFloat_FromDouble(label)))
+            goto error_dict;
+
+        if (!(result = PyTuple_New(2)))
+            goto error_label;
+
+        PyTuple_SET_ITEM(result, 0, label_);
+        PyTuple_SET_ITEM(result, 1, dict_);
+
+        return result;
+    }
+
+    return NULL;
+
+error_label:
+    Py_DECREF(label_);
+error_dict:
+    Py_DECREF(dict_);
     return NULL;
 }
 
@@ -332,11 +410,17 @@ PL_PredictIteratorType_traverse(pl_predict_iter_t *self, visitproc visit,
 static int
 PL_PredictIteratorType_clear(pl_predict_iter_t *self)
 {
+    void *ptr;
+
     if (self->weakreflist)
         PyObject_ClearWeakRefs((PyObject *)self);
 
     Py_CLEAR(self->model);
     pl_iter_clear(&self->iter);
+    if ((ptr = self->dec_values)) {
+        self->dec_values = NULL;
+        PyMem_Free(ptr);
+    }
 
     return 0;
 }
@@ -390,22 +474,30 @@ pl_predict_iter_new(pl_model_t *model, PyObject *matrix)
 
     Py_INCREF((PyObject *)model);
     self->model = model;
+    self->dec_values = NULL;
     self->iter.next = NULL;
     self->iter.clear = NULL;
     self->iter.visit = NULL;
     self->iter.ctx = NULL;
 
-    if (PL_FeatureMatrixType_CheckExact(matrix)
-        || PL_FeatureMatrixType_Check(matrix)) {
-        if (-1 == pl_iter_matrix_new(matrix, self->model->model->bias,
-                                     &self->iter))
+    if (model->model->nr_class > 0) {
+        self->dec_values = PyMem_Malloc(model->model->nr_class
+                                        * (sizeof *self->dec_values));
+        if (!self->dec_values)
             goto error_self;
-    }
-    else {
-        if (-1 == pl_iter_iterable_new(matrix, self->model->model->bias,
-                                       self->model->model->nr_feature,
-                                       &self->iter))
+
+        if (PL_FeatureMatrixType_CheckExact(matrix)
+            || PL_FeatureMatrixType_Check(matrix)) {
+            if (-1 == pl_iter_matrix_new(matrix, model->model->bias,
+                                         &self->iter))
+                goto error_self;
+        }
+        else {
+            if (-1 == pl_iter_iterable_new(matrix, model->model->bias,
+                                           self->model->model->nr_feature,
+                                           &self->iter))
             goto error_self;
+        }
     }
 
     return (PyObject *)self;
