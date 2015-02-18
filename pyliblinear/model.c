@@ -26,10 +26,10 @@ typedef struct {
     void (*clear)(void *);
     int (*visit)(void *, visitproc, void *);
     void *ctx;
-} pl_iter_t;
+} pl_vector_iter_t;
 
 
-#define PL_ITER_VISIT(op) do {                         \
+#define PL_VECTOR_ITER_VISIT(op) do {                         \
     if ((op) && (op)->visit) {                         \
         int vret = (op)->visit((op)->ctx, visit, arg); \
         if (vret) return vret;                         \
@@ -45,7 +45,7 @@ typedef struct {
     struct feature_node *array;
     double bias;
     int bias_index;
-} pl_iter_iterable_ctx_t;
+} pl_vector_iter_iterable_ctx_t;
 
 
 /*
@@ -56,7 +56,7 @@ typedef struct {
     PyObject *matrix;
 
     int j;
-} pl_iter_matrix_ctx_t;
+} pl_vector_iter_matrix_ctx_t;
 
 
 /*
@@ -77,7 +77,7 @@ typedef struct {
     PyObject_HEAD
     PyObject *weakreflist;
 
-    pl_iter_t iter;
+    pl_vector_iter_t iter;
 
     pl_model_t *model;
     double *dec_values;
@@ -89,10 +89,10 @@ typedef struct {
 /* ------------------------ BEGIN Helper Functions ----------------------- */
 
 /*
- * Safely clear a pl_iter_t
+ * Safely clear a pl_vector_iter_t
  */
 static void
-pl_iter_clear(pl_iter_t *iter)
+pl_vector_iter_clear(pl_vector_iter_t *iter)
 {
     void (*clear)(void *);
     void *ctx;
@@ -114,9 +114,9 @@ pl_iter_clear(pl_iter_t *iter)
  * iter_iterable -> next()
  */
 static int
-pl_iter_iterable_next(void *ctx_, void *array__)
+pl_vector_iter_iterable_next(void *ctx_, void *array__)
 {
-    pl_iter_iterable_ctx_t *ctx = ctx_;
+    pl_vector_iter_iterable_ctx_t *ctx = ctx_;
     struct feature_node **array_ = array__;
     PyObject *vector;
     int size, max = 0;
@@ -155,9 +155,9 @@ pl_iter_iterable_next(void *ctx_, void *array__)
  * iter_iterable -> clear()
  */
 static void
-pl_iter_iterable_clear(void *ctx_)
+pl_vector_iter_iterable_clear(void *ctx_)
 {
-    pl_iter_iterable_ctx_t *ctx = ctx_;
+    pl_vector_iter_iterable_ctx_t *ctx = ctx_;
 
     if (ctx) {
         Py_CLEAR(ctx->iter);
@@ -174,9 +174,9 @@ pl_iter_iterable_clear(void *ctx_)
  * iter_iterable -> visit()
  */
 static int
-pl_iter_iterable_visit(void *ctx_, visitproc visit, void *arg)
+pl_vector_iter_iterable_visit(void *ctx_, visitproc visit, void *arg)
 {
-    pl_iter_iterable_ctx_t *ctx = ctx_;
+    pl_vector_iter_iterable_ctx_t *ctx = ctx_;
 
     if (ctx)
         Py_VISIT(ctx->iter);
@@ -186,15 +186,15 @@ pl_iter_iterable_visit(void *ctx_, visitproc visit, void *arg)
 
 
 /*
- * Create pl_iter_t from python iterable of vectors
+ * Create pl_vector_iter_t from python iterable of vectors
  *
  * Return -1 on error
  */
 static int
-pl_iter_iterable_new(PyObject *iterable, double bias, int max_feature,
-                     pl_iter_t *iter_)
+pl_vector_iter_iterable_new(PyObject *iterable, double bias, int max_feature,
+                            pl_vector_iter_t *iter_)
 {
-    pl_iter_iterable_ctx_t *ctx;
+    pl_vector_iter_iterable_ctx_t *ctx;
     PyObject *iter;
 
     if (!(iter = PyObject_GetIter(iterable)))
@@ -214,9 +214,9 @@ pl_iter_iterable_new(PyObject *iterable, double bias, int max_feature,
     ctx->array = NULL;
 
     iter_->ctx = ctx;
-    iter_->next = pl_iter_iterable_next;
-    iter_->clear = pl_iter_iterable_clear;
-    iter_->visit = pl_iter_iterable_visit;
+    iter_->next = pl_vector_iter_iterable_next;
+    iter_->clear = pl_vector_iter_iterable_clear;
+    iter_->visit = pl_vector_iter_iterable_visit;
 
     return 0;
 
@@ -230,9 +230,9 @@ error_iter:
  * iter_matrix -> next()
  */
 static int
-pl_iter_matrix_next(void *ctx_, void *array__)
+pl_vector_iter_matrix_next(void *ctx_, void *array__)
 {
-    pl_iter_matrix_ctx_t *ctx = ctx_;
+    pl_vector_iter_matrix_ctx_t *ctx = ctx_;
     struct feature_node **array_ = array__;
 
     if (ctx && ctx->matrix && ctx->j < ctx->prob.l) {
@@ -250,9 +250,9 @@ pl_iter_matrix_next(void *ctx_, void *array__)
  * iter_matrix -> clear()
  */
 static void
-pl_iter_matrix_clear(void *ctx_)
+pl_vector_iter_matrix_clear(void *ctx_)
 {
-    pl_iter_matrix_ctx_t *ctx = ctx_;
+    pl_vector_iter_matrix_ctx_t *ctx = ctx_;
 
     if (ctx) {
         Py_CLEAR(ctx->matrix);
@@ -265,9 +265,9 @@ pl_iter_matrix_clear(void *ctx_)
  * iter_matrix -> visit()
  */
 static int
-pl_iter_matrix_visit(void *ctx_, visitproc visit, void *arg)
+pl_vector_iter_matrix_visit(void *ctx_, visitproc visit, void *arg)
 {
-    pl_iter_matrix_ctx_t *ctx = ctx_;
+    pl_vector_iter_matrix_ctx_t *ctx = ctx_;
 
     if (ctx)
         Py_VISIT(ctx->matrix);
@@ -277,14 +277,15 @@ pl_iter_matrix_visit(void *ctx_, visitproc visit, void *arg)
 
 
 /*
- * Create pl_iter_t from feature matrix
+ * Create pl_vector_iter_t from feature matrix
  *
  * Return -1 on error
  */
 static int
-pl_iter_matrix_new(PyObject *matrix, double bias, pl_iter_t *iter_)
+pl_vector_iter_matrix_new(PyObject *matrix, double bias,
+                          pl_vector_iter_t *iter_)
 {
-    pl_iter_matrix_ctx_t *ctx;
+    pl_vector_iter_matrix_ctx_t *ctx;
 
     Py_INCREF(matrix);
 
@@ -300,9 +301,9 @@ pl_iter_matrix_new(PyObject *matrix, double bias, pl_iter_t *iter_)
     ctx->j = 0;
 
     iter_->ctx = ctx;
-    iter_->next = pl_iter_matrix_next;
-    iter_->clear = pl_iter_matrix_clear;
-    iter_->visit = pl_iter_matrix_visit;
+    iter_->next = pl_vector_iter_matrix_next;
+    iter_->clear = pl_vector_iter_matrix_clear;
+    iter_->visit = pl_vector_iter_matrix_visit;
 
     return 0;
 
@@ -402,7 +403,7 @@ PL_PredictIteratorType_traverse(pl_predict_iter_t *self, visitproc visit,
                                 void *arg)
 {
     Py_VISIT(self->model);
-    PL_ITER_VISIT(&self->iter);
+    PL_VECTOR_ITER_VISIT(&self->iter);
 
     return 0;
 }
@@ -416,7 +417,7 @@ PL_PredictIteratorType_clear(pl_predict_iter_t *self)
         PyObject_ClearWeakRefs((PyObject *)self);
 
     Py_CLEAR(self->model);
-    pl_iter_clear(&self->iter);
+    pl_vector_iter_clear(&self->iter);
     if ((ptr = self->dec_values)) {
         self->dec_values = NULL;
         PyMem_Free(ptr);
@@ -488,14 +489,15 @@ pl_predict_iter_new(pl_model_t *model, PyObject *matrix)
 
         if (PL_FeatureMatrixType_CheckExact(matrix)
             || PL_FeatureMatrixType_Check(matrix)) {
-            if (-1 == pl_iter_matrix_new(matrix, model->model->bias,
-                                         &self->iter))
+            if (-1 == pl_vector_iter_matrix_new(matrix, model->model->bias,
+                                                &self->iter))
                 goto error_self;
         }
         else {
-            if (-1 == pl_iter_iterable_new(matrix, model->model->bias,
-                                           self->model->model->nr_feature,
-                                           &self->iter))
+            if (-1 == pl_vector_iter_iterable_new(matrix, model->model->bias,
+                                                  self->model->model
+                                                      ->nr_feature,
+                                                  &self->iter))
             goto error_self;
         }
     }
