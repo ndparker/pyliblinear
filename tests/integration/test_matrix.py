@@ -38,9 +38,9 @@ import pyliblinear as _pyliblinear
 # pylint: disable = protected-access
 
 
-def test_matrix_from_iterable_dict():
-    """ FeatureMatrix.from_iterable from dicts """
-    matrix = _pyliblinear.FeatureMatrix.from_iterable(
+def test_matrix_dict():
+    """ FeatureMatrix from dicts """
+    matrix = _pyliblinear.FeatureMatrix(
         [(1, {3: 4, 1: 7}), (2, {2: 1})],
     )
 
@@ -50,9 +50,9 @@ def test_matrix_from_iterable_dict():
     assert_equals(list(matrix.features()), [{1: 7.0, 3: 4.0}, {2: 1.0}])
 
 
-def test_matrix_from_iterable_dict_assign():
-    """ FeatureMatrix.from_iterable from dicts with assigned labels """
-    matrix = _pyliblinear.FeatureMatrix.from_iterable(
+def test_matrix_dict_assign():
+    """ FeatureMatrix from dicts with assigned labels """
+    matrix = _pyliblinear.FeatureMatrix(
         [{3: 4, 1: 7}, {2: 1}],
         assign_labels=4,
     )
@@ -63,9 +63,9 @@ def test_matrix_from_iterable_dict_assign():
     assert_equals(list(matrix.features()), [{1: 7.0, 3: 4.0}, {2: 1.0}])
 
 
-def test_matrix_from_iterable_tuple():
-    """ FeatureMatrix.from_iterable from tuples """
-    matrix = _pyliblinear.FeatureMatrix.from_iterable(
+def test_matrix_tuple():
+    """ FeatureMatrix from tuples """
+    matrix = _pyliblinear.FeatureMatrix(
         [(1, (4, 6)), (2, (1,))],
     )
 
@@ -75,9 +75,9 @@ def test_matrix_from_iterable_tuple():
     assert_equals(list(matrix.features()), [{1: 4.0, 2: 6.0}, {1: 1.0}])
 
 
-def test_matrix_from_iterable_tuple_assign():
-    """ FeatureMatrix.from_iterable from tuples with assigned labels """
-    matrix = _pyliblinear.FeatureMatrix.from_iterable(
+def test_matrix_tuple_assign():
+    """ FeatureMatrix from tuples with assigned labels """
+    matrix = _pyliblinear.FeatureMatrix(
         [(5, 8), (1, 3, 6)],
         assign_labels=4,
     )
@@ -104,9 +104,9 @@ class KeyIterator(object):
         return self._vector[idx - 1]
 
 
-def test_matrix_from_iterable_keys():
-    """ FeatureMatrix.from_iterable from key iterator """
-    matrix = _pyliblinear.FeatureMatrix.from_iterable(
+def test_matrix_keys():
+    """ FeatureMatrix from key iterator """
+    matrix = _pyliblinear.FeatureMatrix(
         [(3, KeyIterator((5, 8))), (4, KeyIterator((1, 3, 6)))]
     )
 
@@ -118,9 +118,9 @@ def test_matrix_from_iterable_keys():
     ])
 
 
-def test_matrix_from_iterable_keys_assign():
-    """ FeatureMatrix.from_iterable from key iterator and assigned labels """
-    matrix = _pyliblinear.FeatureMatrix.from_iterable(
+def test_matrix_keys_assign():
+    """ FeatureMatrix from key iterator and assigned labels """
+    matrix = _pyliblinear.FeatureMatrix(
         [KeyIterator((5, 8)), KeyIterator((1, 3, 6))],
         assign_labels=2.0,
     )

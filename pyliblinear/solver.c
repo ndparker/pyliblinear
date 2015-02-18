@@ -573,7 +573,7 @@ Construct new solver instance.\n\
 \n\
 :Parameters:\n\
   `type` : ``str`` or ``int``\n\
-    The solver type. On of the keys or values of the ``SOLVER_TYPES`` dict.\n\
+    The solver type. One of the keys or values of the ``SOLVER_TYPES`` dict.\n\
     If omitted or ``None``, the default solver type is applied\n\
     (``L2R_L2LOSS_SVC_DUAL == 1``)\n\
 \n\

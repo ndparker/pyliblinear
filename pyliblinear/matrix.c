@@ -84,7 +84,7 @@ typedef struct {
 
 /* Forward declarations */
 static pl_matrix_t *
-pl_matrix_new(struct feature_node **, double *, int, int, int);
+pl_matrix_new(PyTypeObject *, struct feature_node **, double *, int, int, int);
 
 
 /* ------------------------ BEGIN Helper Functions ----------------------- */
@@ -279,7 +279,8 @@ pl_vectors_as_array(pl_vector_block_t **vectors_,
  * Return NULL on error
  */
 static pl_matrix_t *
-pl_matrix_from_iterable(PyObject *iterable, PyObject *assign_labels_)
+pl_matrix_from_iterable(PyTypeObject *cls, PyObject *iterable,
+                        PyObject *assign_labels_)
 {
     PyObject *iter, *item, *label_, *vector_;
     pl_vector_block_t *vectors = NULL;
@@ -331,7 +332,7 @@ pl_matrix_from_iterable(PyObject *iterable, PyObject *assign_labels_)
     if (pl_vectors_as_array(&vectors, &array, &labels, height) == -1)
         goto error;
 
-    return pl_matrix_new(array, labels, height, width, 1);
+    return pl_matrix_new(cls, array, labels, height, width, 1);
 
 error_vector:
     Py_DECREF(vector_);
@@ -723,7 +724,7 @@ features.\n\
   - `ValueError` : The lengths of the iterables differ");
 
 static PyObject *
-PL_FeatureMatrixType_from_iterables(PyObject *cls, PyObject *args,
+PL_FeatureMatrixType_from_iterables(PyTypeObject *cls, PyObject *args,
                                     PyObject *kwds)
 {
     static char *kwlist[] = {"labels", "features", NULL};
@@ -736,14 +737,15 @@ PL_FeatureMatrixType_from_iterables(PyObject *cls, PyObject *args,
 
     if (!(zipped = pl_zipper_new(labels_, features_)))
         return NULL;
-    self = pl_matrix_from_iterable(zipped, NULL);
+    self = pl_matrix_from_iterable(cls, zipped, NULL);
     Py_DECREF(zipped);
 
     return (PyObject *)self;
 }
 
-PyDoc_STRVAR(PL_FeatureMatrixType_from_iterable__doc__,
-"from_iterable(cls, iterable, assign_labels=None)\n\
+#ifdef METH_COEXIST
+PyDoc_STRVAR(PL_FeatureMatrixType_new__doc__,
+"__new__(cls, iterable, assign_labels=None)\n\
 \n\
 Create `FeatureMatrix` instance from a single iterable. If `assign_labels`\n\
 is omitted or ``None``, the iterable is expected to provide 2-tuples,\n\
@@ -765,39 +767,29 @@ provide the feature vectors. All labels are then assigned to the value of\n\
 :Rtype: `FeatureMatrix`");
 
 static PyObject *
-PL_FeatureMatrixType_from_iterable(PyObject *cls, PyObject *args,
-                                   PyObject *kwds)
-{
-    static char *kwlist[] = {"iterable", "assign_labels", NULL};
-    PyObject *iterable_, *assign_labels_ = NULL;
-    pl_matrix_t *self;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
-                                     &iterable_, &assign_labels_))
-        return NULL;
-
-    self = pl_matrix_from_iterable(iterable_, assign_labels_);
-    return (PyObject *)self;
-}
+PL_FeatureMatrixType_new(PyTypeObject *cls, PyObject *args, PyObject *kwds);
+#endif
 
 static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
     {"features",
-     (PyCFunction)PL_FeatureMatrixType_features,  METH_NOARGS,
+     (PyCFunction)PL_FeatureMatrixType_features, METH_NOARGS,
      PL_FeatureMatrixType_features__doc__},
 
     {"labels",
-     (PyCFunction)PL_FeatureMatrixType_labels,    METH_NOARGS,
+     (PyCFunction)PL_FeatureMatrixType_labels,   METH_NOARGS,
      PL_FeatureMatrixType_labels__doc__},
 
     {"from_iterables",
      (PyCFunction)PL_FeatureMatrixType_from_iterables,
-                                                  METH_KEYWORDS | METH_CLASS,
+                                                 METH_KEYWORDS | METH_CLASS,
      PL_FeatureMatrixType_from_iterables__doc__},
 
-    {"from_iterable",
-     (PyCFunction)PL_FeatureMatrixType_from_iterable,
-                                                  METH_KEYWORDS | METH_CLASS,
-     PL_FeatureMatrixType_from_iterable__doc__},
+#ifdef METH_COEXIST
+    {"__new__",
+     (PyCFunction)PL_FeatureMatrixType_new,      METH_KEYWORDS | METH_STATIC |
+                                                 METH_COEXIST,
+     PL_FeatureMatrixType_new__doc__},
+#endif
 
     {NULL, NULL}  /* Sentinel */
 };
@@ -861,14 +853,27 @@ PL_FeatureMatrixType_clear(pl_matrix_t *self)
     return 0;
 }
 
+static PyObject *
+PL_FeatureMatrixType_new(PyTypeObject *cls, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"iterable", "assign_labels", NULL};
+    PyObject *iterable_, *assign_labels_ = NULL;
+    pl_matrix_t *self;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
+                                     &iterable_, &assign_labels_))
+        return NULL;
+
+    self = pl_matrix_from_iterable(cls, iterable_, assign_labels_);
+    return (PyObject *)self;
+}
+
 DEFINE_GENERIC_DEALLOC(PL_FeatureMatrixType)
 
 PyDoc_STRVAR(PL_FeatureMatrixType__doc__,
 "FeatureMatrix\n\
 \n\
-Feature matrix to be used for training or prediction. Use\n\
-FeatureMatrix.from_iterable or FeatureMatrix.from_iterables\n\
-to construct a new instance.");
+Feature matrix to be used for training or prediction.");
 
 PyTypeObject PL_FeatureMatrixType = {
     PyObject_HEAD_INIT(NULL)
@@ -911,7 +916,7 @@ PyTypeObject PL_FeatureMatrixType = {
     0,                                                  /* tp_dictoffset */
     0,                                                  /* tp_init */
     0,                                                  /* tp_alloc */
-    0                                                   /* tp_new */
+    PL_FeatureMatrixType_new                            /* tp_new */
 };
 
 /*
@@ -922,12 +927,12 @@ PyTypeObject PL_FeatureMatrixType = {
  * Return NULL on error
  */
 static pl_matrix_t *
-pl_matrix_new(struct feature_node **vectors, double *labels, int height,
-              int width, int row_alloc)
+pl_matrix_new(PyTypeObject *cls, struct feature_node **vectors, double *labels,
+              int height, int width, int row_alloc)
 {
     pl_matrix_t *self;
 
-    if (!(self = GENERIC_ALLOC(&PL_FeatureMatrixType))) {
+    if (!(self = GENERIC_ALLOC(cls))) {
         pl_matrix_clear_vectors(&vectors, height, row_alloc);
         if (labels)
             PyMem_Free(labels);
