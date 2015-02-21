@@ -40,7 +40,7 @@ typedef struct pl_vector_block {
 
 
 /*
- * Object structure for FeatureMatrixType
+ * Object structure for FeatureMatrix
  */
 typedef struct {
     PyObject_HEAD
@@ -80,6 +80,47 @@ typedef struct {
     pl_matrix_t *matrix;
     int j;
 } pl_label_view_t;
+
+
+/*
+ * Object structure for Zipper
+ */
+typedef struct {
+    PyObject_HEAD
+
+    PyObject *labels;
+    PyObject *vectors;
+} pl_zipper_t;
+
+
+/*
+ * Matrix reader states
+ */
+typedef enum {
+    PL_MATRIX_READER_STATE_ROW,
+    PL_MATRIX_READER_STATE_VECTOR
+} pl_matrix_reader_state;
+
+
+/*
+ * Object structure for MatrixReader
+ */
+typedef struct {
+    PyObject_HEAD
+
+    pl_iter_t *tokread;
+    pl_matrix_reader_state state;
+} pl_matrix_reader_t;
+
+
+/*
+ * Object structure for VectorReader
+ */
+typedef struct {
+    PyObject_HEAD
+
+    pl_matrix_reader_t *matrix_reader;
+} pl_vector_reader_t;
 
 
 /* Forward declarations */
@@ -553,13 +594,6 @@ pl_label_view_new(pl_matrix_t *matrix)
 
 /* ----------------------- BEGIN Zipper DEFINITION ----------------------- */
 
-typedef struct {
-    PyObject_HEAD
-
-    PyObject *labels;
-    PyObject *vectors;
-} pl_zipper_t;
-
 #define PL_ZipperType_iter PyObject_SelfIter
 
 static PyObject *
@@ -650,6 +684,8 @@ PyTypeObject PL_ZipperType = {
 
 /*
  * Create new zipper object
+ *
+ * Return NULL on error
  */
 static PyObject *
 pl_zipper_new(PyObject *labels, PyObject *vectors)
@@ -673,6 +709,294 @@ error:
 }
 
 /* ------------------------ END Zipper DEFINITION ------------------------ */
+
+/* -------------------- BEGIN VectorReader DEFINITION -------------------- */
+
+static PyObject *
+PL_VectorReaderType_iteritems(PyObject *self, PyObject *args)
+{
+    Py_INCREF(self);
+    return self;
+}
+
+static struct PyMethodDef PL_VectorReaderType_methods[] = {
+    {"iteritems",
+     (PyCFunction)PL_VectorReaderType_iteritems, METH_NOARGS,
+     NULL},
+
+    {NULL, NULL}  /* Sentinel */
+};
+
+#define PL_VectorReaderType_iter PyObject_SelfIter
+
+static PyObject *
+PL_VectorReaderType_iternext(pl_vector_reader_t *self)
+{
+    char *end;
+    pl_tok_t *tok;
+    PyObject *index_, *value_, *tuple_;
+    double value;
+    long index;
+
+    if (self->matrix_reader && self->matrix_reader->tokread
+        && pl_iter_next(self->matrix_reader->tokread, &tok) == 0) {
+        if (!tok || PL_TOK_IS_EOL(tok)) {
+            self->matrix_reader->state = PL_MATRIX_READER_STATE_ROW;
+            return NULL;
+        }
+
+        index = PyOS_strtol(tok->start, &end, 10);
+        if (errno || *end != ':') {
+            PyErr_SetString(PyExc_ValueError, "Invalid format");
+            goto error;
+        }
+
+        value = PyOS_string_to_double(end + 1, &end,
+                                      PyExc_OverflowError);
+        if (value == -1.0 && PyErr_Occurred())
+            goto error;
+
+        if (end != tok->sentinel) {
+            PyErr_SetString(PyExc_ValueError, "Invalid format");
+            goto error;
+        }
+
+        if (!(index_ = PyInt_FromLong(index)))
+            goto error;
+
+        if (!(value_ = PyFloat_FromDouble(value)))
+            goto error_index;
+
+        if (!(tuple_ = PyTuple_New(2)))
+            goto error_value;
+
+        PyTuple_SET_ITEM(tuple_, 0, index_);
+        PyTuple_SET_ITEM(tuple_, 1, value_);
+        return tuple_;
+    }
+
+    return NULL;
+
+error_value:
+    Py_DECREF(value_);
+error_index:
+    Py_DECREF(index_);
+error:
+    return NULL;
+}
+
+static int
+PL_VectorReaderType_traverse(pl_vector_reader_t *self, visitproc visit,
+                             void *arg)
+{
+    Py_VISIT(self->matrix_reader);
+
+    return 0;
+}
+
+static int
+PL_VectorReaderType_clear(pl_vector_reader_t *self)
+{
+    Py_CLEAR(self->matrix_reader);
+
+    return 0;
+}
+
+DEFINE_GENERIC_DEALLOC(PL_VectorReaderType)
+
+PyTypeObject PL_VectorReaderType = {
+    PyObject_HEAD_INIT(NULL)
+    0,                                                  /* ob_size */
+    EXT_MODULE_PATH ".FeatureVectorReader",             /* tp_name */
+    sizeof(pl_vector_reader_t),                         /* tp_basicsize */
+    0,                                                  /* tp_itemsize */
+    (destructor)PL_VectorReaderType_dealloc,            /* tp_dealloc */
+    0,                                                  /* tp_print */
+    0,                                                  /* tp_getattr */
+    0,                                                  /* tp_setattr */
+    0,                                                  /* tp_compare */
+    0,                                                  /* tp_repr */
+    0,                                                  /* tp_as_number */
+    0,                                                  /* tp_as_sequence */
+    0,                                                  /* tp_as_mapping */
+    0,                                                  /* tp_hash */
+    0,                                                  /* tp_call */
+    0,                                                  /* tp_str */
+    0,                                                  /* tp_getattro */
+    0,                                                  /* tp_setattro */
+    0,                                                  /* tp_as_buffer */
+    Py_TPFLAGS_HAVE_CLASS                               /* tp_flags */
+    | Py_TPFLAGS_HAVE_ITER
+    | Py_TPFLAGS_HAVE_GC,
+    0,                                                  /* tp_doc */
+    (traverseproc)PL_VectorReaderType_traverse,         /* tp_traverse */
+    (inquiry)PL_VectorReaderType_clear,                 /* tp_clear */
+    0,                                                  /* tp_richcompare */
+    0,                                                  /* tp_weaklistoffset */
+    (getiterfunc)PL_VectorReaderType_iter,              /* tp_iter */
+    (iternextfunc)PL_VectorReaderType_iternext,         /* tp_iternext */
+    PL_VectorReaderType_methods                         /* tp_methods */
+};
+
+/*
+ * Create new reader object
+ *
+ * read is stolen and cleared on error
+ *
+ * Return NULL on error
+ */
+static PyObject *
+pl_vector_reader_new(pl_matrix_reader_t *matrix_reader)
+{
+    pl_vector_reader_t *self;
+
+    if (!(self = GENERIC_ALLOC(&PL_VectorReaderType)))
+        return NULL;
+
+    Py_INCREF(matrix_reader);
+    self->matrix_reader = matrix_reader;
+
+    return (PyObject *)self;
+}
+
+/* --------------------- END VectorReader DEFINITION --------------------- */
+
+/* -------------------- BEGIN MatrixReader DEFINITION -------------------- */
+
+#define PL_MatrixReaderType_iter PyObject_SelfIter
+
+static PyObject *
+PL_MatrixReaderType_iternext(pl_matrix_reader_t *self)
+{
+    char *end;
+    pl_tok_t *tok;
+    PyObject *label_, *vector_, *tuple_;
+    double label;
+
+    if (self->tokread) {
+        switch (self->state) {
+        case PL_MATRIX_READER_STATE_VECTOR:
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Need to iterate the vector first");
+            break;
+
+        case PL_MATRIX_READER_STATE_ROW:
+            if (pl_iter_next(self->tokread, &tok) == 0 && tok) {
+                if (PL_TOK_IS_EOL(tok)) {
+                    PyErr_SetString(PyExc_ValueError, "Invalid format");
+                    break;
+                }
+
+                self->state = PL_MATRIX_READER_STATE_VECTOR;
+                label = PyOS_string_to_double(tok->start, &end,
+                                              PyExc_OverflowError);
+                if (label == -1.0 && PyErr_Occurred())
+                    break;
+                if (end != tok->sentinel) {
+                    PyErr_SetString(PyExc_ValueError, "Invalid format");
+                    break;
+                }
+                if (!(label_ = PyFloat_FromDouble(label)))
+                    break;
+                if (!(vector_ = pl_vector_reader_new(self))) {
+                    Py_DECREF(label_);
+                    break;
+                }
+                if (!(tuple_ = PyTuple_New(2))) {
+                    Py_DECREF(vector_);
+                    Py_DECREF(label_);
+                    break;
+                }
+                PyTuple_SET_ITEM(tuple_, 0, label_);
+                PyTuple_SET_ITEM(tuple_, 1, vector_);
+                return tuple_;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+static int
+PL_MatrixReaderType_traverse(pl_matrix_reader_t *self, visitproc visit,
+                             void *arg)
+{
+    PL_ITER_VISIT(self->tokread);
+
+    return 0;
+}
+
+static int
+PL_MatrixReaderType_clear(pl_matrix_reader_t *self)
+{
+    pl_iter_clear(&self->tokread);
+
+    return 0;
+}
+
+DEFINE_GENERIC_DEALLOC(PL_MatrixReaderType)
+
+PyTypeObject PL_MatrixReaderType = {
+    PyObject_HEAD_INIT(NULL)
+    0,                                                  /* ob_size */
+    EXT_MODULE_PATH ".FeatureMatrixReader",             /* tp_name */
+    sizeof(pl_matrix_reader_t),                         /* tp_basicsize */
+    0,                                                  /* tp_itemsize */
+    (destructor)PL_MatrixReaderType_dealloc,            /* tp_dealloc */
+    0,                                                  /* tp_print */
+    0,                                                  /* tp_getattr */
+    0,                                                  /* tp_setattr */
+    0,                                                  /* tp_compare */
+    0,                                                  /* tp_repr */
+    0,                                                  /* tp_as_number */
+    0,                                                  /* tp_as_sequence */
+    0,                                                  /* tp_as_mapping */
+    0,                                                  /* tp_hash */
+    0,                                                  /* tp_call */
+    0,                                                  /* tp_str */
+    0,                                                  /* tp_getattro */
+    0,                                                  /* tp_setattro */
+    0,                                                  /* tp_as_buffer */
+    Py_TPFLAGS_HAVE_CLASS                               /* tp_flags */
+    | Py_TPFLAGS_HAVE_ITER
+    | Py_TPFLAGS_HAVE_GC,
+    0,                                                  /* tp_doc */
+    (traverseproc)PL_MatrixReaderType_traverse,         /* tp_traverse */
+    (inquiry)PL_MatrixReaderType_clear,                 /* tp_clear */
+    0,                                                  /* tp_richcompare */
+    0,                                                  /* tp_weaklistoffset */
+    (getiterfunc)PL_MatrixReaderType_iter,              /* tp_iter */
+    (iternextfunc)PL_MatrixReaderType_iternext          /* tp_iternext */
+};
+
+/*
+ * Create new reader object
+ *
+ * read is stolen and cleared on error
+ *
+ * Return NULL on error
+ */
+static PyObject *
+pl_matrix_reader_new(PyObject *read)
+{
+    pl_matrix_reader_t *self;
+
+    if (!(self = GENERIC_ALLOC(&PL_MatrixReaderType))) {
+        Py_DECREF(read);
+        return NULL;
+    }
+
+    if (!(self->tokread = pl_tokread_iter_new(read))) {
+        Py_DECREF(self);
+        return NULL;
+    }
+
+    self->state = PL_MATRIX_READER_STATE_ROW;
+
+    return (PyObject *)self;
+}
+
+/* --------------------- END MatrixReader DEFINITION --------------------- */
 
 /* -------------------- BEGIN FeatureMatrix DEFINITION ------------------- */
 
@@ -743,6 +1067,90 @@ PL_FeatureMatrixType_from_iterables(PyTypeObject *cls, PyObject *args,
     return (PyObject *)self;
 }
 
+PyDoc_STRVAR(PL_FeatureMatrixType_load__doc__,
+"load(cls, file)\n\
+\n\
+Create `FeatureMatrix` instance from a file.\n\
+\n\
+Each line of the line of the file contains the label and the accompanying\n\
+sparse feature vector, separated by a space/tab sequence. The feature vector\n\
+consists of index/value pairs. The index and the value are separated by a\n\
+colon (``:``). The pairs are separated by space/tab sequences. Accepted line\n\
+endings are ``\\r``, ``\\n`` and ``\\r\\n``.\n\
+\n\
+All numbers are represented as strings parsable either as ints (for indexes)\n\
+or doubles (for values and labels).\n\
+\n\
+Note that the exact I/O exceptions depend on the stream passed in.\n\
+\n\
+:Parameters:\n\
+  `file` : ``file`` or ``str``\n\
+    Either a readable stream or a filename. If the passed object provides a\n\
+    ``read`` attribute/method, it's treated as readable file stream, as a\n\
+    filename otherwise. If it's a stream, the stream is read from the current\n\
+    position and remains open after hitting EOF. In case of a filename, the\n\
+    accompanying file is opened in text mode, read from the beginning and\n\
+    closed afterwards.\n\
+\n\
+:Return: New feature matrix instance\n\
+:Rtype: `FeatureMatrix`\n\
+\n\
+:Exceptions:\n\
+  - `IOError` : Error reading the file\n\
+  - `ValueError` : Error parsing the file");
+
+static PyObject *
+PL_FeatureMatrixType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"file", NULL};
+    PyObject *file_, *read_, *reader, *stream_ = NULL, *close_ = NULL;
+    pl_matrix_t *self = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
+                                     &file_))
+        return NULL;
+
+    if (pl_attr(file_, "read", &read_) == -1)
+        return NULL;
+
+    if (!read_) {
+        Py_INCREF(file_);
+        stream_ = PyObject_CallFunction((PyObject*)&PyFile_Type, "O", file_);
+        Py_DECREF(file_);
+        if (!stream_)
+            return NULL;
+
+        if (pl_attr(stream_, "close", &close_) == -1)
+            goto error_stream;
+
+        if (pl_attr(stream_, "read", &read_) == -1)
+            goto error_close;
+        if (!read_) {
+            PyErr_SetString(PyExc_AssertionError, "File has no read method");
+            goto error_close;
+            return NULL;
+        }
+    }
+
+    if (!(reader = pl_matrix_reader_new(read_)))
+        goto error_close;
+
+    self = pl_matrix_from_iterable(cls, reader, NULL);
+    Py_DECREF(reader);
+
+    /* fall through */
+
+error_close:
+    if (close_) {
+        PyObject_CallFunction(close_, "");
+        Py_DECREF(close_);
+    }
+error_stream:
+    Py_XDECREF(stream_);
+
+    return (PyObject *)self;
+}
+
 #ifdef METH_COEXIST
 PyDoc_STRVAR(PL_FeatureMatrixType_new__doc__,
 "__new__(cls, iterable, assign_labels=None)\n\
@@ -778,6 +1186,10 @@ static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
     {"labels",
      (PyCFunction)PL_FeatureMatrixType_labels,   METH_NOARGS,
      PL_FeatureMatrixType_labels__doc__},
+
+    {"load",
+     (PyCFunction)PL_FeatureMatrixType_load,     METH_KEYWORDS | METH_CLASS,
+     PL_FeatureMatrixType_load__doc__},
 
     {"from_iterables",
      (PyCFunction)PL_FeatureMatrixType_from_iterables,

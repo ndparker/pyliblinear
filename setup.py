@@ -28,12 +28,13 @@ def setup(args=None, _manifest=0):
         manifest_only=_manifest,
         ext=[
             Extension('pyliblinear._liblinear', [
-                "pyliblinear/util.c",
-
+                "pyliblinear/iter.c",
                 "pyliblinear/main.c",
                 "pyliblinear/matrix.c",
                 "pyliblinear/model.c",
                 "pyliblinear/solver.c",
+                "pyliblinear/tokreader.c",
+                "pyliblinear/util.c",
                 "pyliblinear/vector.c",
 
                 "pyliblinear/liblinear/blas/ddot.c",

@@ -345,8 +345,8 @@ pl_weights_iterator_find(PyObject *weights, PyObject **iter_, char *how)
     int res;
 
     /* (key, value) iterator */
-    if ((!(res = pl_method(weights, "iteritems", &method)) && method)
-        || (!res && !(res = pl_method(weights, "items", &method)) && method)) {
+    if ((!(res = pl_attr(weights, "iteritems", &method)) && method)
+        || (!res && !(res = pl_attr(weights, "items", &method)) && method)) {
         item = PyObject_CallFunction(method, "()");
         Py_DECREF(method);
         if (!item)
@@ -361,8 +361,8 @@ pl_weights_iterator_find(PyObject *weights, PyObject **iter_, char *how)
     }
 
     /* key iterator */
-    else if ((!res && !(res = pl_method(weights, "iterkeys", &method)) && method)
-        || (!res && !(res = pl_method(weights, "keys", &method)) && method)) {
+    else if ((!res && !(res = pl_attr(weights, "iterkeys", &method)) && method)
+        || (!res && !(res = pl_attr(weights, "keys", &method)) && method)) {
         item = PyObject_CallFunction(method, "()");
         Py_DECREF(method);
         if (!item)

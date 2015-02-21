@@ -83,8 +83,8 @@ pl_vector_iterator_find(PyObject **vector_, PyObject **iter_, char *how)
     int res;
 
     /* (key, value) iterator */
-    if ((!(res = pl_method(vector, "iteritems", &method)) && method)
-        || (!res && !(res = pl_method(vector, "items", &method)) && method)) {
+    if ((!(res = pl_attr(vector, "iteritems", &method)) && method)
+        || (!res && !(res = pl_attr(vector, "items", &method)) && method)) {
         Py_DECREF(vector);
         item = PyObject_CallFunction(method, "()");
         Py_DECREF(method);
@@ -101,8 +101,8 @@ pl_vector_iterator_find(PyObject **vector_, PyObject **iter_, char *how)
     }
 
     /* key iterator */
-    else if ((!res && !(res = pl_method(vector, "iterkeys", &method)) && method)
-        || (!res && !(res = pl_method(vector, "keys", &method)) && method)) {
+    else if ((!res && !(res = pl_attr(vector, "iterkeys", &method)) && method)
+        || (!res && !(res = pl_attr(vector, "keys", &method)) && method)) {
         item = PyObject_CallFunction(method, "()");
         Py_DECREF(method);
         if (!item) {
