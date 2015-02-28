@@ -384,6 +384,66 @@ error:
     return NULL;
 }
 
+
+/*
+ * Save matrix to stream
+ *
+ * Return -1 on error
+ */
+static int
+pl_matrix_to_stream(pl_matrix_t *self, PyObject *write)
+{
+    char *r;
+    pl_bufwriter_t *buf;
+    struct feature_node *v;
+    char intbuf[PL_INT_AS_CHAR_BUF_SIZE];
+    int res, h;
+
+    if (!(buf = pl_bufwriter_new(write)))
+        return -1;
+
+    for (h = 0; h < self->height; ++h) {
+        if (!(r = PyOS_double_to_string(self->labels[h], 'r', 0, 0, NULL)))
+            goto error;
+
+        res = pl_bufwriter_write(buf, r, -1);
+        PyMem_Free(r);
+        if (res == -1)
+            goto error;
+
+        for (v = self->vectors[h]; v && v->index > 0; ++v) {
+            if (pl_bufwriter_write(buf, " ", -1) == -1)
+                goto error;
+
+            r = pl_int_as_char(intbuf, v->index);
+            if (pl_bufwriter_write(buf, r,
+                                   intbuf + PL_INT_AS_CHAR_BUF_SIZE - r) == -1)
+                goto error;
+
+            if (pl_bufwriter_write(buf, ":", -1) == -1)
+                goto error;
+
+            if (!(r = PyOS_double_to_string(v->value, 'r', 0, 0, NULL)))
+                goto error;
+            res = pl_bufwriter_write(buf, r, -1);
+            PyMem_Free(r);
+            if (res == -1)
+                goto error;
+        }
+
+        if (pl_bufwriter_write(buf, "\n", -1) == -1)
+            goto error;
+    }
+
+    return pl_bufwriter_close(&buf);
+
+error:
+    if (!PyErr_Occurred())
+        PyErr_SetNone(PyExc_MemoryError);
+    pl_bufwriter_clear(&buf);
+    return -1;
+}
+
 /* ------------------------- END Helper Functions ------------------------ */
 
 /* --------------------- BEGIN FeatureView DEFINITION -------------------- */
@@ -1067,16 +1127,94 @@ PL_FeatureMatrixType_from_iterables(PyTypeObject *cls, PyObject *args,
     return (PyObject *)self;
 }
 
+PyDoc_STRVAR(PL_FeatureMatrixType_save__doc__,
+"save(self, file)\n\
+\n\
+Save `FeatureMatrix` instance to a file.\n\
+\n\
+Each line of the line of the file contains the label and the accompanying\n\
+sparse feature vector, separated by a space. The feature vector consists of\n\
+index/value pairs. The index and the value are separated by a colon (``:``).\n\
+The pairs are separated by a space again. The line ending is ``\\n``.\n\
+\n\
+All numbers are represented as strings parsable either as ints (for indexes)\n\
+or doubles (for values and labels).\n\
+\n\
+Note that the exact I/O exceptions depend on the stream passed in.\n\
+\n\
+:Parameters:\n\
+  `file` : ``file`` or ``str``\n\
+    Either a writeable stream or a filename. If the passed object provides a\n\
+    ``write`` attribute/method, it's treated as writeable stream, as a\n\
+    filename otherwise. If it's a stream, the stream is written to the current\n\
+    position and remains open when done. In case of a filename, the\n\
+    accompanying file is opened in text mode, truncated, written from the\n\
+    beginning and closed afterwards.\n\
+\n\
+:Exceptions:\n\
+  - `IOError` : Error writing the file");
+
+static PyObject *
+PL_FeatureMatrixType_save(pl_matrix_t *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"file", NULL};
+    PyObject *file_, *write_, *stream_ = NULL, *close_ = NULL;
+    int res = -1;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
+                                     &file_))
+        return NULL;
+
+    if (pl_attr(file_, "write", &write_) == -1)
+        return NULL;
+
+    if (!write_) {
+        Py_INCREF(file_);
+        stream_ = PyObject_CallFunction((PyObject*)&PyFile_Type, "Os", file_,
+                                        "w+");
+        Py_DECREF(file_);
+        if (!stream_)
+            return NULL;
+
+        if (pl_attr(stream_, "close", &close_) == -1)
+            goto error_stream;
+
+        if (pl_attr(stream_, "write", &write_) == -1)
+            goto error_close;
+        if (!write_) {
+            PyErr_SetString(PyExc_AssertionError, "File has no write method");
+            goto error_close;
+        }
+    }
+
+    res = pl_matrix_to_stream(self, write_);
+    /* fall through */
+
+error_close:
+    if (close_) {
+        PyObject_CallFunction(close_, "");
+        Py_DECREF(close_);
+    }
+error_stream:
+    Py_XDECREF(stream_);
+
+    if (res == -1)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+
+
 PyDoc_STRVAR(PL_FeatureMatrixType_load__doc__,
 "load(cls, file)\n\
 \n\
 Create `FeatureMatrix` instance from a file.\n\
 \n\
-Each line of the line of the file contains the label and the accompanying\n\
-sparse feature vector, separated by a space/tab sequence. The feature vector\n\
-consists of index/value pairs. The index and the value are separated by a\n\
-colon (``:``). The pairs are separated by space/tab sequences. Accepted line\n\
-endings are ``\\r``, ``\\n`` and ``\\r\\n``.\n\
+Each line of the file contains the label and the accompanying sparse feature\n\
+vector, separated by a space/tab sequence. The feature vector consists of\n\
+index/value pairs. The index and the value are separated by a colon (``:``).\n\
+The pairs are separated by space/tab sequences. Accepted line endings are\n\
+``\\r``, ``\\n`` and ``\\r\\n``.\n\
 \n\
 All numbers are represented as strings parsable either as ints (for indexes)\n\
 or doubles (for values and labels).\n\
@@ -1128,7 +1266,6 @@ PL_FeatureMatrixType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
         if (!read_) {
             PyErr_SetString(PyExc_AssertionError, "File has no read method");
             goto error_close;
-            return NULL;
         }
     }
 
@@ -1186,6 +1323,10 @@ static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
     {"labels",
      (PyCFunction)PL_FeatureMatrixType_labels,   METH_NOARGS,
      PL_FeatureMatrixType_labels__doc__},
+
+    {"save",
+     (PyCFunction)PL_FeatureMatrixType_save,     METH_KEYWORDS,
+     PL_FeatureMatrixType_save__doc__},
 
     {"load",
      (PyCFunction)PL_FeatureMatrixType_load,     METH_KEYWORDS | METH_CLASS,

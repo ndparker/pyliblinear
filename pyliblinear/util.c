@@ -153,6 +153,36 @@ pl_as_index(PyObject *obj, int *result)
 
 
 /*
+ * Convert int to string
+ *
+ * Adapted from intobject.c#int_to_decimal_string
+ *
+ * The caller must provide a buffer where the result is stored. The buffer is
+ * filled from the right side. The function returns the pointer to start of the
+ * result. The buffer is expected to be PL_INT_AS_CHAR_BUF_SIZE bytes long.
+ */
+#define PL_INT_AS_CHAR_BUF_SIZE (sizeof(long)*CHAR_BIT/3+6)
+
+char *
+pl_int_as_char(char *buf, int value)
+{
+    char *p, *bufend;
+    long n = value;
+    unsigned long absn;
+
+    p = bufend = buf + PL_INT_AS_CHAR_BUF_SIZE;
+    absn = n < 0 ? 0UL - n : (unsigned long)n;
+    do {
+        *--p = '0' + (char)(absn % 10);
+        absn /= 10;
+    } while (absn);
+    if (n < 0)
+        *--p = '-';
+    return p;
+}
+
+
+/*
  * Find a particular pyobject attribute
  *
  * Return -1 on error

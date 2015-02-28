@@ -28,6 +28,7 @@ def setup(args=None, _manifest=0):
         manifest_only=_manifest,
         ext=[
             Extension('pyliblinear._liblinear', [
+                "pyliblinear/bufwriter.c",
                 "pyliblinear/iter.c",
                 "pyliblinear/main.c",
                 "pyliblinear/matrix.c",

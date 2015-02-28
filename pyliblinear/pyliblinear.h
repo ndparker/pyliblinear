@@ -35,6 +35,9 @@
 /* Buffer size for tok readers */
 #define PL_TOKREADER_BUF_SIZE (8192)
 
+/* Buffer size for buf writers */
+#define PL_BUFWRITER_BUF_SIZE (8192)
+
 
 /*
  * Type objects, initialized in main()
@@ -116,6 +119,19 @@ pl_as_int(PyObject *, int *);
  */
 int
 pl_as_index(PyObject *, int *);
+
+
+/*
+ * Convert int to char
+ *
+ * The caller must provide a buffer where the result is stored. The buffer is
+ * filled from the right side. The function returns the pointer to start of the
+ * result. The buffer is expected to be PL_INT_AS_CHAR_BUF_SIZE bytes long.
+ */
+#define PL_INT_AS_CHAR_BUF_SIZE (sizeof(long)*CHAR_BIT/3+6)
+
+char *
+pl_int_as_char(char *, int);
 
 
 /*
@@ -273,6 +289,66 @@ typedef struct {
  */
 pl_iter_t *
 pl_tokread_iter_new(PyObject *);
+
+
+/*
+ * ************************************************************************
+ * Buffer writer
+ * ************************************************************************
+ */
+
+typedef struct pl_bufwriter_t pl_bufwriter_t;
+
+/*
+ * Create new bufwriter
+ *
+ * write is stolen and cleared on error
+ *
+ * Return NULL on error
+ */
+pl_bufwriter_t *
+pl_bufwriter_new(PyObject *);
+
+
+/*
+ * Write a string to the buf writer
+ *
+ * if len < 0, strlen(string) is applied
+ *
+ * return -1 on error
+ */
+int
+pl_bufwriter_write(pl_bufwriter_t *, const char *, Py_ssize_t);
+
+
+/*
+ * Close and clear the bufwriter
+ *
+ * Return -1 on error
+ */
+int
+pl_bufwriter_close(pl_bufwriter_t **);
+
+
+/*
+ * Clear buf writer
+ */
+void
+pl_bufwriter_clear(pl_bufwriter_t **);
+
+
+/*
+ * Visit buf writer
+ *
+ * You might want to use the PL_BUFWRITER_VISIT macro instead.
+ */
+int
+pl_bufwriter_visit(pl_bufwriter_t *, visitproc, void *);
+
+#define PL_BUFWRITER_VISIT(op) do {                  \
+    int vret = pl_bufwriter_visit((op), visit, arg); \
+    if (vret) return vret;                           \
+} while (0)
 
 
 #endif
