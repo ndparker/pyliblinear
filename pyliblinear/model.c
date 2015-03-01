@@ -67,6 +67,10 @@ typedef struct {
 } pl_predict_iter_t;
 
 
+/* Foward declaration */
+static pl_model_t *
+pl_model_new(PyTypeObject *cls, struct model *model);
+
 /* ------------------------ BEGIN Helper Functions ----------------------- */
 
 /*
@@ -403,6 +407,204 @@ error:
     return -1;
 }
 
+#define SEEN_SOLVER_TYPE (1 << 0)
+#define SEEN_NR_CLASS    (1 << 1)
+#define SEEN_NR_FEATURE  (1 << 2)
+#define SEEN_BIAS        (1 << 3)
+#define SEEN_LABEL       (1 << 4)
+#define SEEN_W           (1 << 5)
+#define SEEN_REQUIRED    (SEEN_SOLVER_TYPE | SEEN_NR_CLASS | SEEN_NR_FEATURE \
+                          | SEEN_BIAS | SEEN_W)
+
+static pl_model_t *
+pl_model_from_stream(PyTypeObject *cls, PyObject *read)
+{
+    PyObject *tmp;
+    pl_tok_t *tok;
+    pl_iter_t *tokread;
+    pl_model_t *self = NULL;
+    struct model *model;
+    char *end;
+    double longfloat;
+    long longint;
+    int res, h, w, cols, rows, seen = 0;
+
+    if (!(tokread = pl_tokread_iter_new(read)))
+        return NULL;
+
+    if (!(model = malloc(sizeof *model))) {
+        PyErr_SetNone(PyExc_MemoryError);
+        goto error_tokread;
+    }
+    model->label = NULL;
+    model->w = NULL;
+
+#define EXPECT_TOK do {                                      \
+    if (pl_iter_next(tokread, &tok) == -1) goto error_model; \
+    if (!tok || PL_TOK_IS_EOL(tok)) goto error_format;       \
+} while(0)
+
+#define EXPECT_EOL do {                    \
+    if (pl_iter_next(tokread, &tok) == -1) goto error_model; \
+    if (!tok || !PL_TOK_IS_EOL(tok)) goto error_format; \
+} while(0)
+
+#define TOK(str) !strncmp(tok->start, (str), tok->sentinel - tok->start)
+
+    while (1) {
+        if (pl_iter_next(tokread, &tok) == -1) goto error_model;
+        if (!tok) {
+            if ((seen & SEEN_REQUIRED) != SEEN_REQUIRED) goto error_format;
+            break;
+        }
+        if (PL_TOK_IS_EOL(tok)) goto error_format;
+
+        if (TOK("solver_type")) {
+            if (seen & SEEN_SOLVER_TYPE) goto error_format;
+            seen |= SEEN_SOLVER_TYPE;
+
+            EXPECT_TOK;
+            if (!(tmp = PyString_FromStringAndSize(tok->start,
+                                                   tok->sentinel - tok->start)))
+                goto error_model;
+            res = pl_solver_type_as_int(tmp, &model->param.solver_type);
+            Py_DECREF(tmp);
+            if (res == -1)
+                goto error_model;
+
+            EXPECT_EOL;
+        }
+        else if (TOK("nr_class")) {
+            if (seen & SEEN_NR_CLASS) goto error_format;
+            seen |= SEEN_NR_CLASS;
+
+            EXPECT_TOK;
+            longint = PyOS_strtol(tok->start, &end, 10);
+            if (errno || end != tok->sentinel || longint < 0
+                || longint > (long)INT_MAX)
+                goto error_format;
+
+            model->nr_class = (int)longint;
+            EXPECT_EOL;
+        }
+        else if (TOK("nr_feature")) {
+            if (seen & SEEN_NR_FEATURE) goto error_format;
+            seen |= SEEN_NR_FEATURE;
+
+            EXPECT_TOK;
+            longint = PyOS_strtol(tok->start, &end, 10);
+            if (errno || end != tok->sentinel || longint < 0
+                || longint > (long)INT_MAX)
+                goto error_format;
+
+            model->nr_feature = (int)longint;
+            EXPECT_EOL;
+        }
+        else if (TOK("bias")) {
+            if (seen & SEEN_BIAS) goto error_format;
+            seen |= SEEN_BIAS;
+
+            EXPECT_TOK;
+            longfloat = PyOS_string_to_double(tok->start, &end,
+                                              PyExc_OverflowError);
+            if (longfloat == -1.0 && PyErr_Occurred()) goto error_model;
+            if (end != tok->sentinel) goto error_format;
+
+            model->bias = longfloat;
+            EXPECT_EOL;
+        }
+        else if (TOK("label")) {
+            if (seen & SEEN_LABEL) goto error_format;
+            seen |= SEEN_LABEL;
+            if (!(seen & SEEN_NR_CLASS))
+                goto error_format;
+
+            if (model->nr_class > 0) {
+                if (!(model->label = malloc(model->nr_class
+                                            * (sizeof *model->label)))) {
+                    PyErr_SetNone(PyExc_MemoryError);
+                    goto error_model;
+                }
+                for (h = 0; h < model->nr_class; ++h) {
+                    EXPECT_TOK;
+                    longint = PyOS_strtol(tok->start, &end, 10);
+                    if (errno || end != tok->sentinel
+                        || longint < (long)INT_MIN
+                        || longint > (long)INT_MAX)
+                        goto error_format;
+                    model->label[h] = (int)longint;
+                }
+            }
+            EXPECT_EOL;
+        }
+        else if (TOK("w")) {
+            if (seen & SEEN_W) goto error_format;
+            seen |= SEEN_W;
+            if ((seen & SEEN_REQUIRED) != SEEN_REQUIRED)
+                goto error_format;
+
+            EXPECT_EOL;
+
+            cols = model->nr_feature;
+            if (!(model->bias < 0))
+                ++cols;
+            rows = (model->nr_class == 2
+                    && model->param.solver_type != MCSVM_CS)
+                    ? 1 : model->nr_class;
+            if (((int)(INT_MAX / rows)) < cols) {
+                PyErr_SetNone(PyExc_OverflowError);
+                goto error_model;
+            }
+
+            if (!(model->w = malloc(cols * rows * (sizeof *model->w)))) {
+                PyErr_SetNone(PyExc_MemoryError);
+                goto error_model;
+            }
+
+            for (w = 0; w < cols; ++w) {
+                for (h = 0; h < rows; ++h) {
+                    EXPECT_TOK;
+                    longfloat = PyOS_string_to_double(tok->start, &end,
+                                                      PyExc_OverflowError);
+                    if (longfloat == -1.0 && PyErr_Occurred()) goto error_model;
+                    if (end != tok->sentinel) goto error_format;
+                    model->w[w * rows + h] = longfloat;
+                }
+                EXPECT_EOL;
+            }
+        }
+        else {
+            goto error_format;
+        }
+    }
+
+#undef TOK
+#undef EXPECT_EOL
+#undef EXPECT_TOK
+
+    pl_iter_clear(&tokread);
+    return pl_model_new(cls, model);
+
+error_format:
+    PyErr_SetString(PyExc_ValueError, "Invalid format");
+
+error_model:
+    if (model->label) free(model->label);
+    if (model->w) free(model->w);
+    free(model);
+error_tokread:
+    pl_iter_clear(&tokread);
+    return self;
+}
+
+#undef SEEN_REQUIRED
+#undef SEEN_W
+#undef SEEN_LABEL
+#undef SEEN_BIAS
+#undef SEEN_NR_FEATURE
+#undef SEEN_NR_CLASS
+#undef SEEN_SOLVER_TYPE
+
 /* ------------------------- END Helper Functions ------------------------ */
 
 /* ------------------- BEGIN PredictIterator DEFINITION ------------------ */
@@ -562,11 +764,11 @@ error_self:
  * Return NULL on error
  */
 static pl_model_t *
-pl_model_new(struct model *model)
+pl_model_new(PyTypeObject *cls, struct model *model)
 {
     pl_model_t *self;
 
-    if (!(self = GENERIC_ALLOC(&PL_ModelType))) {
+    if (!(self = GENERIC_ALLOC(cls))) {
         free_and_destroy_model(&model);
         return NULL;
     }
@@ -597,7 +799,7 @@ Create model instance from a training run\n\
 :Rtype: `Model`");
 
 static PyObject *
-PL_ModelType_train(PyObject *cls, PyObject *args, PyObject *kwds)
+PL_ModelType_train(PyTypeObject *cls, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"matrix", "solver", "bias", NULL};
     struct problem prob;
@@ -625,46 +827,106 @@ PL_ModelType_train(PyObject *cls, PyObject *args, PyObject *kwds)
     if (pl_solver_as_parameter(solver_, &param) == -1)
         return NULL;
 
-    return (PyObject *)pl_model_new(train(&prob, &param));
+    return (PyObject *)pl_model_new(cls, train(&prob, &param));
 }
 
 PyDoc_STRVAR(PL_ModelType_load__doc__,
 "load(cls, file)\n\
 \n\
-Create model instance from an open stream (previously created by\n\
+Create `Model` instance from a file (previously created by\n\
 Model.save())\n\
 \n\
+Note that the exact I/O exceptions depend on the stream passed in.\n\
+\n\
 :Parameters:\n\
-  `file` : ``file``\n\
-    Open stream\n\
+  `file` : ``file`` or ``str``\n\
+    Either a readable stream or a filename. If the passed object provides a\n\
+    ``read`` attribute/method, it's treated as readable file stream, as a\n\
+    filename otherwise. If it's a stream, the stream is read from the current\n\
+    position and remains open after hitting EOF. In case of a filename, the\n\
+    accompanying file is opened in text mode, read from the beginning and\n\
+    closed afterwards.\n\
 \n\
 :Return: New model instance\n\
-:Rtype: `Model`");
+:Rtype: `Model`\n\
+\n\
+:Exceptions:\n\
+  - `IOError` : Error reading the file\n\
+  - `ValueError` : Error parsing the file");
 
 static PyObject *
-PL_ModelType_load(PyObject *cls, PyObject *args, PyObject *kwds)
+PL_ModelType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"file", NULL};
-    PyObject *file;
-    pl_model_t *self;
+    PyObject *file_, *read_, *stream_ = NULL, *close_ = NULL;
+    pl_model_t *self = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
-                                     &file))
+                                     &file_))
         return NULL;
 
-    self = pl_model_new(NULL);
+    if (pl_attr(file_, "read", &read_) == -1)
+        return NULL;
+
+    if (!read_) {
+        Py_INCREF(file_);
+        stream_ = PyObject_CallFunction((PyObject*)&PyFile_Type, "O", file_);
+        Py_DECREF(file_);
+        if (!stream_)
+            return NULL;
+
+        if (pl_attr(stream_, "close", &close_) == -1)
+            goto error_stream;
+
+        if (pl_attr(stream_, "read", &read_) == -1)
+            goto error_close;
+        if (!read_) {
+            PyErr_SetString(PyExc_AssertionError, "File has no read method");
+            goto error_close;
+        }
+    }
+
+    self = pl_model_from_stream(cls, read_);
+
+    /* fall through */
+
+error_close:
+    if (close_) {
+        PyObject_CallFunction(close_, "");
+        Py_DECREF(close_);
+    }
+error_stream:
+    Py_XDECREF(stream_);
+
     return (PyObject *)self;
 }
 
 PyDoc_STRVAR(PL_ModelType_save__doc__,
 "save(self, file)\n\
 \n\
-Save model to an open stream\n\
+Save `Model` instance to a file.\n\
+\n\
+After some basic information about solver type, dimensions and labels the\n\
+model matrix is stored as a sequence of doubles per line. The matrix is\n\
+transposed, so the height is the number of features (including the bias\n\
+feature) and the width is the number of classes.\n\
+\n\
+All numbers are represented as strings parsable either as ints (for\n\
+dimensions and labels) or doubles (other values).\n\
+\n\
+Note that the exact I/O exceptions depend on the stream passed in.\n\
 \n\
 :Parameters:\n\
-  `file` : ``file``\n\
-    Open stream\n\
-");
+  `file` : ``file`` or ``str``\n\
+    Either a writeable stream or a filename. If the passed object provides a\n\
+    ``write`` attribute/method, it's treated as writeable stream, as a\n\
+    filename otherwise. If it's a stream, the stream is written to the current\n\
+    position and remains open when done. In case of a filename, the\n\
+    accompanying file is opened in text mode, truncated, written from the\n\
+    beginning and closed afterwards.\n\
+\n\
+:Exceptions:\n\
+  - `IOError` : Error writing the file");
 
 static PyObject *
 PL_ModelType_save(pl_model_t *self, PyObject *args, PyObject *kwds)

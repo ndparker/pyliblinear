@@ -152,6 +152,14 @@ pl_attr(PyObject *, const char *, PyObject **);
  */
 
 /*
+ * Find solver type number from pyobject
+ *
+ * Return -1 on error
+ */
+int
+pl_solver_type_as_int(PyObject *, int *);
+
+/*
  * Return solver type mapping as dict (Name->ID)
  *
  * Return NULL on error

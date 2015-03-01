@@ -271,7 +271,7 @@ error_result:
  *
  * Return -1 on error
  */
-static int
+int
 pl_solver_type_as_int(PyObject *type_, int *type)
 {
     PyObject *tmp;
