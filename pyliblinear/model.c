@@ -314,6 +314,95 @@ error_result:
     return NULL;
 }
 
+/*
+ * Save model to stream
+ *
+ * Return -1 on error
+ */
+static int
+pl_model_to_stream(pl_model_t *self, PyObject *write)
+{
+    char *r;
+    pl_bufwriter_t *buf;
+    char intbuf[PL_INT_AS_CHAR_BUF_SIZE];
+    int h, w, res, cols, rows;
+
+    if (!(buf = pl_bufwriter_new(write)))
+        return -1;
+
+#define WRITE_STR(str) do {                     \
+    if (pl_bufwriter_write(buf, str, -1) == -1) \
+        goto error;                             \
+} while(0)
+
+#define WRITE_INT(num) do {                                             \
+    r = pl_int_as_char(intbuf, num);                                    \
+    if (-1 == pl_bufwriter_write(buf, r,                                \
+                                 intbuf + PL_INT_AS_CHAR_BUF_SIZE - r)) \
+        goto error;                                                     \
+} while(0)
+
+#define WRITE_DBL(num) do {                                 \
+    if (!(r = PyOS_double_to_string(num, 'r', 0, 0, NULL))) \
+        goto error;                                         \
+    res = pl_bufwriter_write(buf, r, -1);                   \
+    PyMem_Free(r);                                          \
+    if (res == -1)                                          \
+        goto error;                                         \
+} while(0)
+
+    WRITE_STR("solver_type ");
+    if (!(r = (char *)pl_solver_name(self->model->param.solver_type))) {
+        PyErr_SetString(PyExc_AssertionError, "Unknown solver type");
+        goto error;
+    }
+    WRITE_STR(r);
+    WRITE_STR("\nnr_class ");
+    WRITE_INT(self->model->nr_class);
+
+    if (self->model->label) {
+        WRITE_STR("\nlabel");
+        for (h = 0; h < self->model->nr_class; ++h) {
+            WRITE_STR(" ");
+            WRITE_INT(self->model->label[h]);
+        }
+    }
+    WRITE_STR("\nnr_feature ");
+    WRITE_INT(self->model->nr_feature);
+    WRITE_STR("\nbias ");
+    WRITE_DBL(self->model->bias);
+    WRITE_STR("\nw\n");
+
+    cols = self->model->nr_feature;
+    if (!(self->model->bias < 0))
+        ++cols;
+    rows = (self->model->nr_class == 2
+            && self->model->param.solver_type != MCSVM_CS)
+            ? 1 : self->model->nr_class;
+
+    /* For whatever reason the matrix is stored transposed. */
+    for (w = 0; w < cols; ++w) {
+        for (h = 0; h < rows; ++h) {
+            WRITE_DBL(self->model->w[w * rows + h]);
+            if (h < (rows - 1))
+                WRITE_STR(" ");
+        }
+        WRITE_STR("\n");
+    }
+
+#undef WRITE_DBL
+#undef WRITE_INT
+#undef WRITE_STR
+
+    return pl_bufwriter_close(&buf);
+
+error:
+    if (!PyErr_Occurred())
+        PyErr_SetNone(PyExc_MemoryError);
+    pl_bufwriter_clear(&buf);
+    return -1;
+}
+
 /* ------------------------- END Helper Functions ------------------------ */
 
 /* ------------------- BEGIN PredictIterator DEFINITION ------------------ */
@@ -581,10 +670,47 @@ static PyObject *
 PL_ModelType_save(pl_model_t *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"file", NULL};
-    PyObject *file;
+    PyObject *file_, *write_, *stream_ = NULL, *close_ = NULL;
+    int res = -1;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
-                                     &file))
+                                     &file_))
+        return NULL;
+
+    if (pl_attr(file_, "write", &write_) == -1)
+        return NULL;
+
+    if (!write_) {
+        Py_INCREF(file_);
+        stream_ = PyObject_CallFunction((PyObject*)&PyFile_Type, "Os", file_,
+                                        "w+");
+        Py_DECREF(file_);
+        if (!stream_)
+            return NULL;
+
+        if (pl_attr(stream_, "close", &close_) == -1)
+            goto error_stream;
+
+        if (pl_attr(stream_, "write", &write_) == -1)
+            goto error_close;
+        if (!write_) {
+            PyErr_SetString(PyExc_AssertionError, "File has no write method");
+            goto error_close;
+        }
+    }
+
+    res = pl_model_to_stream(self, write_);
+    /* fall through */
+
+error_close:
+    if (close_) {
+        PyObject_CallFunction(close_, "");
+        Py_DECREF(close_);
+    }
+error_stream:
+    Py_XDECREF(stream_);
+
+    if (res == -1)
         return NULL;
 
     Py_RETURN_NONE;
@@ -754,15 +880,7 @@ PyTypeObject PL_ModelType = {
     0,                                                  /* tp_iternext */
     PL_ModelType_methods,                               /* tp_methods */
     0,                                                  /* tp_members */
-    PL_ModelType_getset,                                /* tp_getset */
-    0,                                                  /* tp_base */
-    0,                                                  /* tp_dict */
-    0,                                                  /* tp_descr_get */
-    0,                                                  /* tp_descr_set */
-    0,                                                  /* tp_dictoffset */
-    0,                                                  /* tp_init */
-    0,                                                  /* tp_alloc */
-    0                                                   /* tp_new */
+    PL_ModelType_getset                                 /* tp_getset */
 };
 
 /* ------------------------- END Model DEFINITION ------------------------ */

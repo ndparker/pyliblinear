@@ -128,6 +128,24 @@ pl_solver_as_parameter(PyObject *self, struct parameter *param)
 
 
 /*
+ * Find solver name
+ *
+ * return NULL if not found.
+ */
+const char *
+pl_solver_name(int solver_type)
+{
+    pl_solver_type_t *stype;
+
+    for (stype = pl_solver_type_list; stype->name; ++stype) {
+        if (stype->type == solver_type)
+            return stype->name;
+    }
+    return NULL;
+}
+
+
+/*
  * Transform (liblinear) struct parameter to pl_solver_t
  *
  * Weights are copied.
@@ -659,17 +677,17 @@ PyDoc_STRVAR(PL_SolverType_type_doc,
 static PyObject *
 PL_SolverType_type_get(pl_solver_t *self, void *closure)
 {
-    pl_solver_type_t *stype;
+    const char *name;
 
-    for (stype = pl_solver_type_list; stype->name; ++stype) {
-        if (stype->type == self->solver_type)
-            return PyString_FromString(stype->name);
+    if (!(name = pl_solver_name(self->solver_type))) {
+        PyErr_SetString(PyExc_AssertionError,
+                        "Solver type unknown. This should not happen (TM).");
+        return NULL;
     }
 
-    PyErr_SetString(PyExc_AssertionError,
-                    "Solver type unknown. This should not happen (TM).");
-    return NULL;
+    return PyString_FromString(name);
 }
+
 
 static PyGetSetDef PL_SolverType_getset[] = {
     {"p",

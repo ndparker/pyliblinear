@@ -183,6 +183,15 @@ pl_parameter_as_solver(struct parameter *);
 
 
 /*
+ * Find solver name
+ *
+ * return NULL if not found.
+ */
+const char *
+pl_solver_name(int solver_type);
+
+
+/*
  * ************************************************************************
  * Matrix utilities
  * ************************************************************************

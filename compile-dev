@@ -5,4 +5,5 @@
 
 # -Wmissing-prototypes
 # -Wmissing-declarations
-CFLAGS="-ggdb -std=c89 -pedantic -Wnested-externs -Wcast-qual -Wcast-align -Wbad-function-cast -Wshadow -Wundef -Wdeclaration-after-statement -Wstrict-overflow=4 -Wmissing-include-dirs -Winit-self -Wextra -Wall -Werror -Wno-overlength-strings -Wno-long-long -Wno-unused-parameter -Wno-missing-field-initializers" exec make clean compile
+# -Wcast-qual
+CFLAGS="-ggdb -std=c89 -pedantic -Wnested-externs -Wcast-align -Wbad-function-cast -Wshadow -Wundef -Wdeclaration-after-statement -Wstrict-overflow=4 -Wmissing-include-dirs -Winit-self -Wextra -Wall -Werror -Wno-overlength-strings -Wno-long-long -Wno-unused-parameter -Wno-missing-field-initializers" exec make clean compile
