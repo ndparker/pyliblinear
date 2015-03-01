@@ -59,11 +59,11 @@ typedef struct {
     PyObject *weakreflist;
 
     pl_iter_t *iter;
-
     pl_model_t *model;
     double *dec_values;
 
-    int j;
+    int label_only;
+    int probability;
 } pl_predict_iter_t;
 
 
@@ -285,16 +285,17 @@ error_matrix:
  * Return NULL on error
  */
 static PyObject *
-pl_dec_values_as_dict(struct model *model, double *dec_values)
+pl_dec_values_as_dict(struct model *model, double *dec_values, int cut_short)
 {
     PyObject *result;
     PyObject *key, *value;
-    int j;
+    int j, m;
 
     if (!(result = PyDict_New()))
         return NULL;
 
-    for (j = model->nr_class - 1; j >= 0; --j) {
+    m = (cut_short && model->nr_class <= 2) ? 1 : model->nr_class;
+    for (j = m - 1; j >= 0; --j) {
         if (!(key = PyFloat_FromDouble((double)model->label[j])))
             goto error_result;
         if (!(value = PyFloat_FromDouble(dec_values[j])))
@@ -619,17 +620,26 @@ PL_PredictIteratorType_iternext(pl_predict_iter_t *self)
     double label;
 
     if (pl_iter_next(self->iter, &array) == 0 && array) {
-        label = predict_values(self->model->model, array, self->dec_values);
+        if (self->probability) {
+            label = predict_probability(self->model->model, array,
+                                        self->dec_values);
+        }
+        else {
+            label = predict_values(self->model->model, array,
+                                   self->dec_values);
+        }
+        if (!(label_ = PyFloat_FromDouble(label)))
+            return NULL;
+        if (self->label_only)
+            return label_;
 
         if (!(dict_ = pl_dec_values_as_dict(self->model->model,
-                                            self->dec_values)))
-            return NULL;
-
-        if (!(label_ = PyFloat_FromDouble(label)))
-            goto error_dict;
+                                            self->dec_values,
+                                            !self->probability)))
+            goto error_label;
 
         if (!(result = PyTuple_New(2)))
-            goto error_label;
+            goto error_dict;
 
         PyTuple_SET_ITEM(result, 0, label_);
         PyTuple_SET_ITEM(result, 1, dict_);
@@ -639,10 +649,10 @@ PL_PredictIteratorType_iternext(pl_predict_iter_t *self)
 
     return NULL;
 
-error_label:
-    Py_DECREF(label_);
 error_dict:
     Py_DECREF(dict_);
+error_label:
+    Py_DECREF(label_);
     return NULL;
 }
 
@@ -714,7 +724,8 @@ PyTypeObject PL_PredictIteratorType = {
  * Create new predict iterator object
  */
 static PyObject *
-pl_predict_iter_new(pl_model_t *model, PyObject *matrix)
+pl_predict_iter_new(pl_model_t *model, PyObject *matrix, int label_only,
+                    int probability)
 {
     pl_predict_iter_t *self;
 
@@ -725,6 +736,8 @@ pl_predict_iter_new(pl_model_t *model, PyObject *matrix)
     self->model = model;
     self->dec_values = NULL;
     self->iter = NULL;
+    self->label_only = label_only;
+    self->probability = probability;
 
     if (model->model->nr_class > 0) {
         self->dec_values = PyMem_Malloc(model->model->nr_class
@@ -738,7 +751,8 @@ pl_predict_iter_new(pl_model_t *model, PyObject *matrix)
                 goto error_self;
         }
         else {
-            if (!(self->iter = pl_iter_iterable_new(matrix, model->model->bias,
+            if (!(self->iter = pl_iter_iterable_new(matrix,
+                                                    model->model->bias,
                                                     self->model->model
                                                         ->nr_feature)))
                 goto error_self;
@@ -979,28 +993,54 @@ error_stream:
 }
 
 PyDoc_STRVAR(PL_ModelType_predict__doc__,
-"predict(self, matrix)\n\
+"predict(self, matrix, label_only=True, probability=False)\n\
 \n\
 Run the model on `matrix` and predict labels.\n\
 \n\
 :Parameters:\n\
-  `matrix` : `pyliblinear.FeatureMatrix`\n\
-    Feature matrix to inspect and predict upon\n\
+  `matrix` : `pyliblinear.FeatureMatrix` or iterable\n\
+    Either a feature matrix or a simple iterator over feature vectors to\n\
+    inspect and predict upon.\n\
 \n\
-:Return: Return values\n\
-:Rtype: ``tuple``");
+  `label_only` : ``bool``\n\
+    Return the label only? If false, the decision dict for all labels is\n\
+    returned as well.\n\
+\n\
+  `probability` : ``bool``\n\
+    Use probability estimates?\n\
+\n\
+:Return: Result iterator. Either over labels or over label/decision dict\n\
+         tuples.\n\
+:Rtype: iterable");
 
 static PyObject *
 PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"matrix", NULL};
-    PyObject *matrix_;
+    static char *kwlist[] = {"matrix", "label_only", "probability", NULL};
+    PyObject *matrix_, *label_only_ = NULL, *probability_;
+    int label_only, probability;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
-                                     &matrix_))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OO", kwlist,
+                                     &matrix_, &label_only_, &probability_))
         return NULL;
 
-    return pl_predict_iter_new(self, matrix_);
+    if (!label_only_)
+        label_only = 1;
+    else if ((label_only = PyObject_IsTrue(label_only_)) == -1)
+        return NULL;
+
+    if (!probability_)
+        probability = 0;
+    else if ((probability = PyObject_IsTrue(probability_)) == -1)
+        return NULL;
+    if (probability && !check_probability_model(self->model)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "Probability estimates are not supported by this "
+                        "model.");
+        return NULL;
+    }
+
+    return pl_predict_iter_new(self, matrix_, label_only, probability);
 }
 
 PyDoc_STRVAR(PL_ModelType_solver__doc__,

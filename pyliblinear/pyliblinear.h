@@ -61,6 +61,7 @@ PyTypeObject PL_FeatureMatrixType;
     ((op)->ob_type == &PL_FeatureMatrixType)
 
 
+PyTypeObject PL_PredictIteratorType;
 PyTypeObject PL_ModelType;
 #define PL_ModelType_CheckExact(op) \
     ((op)->ob_type == &PL_ModelType)
