@@ -826,14 +826,14 @@ static PyGetSetDef PL_ModelType_getset[] = {
 static int
 PL_ModelType_clear(pl_model_t *self)
 {
-    void *ptr;
+    struct model *ptr;
 
     if (self->weakreflist)
         PyObject_ClearWeakRefs((PyObject *)self);
 
     if ((ptr = self->model)) {
         self->model = NULL;
-        free_and_destroy_model(ptr);
+        free_and_destroy_model(&ptr);
     }
 
     return 0;
