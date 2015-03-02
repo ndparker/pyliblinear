@@ -40,6 +40,16 @@ typedef struct pl_vector_block {
 
 
 /*
+ * Evaluation result
+ */
+typedef struct {
+    double acc;  /* Accuracy */
+    double mse;  /* Mean squared error */
+    double scc;  /* Squared correlation coefficient */
+} pl_eval_t;
+
+
+/*
  * Object structure for FeatureMatrix
  */
 typedef struct {
@@ -442,6 +452,45 @@ error:
         PyErr_SetNone(PyExc_MemoryError);
     pl_bufwriter_clear(&buf);
     return -1;
+}
+
+
+/*
+ * Evaluate prediction result
+ *
+ * Adapted from liblinear/train.c
+ *
+ * Return -1 on error
+ */
+static int
+pl_eval(struct problem *prob, double *predicted, pl_eval_t *result)
+{
+    int j, corr = 0;
+    double y, v, err = 0, sumv = 0, sumy = 0, sumvv = 0, sumyy = 0, sumvy = 0;
+
+    if (prob->l <= 0) {
+        PyErr_SetNone(PyExc_ZeroDivisionError);
+        return -1;
+    }
+    for (j = 0; j < prob->l; ++j) {
+        y = prob->y[j];
+        v = predicted[j];
+        corr += v == y;
+        err += (v - y) * (v - y);
+        sumv += v;
+        sumy += y;
+        sumvv += v * v;
+        sumyy += y * y;
+        sumvy += v * y;
+    }
+    result->acc = corr / prob->l;
+    result->mse = err / prob->l;
+    result->scc = ((prob->l * sumvy - sumv * sumy)
+                      * (prob->l * sumvy - sumv * sumy))
+                  /
+                  ((prob->l * sumvv - sumv * sumv)
+                      * (prob->l * sumyy - sumy * sumy));
+    return 0;
 }
 
 /* ------------------------- END Helper Functions ------------------------ */
@@ -1127,6 +1176,97 @@ PL_FeatureMatrixType_from_iterables(PyTypeObject *cls, PyObject *args,
     return (PyObject *)self;
 }
 
+PyDoc_STRVAR(PL_FeatureMatrixType_xval__doc__,
+"cross_validate(self, nr_fold, solver=None, bias=None)\n\
+\n\
+Run cross-validation of a solver using the matrix instance.\n\
+\n\
+:Parameters:\n\
+\n\
+  `nr_fold` : ``int``\n\
+    Number of folds. ``nr_folds > 1``\n\
+\n\
+  `solver` : `pyliblinear.Solver`\n\
+    Solver instance. If omitted or ``None``, a default solver is picked.\n\
+\n\
+  `bias` : ``float``\n\
+    Bias to the hyperplane. Of omitted or ``None``, no bias is applied.\n\
+    ``bias >= 0``.\n\
+\n\
+:Return: A tuple of accuracy, mean squared error and squared correlation\n\
+         coefficient. Pick the value(s) suitable for your solver. Basically\n\
+         for SVR solvers MSE and SCC are interesting, accuracy for the other\n\
+         ones.\n\
+:Rtype: ``tuple``");
+
+static PyObject *
+PL_FeatureMatrixType_xval(pl_matrix_t *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"nr_fold", "solver", "bias", NULL};
+    struct problem prob;
+    struct parameter param;
+    pl_eval_t result;
+    PyObject *nr_fold_, *solver_ = NULL, *bias_ = NULL;
+    double *target;
+    double bias = -1.0;
+    int res, nr_fold;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OO", kwlist,
+                                     &nr_fold_, &solver_, &bias_))
+        return NULL;
+
+    if (bias_ && bias_ != Py_None) {
+        Py_INCREF(bias_);
+        if (pl_as_double(bias_, &bias) == -1)
+            return NULL;
+        if (bias < 0) {
+            PyErr_SetString(PyExc_ValueError, "bias must be >= 0");
+            return NULL;
+        }
+    }
+
+    Py_INCREF(nr_fold_);
+    if (pl_as_int(nr_fold_, &nr_fold) == -1)
+        return NULL;
+    if (!(nr_fold > 1)) {
+        PyErr_SetString(PyExc_ValueError, "nr_fold must be more than one.");
+        return NULL;
+    }
+
+    if (pl_matrix_as_problem((PyObject *)self, bias, &prob) == -1)
+        return NULL;
+
+    if (prob.l > 0) {
+        if (pl_solver_as_parameter(solver_, &param) == -1)
+            return NULL;
+
+        if (nr_fold > prob.l) {
+            nr_fold = prob.l;
+            if (-1 == PyErr_WarnEx(PyExc_UserWarning,
+                                   "WARNING: # folds > # data. Will use # "
+                                   "folds = # data instead (i.e., "
+                                   "leave-one-out cross validation)", 1))
+                return NULL;
+        }
+
+        if (!(target = PyMem_Malloc(prob.l * (sizeof *target)))) {
+            PyErr_SetNone(PyExc_MemoryError);
+            return NULL;
+        }
+
+        cross_validation(&prob, &param, nr_fold, target);
+        res = pl_eval(&prob, target, &result);
+        PyMem_Free(target);
+        if (res == -1)
+            return NULL;
+
+        return Py_BuildValue("(ddd)", result.acc, result.mse, result.scc);
+    }
+
+    PyErr_SetString(PyExc_ValueError, "Matrix is empty");
+    return NULL;
+}
+
 PyDoc_STRVAR(PL_FeatureMatrixType_save__doc__,
 "save(self, file)\n\
 \n\
@@ -1316,6 +1456,10 @@ PL_FeatureMatrixType_new(PyTypeObject *cls, PyObject *args, PyObject *kwds);
 #endif
 
 static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
+    {"cross_validate",
+     (PyCFunction)PL_FeatureMatrixType_xval,     METH_KEYWORDS,
+     PL_FeatureMatrixType_xval__doc__},
+
     {"features",
      (PyCFunction)PL_FeatureMatrixType_features, METH_NOARGS,
      PL_FeatureMatrixType_features__doc__},
