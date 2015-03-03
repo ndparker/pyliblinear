@@ -360,7 +360,7 @@ class SVNRelease(Target):
         revision = parser.getint('package', 'version.revision')
         version = strversion
         if isdev:
-            version += '-dev-r%d' % (revision,)
+            version += '.dev%d' % (revision,)
         trunk_url = self._repo_url()
         if not trunk_url.endswith('/trunk'):
             rex = _re.compile(r'/branches/\d+(?:\.\d+)*\.[xX]$').search
@@ -442,7 +442,7 @@ class GitRelease(Target):
         revision = parser.getint('package', 'version.revision')
         version = strversion
         if isdev:
-            version += '-dev-r%d' % (revision,)
+            version += '.dev%d' % (revision,)
         git = shell.frompath('git')
         shell.spawn(
             git, 'tag', '-a', '-m', 'Release version ' + version, '--',
@@ -625,7 +625,7 @@ class Version(Target):
         """ Modify version in changes """
         filename = _os.path.join(shell.native(self.dirs['docs']), 'CHANGES')
         if isdev:
-            strversion = "%s-dev-r%d" % (strversion, revision)
+            strversion = "%s.dev%d" % (strversion, revision)
         fp = textopen(filename)
         try:
             initlines = fp.readlines()
@@ -646,7 +646,7 @@ class Version(Target):
         shortversion = '.'.join(strversion.split('.')[:2])
         longversion = strversion
         if isdev:
-            longversion = "%s-dev-r%d" % (strversion, revision)
+            longversion = "%s.dev%d" % (strversion, revision)
         fp = textopen(filename)
         try:
             initlines = fp.readlines()
@@ -693,7 +693,7 @@ class Version(Target):
             if hasstable:
                 dllines = oldstable
             else:
-                VERSION = "%s-dev-r%s" % (strversion, revision)
+                VERSION = "%s.dev%d" % (strversion, revision)
                 PATH='dev/'
         newdev = []
         fp = textopen(filename + '.in')
@@ -737,7 +737,7 @@ class Version(Target):
                             if newdev:
                                 indev = newdev
                             fp.write(''.join(indev)
-                                .replace('@@DEVVERSION@@', "%s-dev-r%d" % (
+                                .replace('@@DEVVERSION@@', "%s.dev%d" % (
                                     strversion, revision
                                 ))
                                 .replace('@@PATH@@', 'dev/')

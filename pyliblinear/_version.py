@@ -147,7 +147,7 @@ class Version(tuple):
         """
         return "%s%s" % (
             self._str,
-            ("", "-dev-r%d" % self.revision)[self.is_dev],
+            ("", ".dev%d" % self.revision)[self.is_dev],
         )
 
     def __unicode__(self):
@@ -159,5 +159,5 @@ class Version(tuple):
         """
         return u"%s%s" % (
             u".".join(map(unicode, self)),
-            (u"", u"-dev-r%d" % self.revision)[self.is_dev],
+            (u"", u".dev%d" % self.revision)[self.is_dev],
         )

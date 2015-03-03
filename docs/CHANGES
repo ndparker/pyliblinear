@@ -1,3 +1,8 @@
+Changes with version
+
+ *) Adjusted versioning scheme to PEP 440
+
+
 Changes with version 1.96.0-dev-r1
 
  *) First alpha release
