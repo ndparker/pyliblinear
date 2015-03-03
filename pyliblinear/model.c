@@ -1025,7 +1025,7 @@ static PyObject *
 PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"matrix", "label_only", "probability", NULL};
-    PyObject *matrix_, *label_only_ = NULL, *probability_;
+    PyObject *matrix_, *label_only_ = NULL, *probability_ = NULL;
     int label_only, probability;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OO", kwlist,
