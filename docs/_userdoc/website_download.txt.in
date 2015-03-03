@@ -1,21 +1,13 @@
 Download
 ~~~~~~~~
 
-Change Log
-----------
-
-`CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-@@DEVVERSION@@>`_
-
-
-Source Packages
----------------
-
 .. comment
     .. begin stable
 
     Current Stable Version
     ''''''''''''''''''''''
 
+    - `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-@@VERSION@@>`_
     - `pyliblinear-@@VERSION@@.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.xz>`_
     - `pyliblinear-@@VERSION@@.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.bz2>`_
     - `pyliblinear-@@VERSION@@.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.gz>`_
@@ -28,8 +20,9 @@ Source Packages
 .. begin dev
 
 Current Development Version
-+++++++++++++++++++++++++++
+---------------------------
 
+- `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-@@DEVVERSION@@>`_
 - `pyliblinear-@@DEVVERSION@@.tar.xz <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.xz>`_
 - `pyliblinear-@@DEVVERSION@@.tar.bz2 <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.bz2>`_
 - `pyliblinear-@@DEVVERSION@@.tar.gz <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.gz>`_

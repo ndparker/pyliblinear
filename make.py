@@ -693,7 +693,7 @@ class Version(Target):
             if hasstable:
                 dllines = oldstable
             else:
-                VERSION = "%s-dev-%s" % (strversion, revision)
+                VERSION = "%s-dev-r%s" % (strversion, revision)
                 PATH='dev/'
         newdev = []
         fp = textopen(filename + '.in')
