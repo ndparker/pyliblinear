@@ -440,6 +440,14 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
     model->label = NULL;
     model->w = NULL;
 
+    /* Not used, but be on the safe side here: */
+    model->param.C = -1.0;
+    model->param.eps = -1.0;
+    model->param.p = -1.0;
+    model->param.nr_weight = 0;
+    model->param.weight = NULL;
+    model->param.weight_label = NULL;
+
 #define EXPECT_TOK do {                                      \
     if (pl_iter_next(tokread, &tok) == -1) goto error_model; \
     if (!tok || PL_TOK_IS_EOL(tok)) goto error_format;       \
@@ -1043,20 +1051,6 @@ PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)
     return pl_predict_iter_new(self, matrix_, label_only, probability);
 }
 
-PyDoc_STRVAR(PL_ModelType_solver__doc__,
-"solver(self)\n\
-\n\
-Return solver instance from model parameters\n\
-\n\
-:Return: New solver instance\n\
-:Rtype: `pyliblinear.Solver`");
-
-static PyObject *
-PL_ModelType_solver(pl_model_t *self, PyObject *args)
-{
-    return pl_parameter_as_solver(&self->model->param);
-}
-
 static struct PyMethodDef PL_ModelType_methods[] = {
     {"train",
      (PyCFunction)PL_ModelType_train,           METH_KEYWORDS | METH_CLASS,
@@ -1074,15 +1068,11 @@ static struct PyMethodDef PL_ModelType_methods[] = {
      (PyCFunction)PL_ModelType_predict,         METH_KEYWORDS,
      PL_ModelType_predict__doc__},
 
-    {"solver",
-     (PyCFunction)PL_ModelType_solver,          METH_NOARGS,
-     PL_ModelType_solver__doc__},
-
     {NULL, NULL}  /* Sentinel */
 };
 
 PyDoc_STRVAR(PL_ModelType_is_probability_doc,
-"Is model a probability model?.\n\
+"Is model a probability model?\n\
 \n\
 :Type: ``bool``");
 
@@ -1096,7 +1086,7 @@ PL_ModelType_is_probability_get(pl_model_t *self, void *closure)
 }
 
 PyDoc_STRVAR(PL_ModelType_is_regression_doc,
-"Is model a regression model?.\n\
+"Is model a regression model?\n\
 \n\
 :Type: ``bool``");
 
@@ -1107,6 +1097,25 @@ PL_ModelType_is_regression_get(pl_model_t *self, void *closure)
         Py_RETURN_TRUE;
 
     Py_RETURN_FALSE;
+}
+
+PyDoc_STRVAR(PL_ModelType_solver_type_doc,
+"Solver type used to create the model\n\
+\n\
+:Type: ``str``");
+
+static PyObject *
+PL_ModelType_solver_type_get(pl_model_t *self, void *closure)
+{
+    const char *name;
+
+    if (!(name = pl_solver_name(self->model->param.solver_type))) {
+        PyErr_SetString(PyExc_AssertionError,
+                        "Solver type unknown. This should not happen (TM).");
+        return NULL;
+    }
+
+    return PyString_FromString(name);
 }
 
 static PyGetSetDef PL_ModelType_getset[] = {
@@ -1120,6 +1129,12 @@ static PyGetSetDef PL_ModelType_getset[] = {
      (getter)PL_ModelType_is_regression_get,
      NULL,
      PL_ModelType_is_regression_doc,
+     NULL},
+
+    {"solver_type",
+     (getter)PL_ModelType_solver_type_get,
+     NULL,
+     PL_ModelType_solver_type_doc,
      NULL},
 
     {NULL}  /* Sentinel */

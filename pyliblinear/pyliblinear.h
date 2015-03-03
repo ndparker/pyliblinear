@@ -181,17 +181,6 @@ pl_solver_as_parameter(PyObject *, struct parameter *);
 
 
 /*
- * Transform (liblinear) struct parameter to pl_solver_t
- *
- * Weights are copied.
- *
- * Return NULL on error
- */
-PyObject *
-pl_parameter_as_solver(struct parameter *);
-
-
-/*
  * Find solver name
  *
  * return NULL if not found.
