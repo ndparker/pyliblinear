@@ -22,7 +22,7 @@ Download
 Current Development Version
 ---------------------------
 
-- `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-@@DEVVERSION@@>`_
+- `CHANGES file <http://storage.perlig.de/pyliblinear/@@PATH@@CHANGES-@@DEVVERSION@@>`_
 - `pyliblinear-@@DEVVERSION@@.tar.xz <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.xz>`_
 - `pyliblinear-@@DEVVERSION@@.tar.bz2 <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.bz2>`_
 - `pyliblinear-@@DEVVERSION@@.tar.gz <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.gz>`_

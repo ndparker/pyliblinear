@@ -22,7 +22,7 @@ Download
 Current Development Version
 ---------------------------
 
-- `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-1.96.0-dev-r1>`_
+- `CHANGES file <http://storage.perlig.de/pyliblinear/dev/CHANGES-1.96.0-dev-r1>`_
 - `pyliblinear-1.96.0-dev-r1.tar.xz <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0-dev-r1.tar.xz>`_
 - `pyliblinear-1.96.0-dev-r1.tar.bz2 <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0-dev-r1.tar.bz2>`_
 - `pyliblinear-1.96.0-dev-r1.tar.gz <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0-dev-r1.tar.gz>`_
