@@ -17,6 +17,10 @@
 
 #include "pyliblinear.h"
 
+#ifdef PL_CROSS_VALIDATE
+#undef PL_CROSS_VALIDATE
+#endif
+
 
 /*
  * Single feature vector
@@ -39,6 +43,7 @@ typedef struct pl_vector_block {
 } pl_vector_block_t;
 
 
+#ifdef PL_CROSS_VALIDATE
 /*
  * Evaluation result
  */
@@ -47,6 +52,7 @@ typedef struct {
     double mse;  /* Mean squared error */
     double scc;  /* Squared correlation coefficient */
 } pl_eval_t;
+#endif
 
 
 /*
@@ -455,6 +461,7 @@ error:
 }
 
 
+#ifdef PL_CROSS_VALIDATE
 /*
  * Evaluate prediction result
  *
@@ -492,6 +499,7 @@ pl_eval(struct problem *prob, double *predicted, pl_eval_t *result)
                       * (prob->l * sumyy - sumy * sumy));
     return 0;
 }
+#endif
 
 /* ------------------------- END Helper Functions ------------------------ */
 
@@ -1176,6 +1184,7 @@ PL_FeatureMatrixType_from_iterables(PyTypeObject *cls, PyObject *args,
     return (PyObject *)self;
 }
 
+#ifdef PL_CROSS_VALIDATE
 PyDoc_STRVAR(PL_FeatureMatrixType_xval__doc__,
 "cross_validate(self, nr_fold, solver=None, bias=None)\n\
 \n\
@@ -1266,6 +1275,7 @@ PL_FeatureMatrixType_xval(pl_matrix_t *self, PyObject *args, PyObject *kwds)
     PyErr_SetString(PyExc_ValueError, "Matrix is empty");
     return NULL;
 }
+#endif
 
 PyDoc_STRVAR(PL_FeatureMatrixType_save__doc__,
 "save(self, file)\n\
@@ -1456,9 +1466,11 @@ PL_FeatureMatrixType_new(PyTypeObject *cls, PyObject *args, PyObject *kwds);
 #endif
 
 static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
+#ifdef PL_CROSS_VALIDATE
     {"cross_validate",
      (PyCFunction)PL_FeatureMatrixType_xval,     METH_KEYWORDS,
      PL_FeatureMatrixType_xval__doc__},
+#endif
 
     {"features",
      (PyCFunction)PL_FeatureMatrixType_features, METH_NOARGS,
