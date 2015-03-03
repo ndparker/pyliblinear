@@ -21,6 +21,8 @@
 
 |**pyliblinear**| is an API for `liblinear
 <http://www.csie.ntu.edu.tw/~cjlin/liblinear/>`_ without using ctypes.
+It aims for more pythonic access to liblinear's features, especially
+featuring lazy evaluations whereever possible.
 
 
 Documentation
@@ -30,21 +32,24 @@ Documentation
     :hidden:
 
 
-
 - :ref:`Documentation Search <search>` (needs javascript)
 - :pyliblinear:`API Documentation </>` (generated)
 
 
-Rationale, Advocacy, Key Features
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. comment:
+    Rationale, Advocacy, Key Features
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-WRITEME.
+    WRITEME.
 
 
 Development Status
 ~~~~~~~~~~~~~~~~~~
 
-Pre-Alpha.
+Alpha.
+
+The API is not stabilized yet. There also may be a few kinks here and
+there.
 
 
 .. placeholder: Download
@@ -61,7 +66,7 @@ root directory of the source distribution package or online at
 
 |pyliblinear| ships
 with a copy of `liblinear
-<http://www.csie.ntu.edu.tw/~cjlin/liblinear/>_`, which is licensed
+<http://www.csie.ntu.edu.tw/~cjlin/liblinear/>`_, which is licensed
 under the terms of the `3-clause BSD license
 <http://opensource.org/licenses/BSD-3-Clause>`_.
 

@@ -3,10 +3,10 @@
 # $Header$
 
 EAPI="5"
-PYTHON_COMPAT=( python2_7 python3_3 python 3_4 )
+PYTHON_COMPAT=( python2_7 )
 inherit distutils-r1
 
-MY_P="${P/_beta/-dev-r}"
+MY_P="${P/_alpha/.alpha}"
 DESCRIPTION="pyliblinear - liblinear python API"
 HOMEPAGE="http://opensource.perlig.de/pyliblinear/"
 SRC_URI="http://storage.perlig.de/pyliblinear/dev/${MY_P}.tar.gz"
@@ -24,6 +24,6 @@ python_install() {
 	distutils-r1_python_install --without-docs || die
 
     if use doc; then
-		dohtml -A py,out -r docs/{apidoc,userdoc,examples} || die
+		dohtml -A py,out -r docs/{apidoc,userdoc} || die
 	fi
 }

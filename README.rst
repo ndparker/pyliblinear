@@ -20,7 +20,9 @@ TABLE OF CONTENTS
 INTRODUCTION
 ------------
 
-**pyliblinear** is an API for `liblinear`_ without using ctypes.
+**pyliblinear** is an API for `liblinear`_ without using ctypes. It aims for
+more pythonic access to liblinear's features, especially featuring lazy
+evaluations whereever possible.
 
 .. _liblinear: http://www.csie.ntu.edu.tw/~cjlin/liblinear/
 
@@ -28,7 +30,8 @@ INTRODUCTION
 DEVELOPMENT STATUS
 ------------------
 
-Pre-Alpha.
+Alpha.
+The API is not stabilized yet. There also may be a few kinks here and there.
 
 
 COPYRIGHT AND LICENSE
@@ -51,14 +54,24 @@ under the terms of the `3-clause BSD license`_.
 SYSTEM REQUIREMENTS
 -------------------
 
-You need at least python 2.7 Python 3 is supported as well.
+You need at least python 2.7. Python 3 is not supported *yet*.
+
+You also need a build environment for python C extensions (i.e. a compiler and
+the python development files).
 
 
 INSTALLATION
 ------------
 
-pyliblinear is set up using the standard python distutils. So you can install
-it using the usual command:
+Using pip
+~~~~~~~~~
+
+$ pip install pyliblinear
+
+Using distutils
+~~~~~~~~~~~~~~~
+
+Download the package, unpack it, change into the directory
 
 $ python setup.py install
 

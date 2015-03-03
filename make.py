@@ -66,7 +66,7 @@ class Target(make.Target):
             'userdoc_source': 'docs/_userdoc',
             'userdoc_build': 'docs/_userdoc/_build',
             'website': 'dist/website',
-            '_website': '_website', # source dir
+            '_website': '_website',  # source dir
             'dist': 'dist',
             'build': 'build',
             'ebuild': '_pkg/ebuilds',
@@ -78,9 +78,9 @@ class Target(make.Target):
             _sys.path.insert(0, libpath)
 
         self.ebuild_files = {
-            'pyliblinear-beta.ebuild.in':
-                'pyliblinear-%(VERSION)s_beta%(REV)s.ebuild',
-            'pyliblinear.ebuild.in': 'pyliblinear-%(VERSION)s.ebuild',
+            'pyliblinear-alpha.ebuild.in':
+                'pyliblinear-%(VERSION)s_alpha%(REV)s.ebuild',
+            #'pyliblinear.ebuild.in': 'pyliblinear-%(VERSION)s.ebuild',
         }
 
 
@@ -134,7 +134,7 @@ class NoseTest(Target):
 class Compile(Target):
     """ Compile the python code """
     NAME = "compile"
-    #DEPS = None
+    # DEPS = None
 
     def run(self):
         import setup
@@ -166,7 +166,7 @@ class Compile(Target):
     def compile(self, name):
         path = shell.native(name)
         term.write("%(ERASE)s%(BOLD)s>>> Compiling %(name)s...%(NORMAL)s",
-            name=name)
+                   name=name)
         from distutils import util
         try:
             from distutils import log
@@ -588,15 +588,15 @@ class Version(Target):
 
         self._version_init(strversion, isdev, revision)
         self._version_userdoc(strversion, isdev, revision)
-        #self._version_download(strversion, isdev, revision)
+        self._version_download(strversion, isdev, revision)
         self._version_changes(strversion, isdev, revision)
 
-        #parm = {'VERSION': strversion, 'REV': revision}
-        #for src, dest in self.ebuild_files.items():
-        #    src = "%s/%s" % (self.dirs['ebuild'], src)
-        #    dest = "%s/%s" % (self.dirs['ebuild'], dest % parm)
-        #    term.green("Creating %(name)s...", name=dest)
-        #    shell.cp(src, dest)
+        parm = {'VERSION': strversion, 'REV': revision}
+        for src, dest in self.ebuild_files.items():
+            src = "%s/%s" % (self.dirs['ebuild'], src)
+            dest = "%s/%s" % (self.dirs['ebuild'], dest % parm)
+            term.green("Creating %(name)s...", name=dest)
+            shell.cp(src, dest)
 
     def _version_init(self, strversion, isdev, revision):
         """ Modify version in __init__ """
