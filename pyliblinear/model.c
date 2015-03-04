@@ -1118,6 +1118,22 @@ PL_ModelType_solver_type_get(pl_model_t *self, void *closure)
     return PyString_FromString(name);
 }
 
+PyDoc_STRVAR(PL_ModelType_bias_doc,
+"Bias used to create the model\n\
+\n\
+``None`` if no bias was applied.\n\
+\n\
+:Type: ``double``");
+
+static PyObject *
+PL_ModelType_bias_get(pl_model_t *self, void *closure)
+{
+    if (self->model->bias < 0)
+        Py_RETURN_NONE;
+
+    return PyFloat_FromDouble(self->model->bias);
+}
+
 static PyGetSetDef PL_ModelType_getset[] = {
     {"is_probability",
      (getter)PL_ModelType_is_probability_get,
@@ -1135,6 +1151,12 @@ static PyGetSetDef PL_ModelType_getset[] = {
      (getter)PL_ModelType_solver_type_get,
      NULL,
      PL_ModelType_solver_type_doc,
+     NULL},
+
+    {"bias",
+     (getter)PL_ModelType_bias_get,
+     NULL,
+     PL_ModelType_bias_doc,
      NULL},
 
     {NULL}  /* Sentinel */
