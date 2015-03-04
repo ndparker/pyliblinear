@@ -453,12 +453,30 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
     if (!tok || PL_TOK_IS_EOL(tok)) goto error_format;       \
 } while(0)
 
-#define EXPECT_EOL do {                    \
+#define EXPECT_EOL do {                                      \
     if (pl_iter_next(tokread, &tok) == -1) goto error_model; \
-    if (!tok || !PL_TOK_IS_EOL(tok)) goto error_format; \
+    if (!tok || !PL_TOK_IS_EOL(tok)) goto error_format;      \
 } while(0)
 
 #define TOK(str) !strncmp(tok->start, (str), tok->sentinel - tok->start)
+
+#define LOAD_DOUBLE(target) do {                                 \
+    EXPECT_TOK;                                                  \
+    longfloat = PyOS_string_to_double(tok->start, &end,          \
+                                      PyExc_OverflowError);      \
+    if (longfloat == -1.0 && PyErr_Occurred()) goto error_model; \
+    if (end != tok->sentinel) goto error_format;                 \
+    target = longfloat;                                          \
+} while(0)
+
+#define LOAD_INT(min, target) do {                             \
+    EXPECT_TOK;                                                \
+    longint = PyOS_strtol(tok->start, &end, 10);               \
+    if (errno || end != tok->sentinel || longint < (long)(min) \
+        || longint > (long)INT_MAX)                            \
+        goto error_format;                                     \
+    target = (int)longint;                                     \
+} while(0)
 
     while (1) {
         if (pl_iter_next(tokread, &tok) == -1) goto error_model;
@@ -487,39 +505,21 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
             if (seen & SEEN_NR_CLASS) goto error_format;
             seen |= SEEN_NR_CLASS;
 
-            EXPECT_TOK;
-            longint = PyOS_strtol(tok->start, &end, 10);
-            if (errno || end != tok->sentinel || longint < 0
-                || longint > (long)INT_MAX)
-                goto error_format;
-
-            model->nr_class = (int)longint;
+            LOAD_INT(0, model->nr_class);
             EXPECT_EOL;
         }
         else if (TOK("nr_feature")) {
             if (seen & SEEN_NR_FEATURE) goto error_format;
             seen |= SEEN_NR_FEATURE;
 
-            EXPECT_TOK;
-            longint = PyOS_strtol(tok->start, &end, 10);
-            if (errno || end != tok->sentinel || longint < 0
-                || longint > (long)INT_MAX)
-                goto error_format;
-
-            model->nr_feature = (int)longint;
+            LOAD_INT(0, model->nr_feature);
             EXPECT_EOL;
         }
         else if (TOK("bias")) {
             if (seen & SEEN_BIAS) goto error_format;
             seen |= SEEN_BIAS;
 
-            EXPECT_TOK;
-            longfloat = PyOS_string_to_double(tok->start, &end,
-                                              PyExc_OverflowError);
-            if (longfloat == -1.0 && PyErr_Occurred()) goto error_model;
-            if (end != tok->sentinel) goto error_format;
-
-            model->bias = longfloat;
+            LOAD_DOUBLE(model->bias);
             EXPECT_EOL;
         }
         else if (TOK("label")) {
@@ -534,15 +534,8 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
                     PyErr_SetNone(PyExc_MemoryError);
                     goto error_model;
                 }
-                for (h = 0; h < model->nr_class; ++h) {
-                    EXPECT_TOK;
-                    longint = PyOS_strtol(tok->start, &end, 10);
-                    if (errno || end != tok->sentinel
-                        || longint < (long)INT_MIN
-                        || longint > (long)INT_MAX)
-                        goto error_format;
-                    model->label[h] = (int)longint;
-                }
+                for (h = 0; h < model->nr_class; ++h)
+                    LOAD_INT(INT_MIN, model->label[h]);
             }
             EXPECT_EOL;
         }
@@ -571,14 +564,8 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
             }
 
             for (w = 0; w < cols; ++w) {
-                for (h = 0; h < rows; ++h) {
-                    EXPECT_TOK;
-                    longfloat = PyOS_string_to_double(tok->start, &end,
-                                                      PyExc_OverflowError);
-                    if (longfloat == -1.0 && PyErr_Occurred()) goto error_model;
-                    if (end != tok->sentinel) goto error_format;
-                    model->w[w * rows + h] = longfloat;
-                }
+                for (h = 0; h < rows; ++h)
+                    LOAD_DOUBLE(model->w[w * rows + h]);
                 EXPECT_EOL;
             }
         }
@@ -587,6 +574,8 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
         }
     }
 
+#undef LOAD_INT
+#undef LOAD_DOUBLE
 #undef TOK
 #undef EXPECT_EOL
 #undef EXPECT_TOK
