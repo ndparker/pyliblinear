@@ -42,6 +42,34 @@ typedef struct {
 } pl_tokread_iter_ctx_t;
 
 
+#ifdef EXT3
+#define PyString_GET_SIZE PyBytes_GET_SIZE
+
+/*
+ * Return obj as bytes
+ */
+static PyObject *
+pl_obj_as_string(PyObject *obj)
+{
+    PyObject *result;
+
+    if (PyBytes_Check(obj)) {
+        Py_INCREF(obj);
+        return obj;
+    }
+
+    if (!(obj = PyObject_Str(obj)))
+        return NULL;
+
+    result = PyUnicode_AsEncodedString(obj, "utf-8", "strict");
+    Py_DECREF(obj);
+    return result;
+}
+
+#else
+#define pl_obj_as_string PyObject_Str
+#endif
+
 /*
  * Create new buf
  *
@@ -60,7 +88,7 @@ pl_buf_new(pl_buf_t **buf_, PyObject *obj)
     if (!obj)
         return -1;  /* pass through error */
 
-    str = PyObject_Str(obj);
+    str = pl_obj_as_string(obj);
     Py_DECREF(obj);
     if (!str)
         return -1;
@@ -84,6 +112,12 @@ pl_buf_new(pl_buf_t **buf_, PyObject *obj)
     return 0;
 }
 
+#ifdef EXT3
+#undef PyString_GET_SIZE
+#else
+#undef pl_obj_as_string
+#endif
+
 
 /*
  * Clear buf chain
@@ -100,6 +134,12 @@ pl_buf_clear(pl_buf_t **buf_)
     }
 }
 
+
+#ifdef EXT3
+#define PyString_AS_STRING PyBytes_AS_STRING
+#define PyString_GET_SIZE PyBytes_GET_SIZE
+#define PyString_FromStringAndSize PyBytes_FromStringAndSize
+#endif
 
 /*
  * Fill in current token
@@ -285,6 +325,12 @@ pl_tokread_iter_next(void *ctx_, void *tok__)
     return 0;
 }
 
+#ifdef EXT3
+#undef PyString_FromStringAndSize
+#undef PyString_GET_SIZE
+#undef PyString_AS_STRING
+#endif
+
 
 static void
 pl_tokread_iter_clear(void *ctx_)
@@ -363,6 +409,10 @@ typedef struct {
 
 #define PL_TokReaderType_iter PyObject_SelfIter
 
+#ifdef EXT3
+#define PyString_FromString PyUnicode_FromString
+#define PyString_FromStringAndSize PyUnicode_FromStringAndSize
+#endif
 static PyObject *
 PL_TokReaderType_iternext(pl_tokreader_iter_t *self)
 {
@@ -378,6 +428,10 @@ PL_TokReaderType_iternext(pl_tokreader_iter_t *self)
 
     return NULL;
 }
+#ifdef EXT3
+#undef PyString_FromStringAndSize
+#undef PyString_FromString
+#endif
 
 static int
 PL_TokReaderType_traverse(pl_tokreader_iter_t *self, visitproc visit,
@@ -425,8 +479,7 @@ PL_TokReaderType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 DEFINE_GENERIC_DEALLOC(PL_TokReaderType)
 
 PyTypeObject PL_TokReaderType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".TokReader",                       /* tp_name */
     sizeof(pl_tokreader_iter_t),                        /* tp_basicsize */
     0,                                                  /* tp_itemsize */

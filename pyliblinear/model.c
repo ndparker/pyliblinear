@@ -417,6 +417,10 @@ error:
 #define SEEN_REQUIRED    (SEEN_SOLVER_TYPE | SEEN_NR_CLASS | SEEN_NR_FEATURE \
                           | SEEN_BIAS | SEEN_W)
 
+#ifdef EXT3
+#define PyString_FromStringAndSize PyBytes_FromStringAndSize
+#endif
+
 static pl_model_t *
 pl_model_from_stream(PyTypeObject *cls, PyObject *read)
 {
@@ -595,6 +599,10 @@ error_tokread:
     return self;
 }
 
+#ifdef EXT3
+#undef PyString_FromStringAndSize
+#endif
+
 #undef SEEN_REQUIRED
 #undef SEEN_W
 #undef SEEN_LABEL
@@ -684,8 +692,7 @@ PL_PredictIteratorType_clear(pl_predict_iter_t *self)
 DEFINE_GENERIC_DEALLOC(PL_PredictIteratorType)
 
 PyTypeObject PL_PredictIteratorType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".PredictIterator",                 /* tp_name */
     sizeof(pl_predict_iter_t),                          /* tp_basicsize */
     0,                                                  /* tp_itemsize */
@@ -1093,6 +1100,9 @@ PyDoc_STRVAR(PL_ModelType_solver_type_doc,
 \n\
 :Type: ``str``");
 
+#ifdef EXT3
+#define PyString_FromString PyUnicode_FromString
+#endif
 static PyObject *
 PL_ModelType_solver_type_get(pl_model_t *self, void *closure)
 {
@@ -1106,6 +1116,9 @@ PL_ModelType_solver_type_get(pl_model_t *self, void *closure)
 
     return PyString_FromString(name);
 }
+#ifdef EXT3
+#undef PyString_FromString
+#endif
 
 PyDoc_STRVAR(PL_ModelType_bias_doc,
 "Bias used to create the model\n\
@@ -1176,8 +1189,7 @@ Classification model. Use its Model.load or Model.train methods to construct\n\
 a new instance");
 
 PyTypeObject PL_ModelType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".Model",                           /* tp_name */
     sizeof(pl_model_t),                                 /* tp_basicsize */
     0,                                                  /* tp_itemsize */

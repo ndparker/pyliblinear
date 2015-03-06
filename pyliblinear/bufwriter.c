@@ -60,6 +60,12 @@ pl_bufwriter_clear(pl_bufwriter_t **self_)
 }
 
 
+#ifdef EXT3
+#define PyString_GET_SIZE PyBytes_GET_SIZE
+#define PyString_AS_STRING PyBytes_AS_STRING
+#define PyString_FromStringAndSize PyBytes_FromStringAndSize
+#endif
+
 /*
  * Close and clear the bufwriter
  *
@@ -168,3 +174,8 @@ error_write:
     return NULL;
 }
 
+#ifdef EXT3
+#undef PyString_FromStringAndSize
+#undef PyString_AS_STRING
+#undef PyString_GET_SIZE
+#endif

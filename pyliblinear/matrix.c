@@ -507,6 +507,9 @@ pl_eval(struct problem *prob, double *predicted, pl_eval_t *result)
 
 #define PL_FeatureViewType_iter PyObject_SelfIter
 
+#ifdef EXT3
+#define PyInt_FromLong PyLong_FromLong
+#endif
 static PyObject *
 PL_FeatureViewType_iternext(pl_feature_view_t *self)
 {
@@ -544,6 +547,9 @@ error_result:
     Py_DECREF(result);
     return NULL;
 }
+#ifdef EXT3
+#undef PyInt_FromLong
+#endif
 
 static int
 PL_FeatureViewType_traverse(pl_feature_view_t *self, visitproc visit,
@@ -568,8 +574,7 @@ PL_FeatureViewType_clear(pl_feature_view_t *self)
 DEFINE_GENERIC_DEALLOC(PL_FeatureViewType)
 
 PyTypeObject PL_FeatureViewType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".FeatureView",                     /* tp_name */
     sizeof(pl_feature_view_t),                          /* tp_basicsize */
     0,                                                  /* tp_itemsize */
@@ -656,8 +661,7 @@ PL_LabelViewType_clear(pl_label_view_t *self)
 DEFINE_GENERIC_DEALLOC(PL_LabelViewType)
 
 PyTypeObject PL_LabelViewType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".LabelView",                       /* tp_name */
     sizeof(pl_label_view_t),                            /* tp_basicsize */
     0,                                                  /* tp_itemsize */
@@ -767,8 +771,7 @@ PL_ZipperType_clear(pl_zipper_t *self)
 DEFINE_GENERIC_DEALLOC(PL_ZipperType)
 
 PyTypeObject PL_ZipperType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".FeatureMatrixZipper",             /* tp_name */
     sizeof(pl_zipper_t),                                /* tp_basicsize */
     0,                                                  /* tp_itemsize */
@@ -846,6 +849,9 @@ static struct PyMethodDef PL_VectorReaderType_methods[] = {
 
 #define PL_VectorReaderType_iter PyObject_SelfIter
 
+#ifdef EXT3
+#define PyInt_FromLong PyLong_FromLong
+#endif
 static PyObject *
 PL_VectorReaderType_iternext(pl_vector_reader_t *self)
 {
@@ -901,6 +907,9 @@ error_index:
 error:
     return NULL;
 }
+#ifdef EXT3
+#undef PyInt_FromLong
+#endif
 
 static int
 PL_VectorReaderType_traverse(pl_vector_reader_t *self, visitproc visit,
@@ -922,8 +931,7 @@ PL_VectorReaderType_clear(pl_vector_reader_t *self)
 DEFINE_GENERIC_DEALLOC(PL_VectorReaderType)
 
 PyTypeObject PL_VectorReaderType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".FeatureVectorReader",             /* tp_name */
     sizeof(pl_vector_reader_t),                         /* tp_basicsize */
     0,                                                  /* tp_itemsize */
@@ -1054,8 +1062,7 @@ PL_MatrixReaderType_clear(pl_matrix_reader_t *self)
 DEFINE_GENERIC_DEALLOC(PL_MatrixReaderType)
 
 PyTypeObject PL_MatrixReaderType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".FeatureMatrixReader",             /* tp_name */
     sizeof(pl_matrix_reader_t),                         /* tp_basicsize */
     0,                                                  /* tp_itemsize */
@@ -1508,6 +1515,9 @@ PyDoc_STRVAR(PL_FeatureMatrixType_width_doc,
 \n\
 :Type: ``int``");
 
+#ifdef EXT3
+#define PyInt_FromLong PyLong_FromLong
+#endif
 static PyObject *
 PL_FeatureMatrixType_width_get(pl_matrix_t *self, void *closure)
 {
@@ -1524,6 +1534,9 @@ PL_FeatureMatrixType_height_get(pl_matrix_t *self, void *closure)
 {
     return PyInt_FromLong(self->height);
 }
+#ifdef EXT3
+#undef PyInt_FromLong
+#endif
 
 static PyGetSetDef PL_FeatureMatrixType_getset[] = {
     {"width",
@@ -1585,8 +1598,7 @@ PyDoc_STRVAR(PL_FeatureMatrixType__doc__,
 Feature matrix to be used for training or prediction.");
 
 PyTypeObject PL_FeatureMatrixType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".FeatureMatrix",                   /* tp_name */
     sizeof(pl_matrix_t),                                /* tp_basicsize */
     0,                                                  /* tp_itemsize */

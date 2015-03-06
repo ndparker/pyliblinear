@@ -94,6 +94,10 @@ pl_as_double(PyObject *obj, double *result)
     return 0;
 }
 
+#ifdef EXT3
+#define PyNumber_Int PyNumber_Long
+#define PyInt_AsLong PyLong_AsLong
+#endif
 
 /*
  * Convert object to int
@@ -129,6 +133,11 @@ pl_as_int(PyObject *obj, int *result)
     *result = (int)long_int;
     return 0;
 }
+
+#ifdef EXT3
+#undef PyNumber_Int
+#undef PyInt_AsLong
+#endif
 
 
 /*

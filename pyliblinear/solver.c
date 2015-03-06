@@ -184,6 +184,10 @@ pl_weight_node_next(pl_weight_node_block_t **weights_)
 }
 
 
+#ifdef EXT3
+#define PyInt_FromLong PyLong_FromLong
+#endif
+
 /*
  * Create dict of solver types
  *
@@ -215,6 +219,9 @@ error_result:
     return NULL;
 }
 
+#ifdef EXT3
+#undef PyInt_FromLong
+#endif
 
 /*
  * Find solver type number from pyobject
@@ -501,6 +508,9 @@ Return the configured weights as a dict (label -> weight).\n\
 :Return: The weights (maybe empty)\n\
 :Rtype: ``dict``");
 
+#ifdef EXT3
+#define PyInt_FromLong PyLong_FromLong
+#endif
 static PyObject *
 PL_SolverType_weights(pl_solver_t *self, PyObject *args)
 {
@@ -532,6 +542,9 @@ error_result:
     Py_DECREF(result);
     return NULL;
 }
+#ifdef EXT3
+#undef PyInt_FromLong
+#endif
 
 #ifdef METH_COEXIST
 PyDoc_STRVAR(PL_SolverType_new__doc__,
@@ -624,6 +637,9 @@ PyDoc_STRVAR(PL_SolverType_type_doc,
 \n\
 :Type: ``str``");
 
+#ifdef EXT3
+#define PyString_FromString PyUnicode_FromString
+#endif
 static PyObject *
 PL_SolverType_type_get(pl_solver_t *self, void *closure)
 {
@@ -637,7 +653,9 @@ PL_SolverType_type_get(pl_solver_t *self, void *closure)
 
     return PyString_FromString(name);
 }
-
+#ifdef EXT3
+#undef PyString_FromString
+#endif
 
 static PyGetSetDef PL_SolverType_getset[] = {
     {"p",
@@ -774,8 +792,7 @@ PyDoc_STRVAR(PL_SolverType__doc__,
 "Solver container");
 
 PyTypeObject PL_SolverType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                                  /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     EXT_MODULE_PATH ".Solver",                          /* tp_name */
     sizeof(pl_solver_t),                                /* tp_basicsize */
     0,                                                  /* tp_itemsize */
