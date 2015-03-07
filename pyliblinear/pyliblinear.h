@@ -147,6 +147,20 @@ pl_attr(PyObject *, const char *, PyObject **);
 
 
 /*
+ * Open a file
+ *
+ * Return NULL on error
+ */
+#ifdef EXT3
+PyObject *
+pl_file_open(PyObject *, const char *);
+#else
+#define pl_file_open(filename, mode) \
+    PyObject_CallFunction((PyObject*)&PyFile_Type, "Os", filename, mode)
+#endif
+
+
+/*
  * ************************************************************************
  * Solver utilities
  * ************************************************************************

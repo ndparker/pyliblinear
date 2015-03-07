@@ -31,8 +31,8 @@ def setup(args=None, _manifest=0):
                 "pyliblinear/bufwriter.c",
                 "pyliblinear/iter.c",
                 "pyliblinear/main.c",
-                "pyliblinear/matrix.c",  # !3
-                "pyliblinear/model.c",   # !3
+                "pyliblinear/matrix.c",
+                "pyliblinear/model.c",
                 "pyliblinear/solver.c",  # !3
                 "pyliblinear/tokreader.c",
                 "pyliblinear/util.c",

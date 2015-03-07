@@ -888,7 +888,7 @@ PL_ModelType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
 
     if (!read_) {
         Py_INCREF(file_);
-        stream_ = PyObject_CallFunction((PyObject*)&PyFile_Type, "O", file_);
+        stream_ = pl_file_open(file_, "r");
         Py_DECREF(file_);
         if (!stream_)
             return NULL;
@@ -962,8 +962,7 @@ PL_ModelType_save(pl_model_t *self, PyObject *args, PyObject *kwds)
 
     if (!write_) {
         Py_INCREF(file_);
-        stream_ = PyObject_CallFunction((PyObject*)&PyFile_Type, "Os", file_,
-                                        "w+");
+        stream_ = pl_file_open(file_, "w+");
         Py_DECREF(file_);
         if (!stream_)
             return NULL;
