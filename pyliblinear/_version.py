@@ -1,5 +1,5 @@
 # -*- coding: ascii -*-
-u"""
+r"""
 :Copyright:
 
  Copyright 2015
@@ -25,8 +25,20 @@ u"""
 
 Version representation.
 """
-__author__ = u"Andr\xe9 Malo"
+if __doc__:
+    # pylint: disable = redefined-builtin
+    __doc__ = __doc__.encode('ascii').decode('unicode_escape')
+__author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
 __docformat__ = "restructuredtext en"
+
+
+try:
+    unicode
+except NameError:
+    py3 = True
+    unicode = str  # pylint: disable = redefined-builtin, invalid-name
+else:
+    py3 = False
 
 
 class Version(tuple):
@@ -73,7 +85,7 @@ class Version(tuple):
 
         tup = []
         versionstring = versionstring.strip()
-        isuni = isinstance(versionstring, unicode)
+        isuni = not(py3) and isinstance(versionstring, unicode)
         strs = []
         if versionstring:
             for item in versionstring.split('.'):
@@ -81,7 +93,9 @@ class Version(tuple):
                     item = int(item)
                     strs.append(str(item))
                 except ValueError:
-                    if isuni:
+                    if py3:
+                        strs.append(item)
+                    elif isuni:
                         strs.append(item.encode('utf-8'))
                     else:
                         try:
@@ -157,7 +171,18 @@ class Version(tuple):
         :Return: The unicode representation
         :Rtype: ``unicode``
         """
-        return u"%s%s" % (
-            u".".join(map(unicode, self)),
-            (u"", u".dev%d" % self.revision)[self.is_dev],
+        u = lambda x: x.decode('ascii')  # pylint: disable = invalid-name
+
+        return u("%s%s") % (
+            u(".").join(map(unicode, self)),
+            (u(""), u(".dev%d") % self.revision)[self.is_dev],
         )
+
+    def __bytes__(self):
+        """
+        Create a version like bytes representation (utf-8 encoded)
+
+        :Return: The bytes representation
+        :Rtype: ``bytes``
+        """
+        return str(self).encode('utf-8')

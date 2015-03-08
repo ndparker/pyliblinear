@@ -1,5 +1,5 @@
 # -*- coding: ascii -*-
-u"""
+r"""
 :Copyright:
 
  Copyright 2015
@@ -25,7 +25,10 @@ u"""
 
 pyliblinear - liblinear python API
 """
-__author__ = u"Andr\xe9 Malo"
+if __doc__:
+    # pylint: disable = redefined-builtin
+    __doc__ = __doc__.encode('ascii').decode('unicode_escape')
+__author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
 __docformat__ = "restructuredtext en"
 __license__ = "Apache License, Version 2.0"
 __version__ = ('1.96.0', True, 2)
