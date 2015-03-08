@@ -223,6 +223,12 @@ error_result:
 #undef PyInt_FromLong
 #endif
 
+
+#ifdef EXT3
+#define PyNumber_Int PyNumber_Long
+#define PyString_AsString PyBytes_AsString
+#endif
+
 /*
  * Find solver type number from pyobject
  *
@@ -243,13 +249,24 @@ pl_solver_type_as_int(PyObject *type_, int *type)
     /* Solver type is a string */
     if (!(tmp = PyNumber_Int(type_))) {
         if (!(PyErr_ExceptionMatches(PyExc_ValueError)
-            || PyErr_ExceptionMatches(PyExc_TypeError)))
+              || PyErr_ExceptionMatches(PyExc_TypeError)))
             return -1;
 
         PyErr_Clear();
 
         if (!(tmp = PyObject_Str(type_)))
             return -1;
+
+#ifdef EXT3
+        do {
+            PyObject *tmp2 = PyUnicode_AsEncodedString(tmp, "utf-8", "strict");
+
+            Py_DECREF(tmp);
+            if (!tmp2)
+                return -1;
+            tmp = tmp2;
+        } while(0);
+#endif
 
         if (!(str = PyString_AsString(tmp))) {
             Py_DECREF(tmp);
@@ -281,6 +298,11 @@ pl_solver_type_as_int(PyObject *type_, int *type)
     PyErr_SetString(PyExc_ValueError, "Invalid solver type");
     return -1;
 }
+
+#ifdef EXT3
+#undef PyString_AsString
+#undef PyNumber_Int
+#endif
 
 
 /*

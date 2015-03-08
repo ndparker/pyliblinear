@@ -33,7 +33,7 @@ def setup(args=None, _manifest=0):
                 "pyliblinear/main.c",
                 "pyliblinear/matrix.c",
                 "pyliblinear/model.c",
-                "pyliblinear/solver.c",  # !3
+                "pyliblinear/solver.c",
                 "pyliblinear/tokreader.c",
                 "pyliblinear/util.c",
                 "pyliblinear/vector.c",
