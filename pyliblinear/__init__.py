@@ -19,11 +19,11 @@ r"""
  See the License for the specific language governing permissions and
  limitations under the License.
 
-====================================
- pyliblinear - liblinear python API
-====================================
+======================================
+ pyliblinear - a liblinear python API
+======================================
 
-pyliblinear - liblinear python API
+pyliblinear - a liblinear python API
 """
 if __doc__:
     # pylint: disable = redefined-builtin

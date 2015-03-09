@@ -1,10 +1,12 @@
-=====================================
-  Pyliblinear - liblinear python API
-=====================================
+=======================================
+  Pyliblinear - a liblinear python API
+=======================================
 
 **pyliblinear** is an API for `liblinear`_  without using ctypes. It
 aims for more pythonic access to liblinear's features, especially
-featuring lazy evaluations whereever possible.
+featuring streams of data and lazy evaluations whereever possible.
+
+Supported python versions are Python 2.7 and Python 3.2 and above.
 
 .. _liblinear: http://www.csie.ntu.edu.tw/~cjlin/liblinear/
 
@@ -13,7 +15,8 @@ Development Status
 ~~~~~~~~~~~~~~~~~~
 
 Alpha.
-The API is not stabilized yet. There also may be a few kinks here and there.
+The API is not stabilized yet. There also may be a few kinks here and
+there.
 
 
 Copyright and License

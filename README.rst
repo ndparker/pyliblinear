@@ -1,8 +1,8 @@
 .. -*- coding: utf-8 -*-
 
-====================================
- pyliblinear - liblinear python API
-====================================
+======================================
+ pyliblinear - a liblinear python API
+======================================
 
 TABLE OF CONTENTS
 -----------------
@@ -21,8 +21,8 @@ INTRODUCTION
 ------------
 
 **pyliblinear** is an API for `liblinear`_ without using ctypes. It aims for
-more pythonic access to liblinear's features, especially featuring lazy
-evaluations whereever possible.
+more pythonic access to liblinear's features, especially featuring streams of
+data and lazy evaluations whereever possible.
 
 .. _liblinear: http://www.csie.ntu.edu.tw/~cjlin/liblinear/
 
@@ -54,10 +54,10 @@ under the terms of the `3-clause BSD license`_.
 SYSTEM REQUIREMENTS
 -------------------
 
-You need at least python 2.7. Python 3 is not supported *yet*.
+You need at least python 2.7 or Python 3 starting with version 3.2.
 
-You also need a build environment for python C extensions (i.e. a compiler and
-the python development files).
+You also need a build environment for python C/C++ extensions (i.e. a compiler
+and the python development files).
 
 
 INSTALLATION

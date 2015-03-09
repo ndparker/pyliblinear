@@ -1,3 +1,8 @@
+Changes with version
+
+ *) Added python 3 support
+
+
 Changes with version 1.96.0.dev2
 
  *) Adjusted versioning scheme to PEP 440
