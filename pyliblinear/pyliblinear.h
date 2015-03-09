@@ -42,33 +42,33 @@
 /*
  * Type objects, initialized in main()
  */
-PyTypeObject PL_SolverType;
+extern PyTypeObject PL_SolverType;
 #define PL_SolverType_Check(op) \
     PyObject_TypeCheck(op, &PL_SolverType)
 #define PL_SolverType_CheckExact(op) \
     ((op)->ob_type == &PL_SolverType)
 
 
-PyTypeObject PL_FeatureViewType;
-PyTypeObject PL_LabelViewType;
-PyTypeObject PL_ZipperType;
-PyTypeObject PL_VectorReaderType;
-PyTypeObject PL_MatrixReaderType;
-PyTypeObject PL_FeatureMatrixType;
+extern PyTypeObject PL_FeatureViewType;
+extern PyTypeObject PL_LabelViewType;
+extern PyTypeObject PL_ZipperType;
+extern PyTypeObject PL_VectorReaderType;
+extern PyTypeObject PL_MatrixReaderType;
+extern PyTypeObject PL_FeatureMatrixType;
 #define PL_FeatureMatrixType_Check(op) \
     PyObject_TypeCheck(op, &PL_FeatureMatrixType)
 #define PL_FeatureMatrixType_CheckExact(op) \
     ((op)->ob_type == &PL_FeatureMatrixType)
 
 
-PyTypeObject PL_PredictIteratorType;
-PyTypeObject PL_ModelType;
+extern PyTypeObject PL_PredictIteratorType;
+extern PyTypeObject PL_ModelType;
 #define PL_ModelType_CheckExact(op) \
     ((op)->ob_type == &PL_ModelType)
 
 
 #if (PL_TEST == 1)
-PyTypeObject PL_TokReaderType;
+extern PyTypeObject PL_TokReaderType;
 #endif
 
 
