@@ -147,20 +147,6 @@ pl_attr(PyObject *, const char *, PyObject **);
 
 
 /*
- * Open a file
- *
- * Return NULL on error
- */
-#ifdef EXT3
-PyObject *
-pl_file_open(PyObject *, const char *);
-#else
-#define pl_file_open(filename, mode) \
-    PyObject_CallFunction((PyObject*)&PyFile_Type, "Os", filename, mode)
-#endif
-
-
-/*
  * ************************************************************************
  * Solver utilities
  * ************************************************************************
@@ -370,6 +356,26 @@ pl_bufwriter_visit(pl_bufwriter_t *, visitproc, void *);
     int vret = pl_bufwriter_visit((op), visit, arg); \
     if (vret) return vret;                           \
 } while (0)
+
+
+/*
+ * ************************************************************************
+ * Compat
+ * ************************************************************************
+ */
+
+/*
+ * Open a file
+ *
+ * Return NULL on error
+ */
+#ifdef EXT3
+PyObject *
+pl_file_open(PyObject *, const char *);
+#else
+#define pl_file_open(filename, mode) \
+    PyObject_CallFunction((PyObject*)&PyFile_Type, "Os", filename, mode)
+#endif
 
 
 #endif

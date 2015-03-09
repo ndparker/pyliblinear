@@ -219,24 +219,3 @@ pl_attr(PyObject *obj, const char *name, PyObject **attr)
 
     return -1;
 }
-
-
-#ifdef EXT3
-/*
- * Open a file
- *
- * Return NULL on error
- */
-PyObject *
-pl_file_open(PyObject *filename, const char *mode)
-{
-   PyObject *io, *result;
-
-    if (!(io = PyImport_ImportModule("io")))
-        return NULL;
-    result = PyObject_CallMethod(io, "open", "Os", filename, mode);
-    Py_DECREF(io);
-
-    return result;
-}
-#endif

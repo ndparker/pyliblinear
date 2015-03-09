@@ -29,6 +29,7 @@ def setup(args=None, _manifest=0):
         ext=[
             Extension('pyliblinear._liblinear', [
                 "pyliblinear/bufwriter.c",
+                "pyliblinear/compat.c",
                 "pyliblinear/iter.c",
                 "pyliblinear/main.c",
                 "pyliblinear/matrix.c",
