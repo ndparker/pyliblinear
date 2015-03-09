@@ -80,7 +80,7 @@ pl_bufwriter_close(pl_bufwriter_t **self_)
 
     if (self && self->write && self->buf
         && self->c > (b = PyString_AS_STRING(self->buf))) {
-        rw = PyObject_CallFunction(self->write, "s#", b,
+        rw = PyObject_CallFunction(self->write, "(s#)", b,
                                    (Py_ssize_t)(self->c - b));
         self->c = b;
         if (!rw)
@@ -117,7 +117,7 @@ pl_bufwriter_write(pl_bufwriter_t *self, const char *string, Py_ssize_t len)
     /* Check if flush needed */
     if (len < (Py_ssize_t)(self->s - self->c)) {
         b = PyString_AS_STRING(self->buf);
-        rw = PyObject_CallFunction(self->write, "s#", b,
+        rw = PyObject_CallFunction(self->write, "(s#)", b,
                                    (Py_ssize_t)(self->c - b));
         self->c = b;
         if (!rw)
@@ -127,7 +127,7 @@ pl_bufwriter_write(pl_bufwriter_t *self, const char *string, Py_ssize_t len)
 
     /* Buffer too small... well then, just push it out */
     if (len < (Py_ssize_t)(self->s - self->c)) {
-        if (!(rw = PyObject_CallFunction(self->write, "s#", string, len)))
+        if (!(rw = PyObject_CallFunction(self->write, "(s#)", string, len)))
             return -1;
         Py_DECREF(rw);
     }

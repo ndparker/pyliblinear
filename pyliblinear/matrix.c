@@ -1348,7 +1348,7 @@ PL_FeatureMatrixType_save(pl_matrix_t *self, PyObject *args, PyObject *kwds)
 
 error_close:
     if (close_) {
-        PyObject_CallFunction(close_, "");
+        PyObject_CallFunction(close_, "()");
         Py_DECREF(close_);
     }
 error_stream:
@@ -1435,7 +1435,7 @@ PL_FeatureMatrixType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
 
 error_close:
     if (close_) {
-        PyObject_CallFunction(close_, "");
+        PyObject_CallFunction(close_, "()");
         Py_DECREF(close_);
     }
 error_stream:
@@ -1474,7 +1474,7 @@ PL_FeatureMatrixType_new(PyTypeObject *cls, PyObject *args, PyObject *kwds);
 static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
 #ifdef PL_CROSS_VALIDATE
     {"cross_validate",
-     (PyCFunction)PL_FeatureMatrixType_xval,     METH_KEYWORDS,
+     (PyCFunction)PL_FeatureMatrixType_xval,     METH_KEYWORDS | METH_VARARGS,
      PL_FeatureMatrixType_xval__doc__},
 #endif
 
@@ -1487,22 +1487,28 @@ static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
      PL_FeatureMatrixType_labels__doc__},
 
     {"save",
-     (PyCFunction)PL_FeatureMatrixType_save,     METH_KEYWORDS,
+     (PyCFunction)PL_FeatureMatrixType_save,     METH_KEYWORDS | METH_VARARGS,
      PL_FeatureMatrixType_save__doc__},
 
     {"load",
-     (PyCFunction)PL_FeatureMatrixType_load,     METH_KEYWORDS | METH_CLASS,
+     (PyCFunction)PL_FeatureMatrixType_load,     METH_CLASS    |
+                                                 METH_KEYWORDS |
+                                                 METH_VARARGS,
      PL_FeatureMatrixType_load__doc__},
 
     {"from_iterables",
      (PyCFunction)PL_FeatureMatrixType_from_iterables,
-                                                 METH_KEYWORDS | METH_CLASS,
+                                                 METH_CLASS    |
+                                                 METH_KEYWORDS |
+                                                 METH_VARARGS,
      PL_FeatureMatrixType_from_iterables__doc__},
 
 #ifdef METH_COEXIST
     {"__new__",
-     (PyCFunction)PL_FeatureMatrixType_new,      METH_KEYWORDS | METH_STATIC |
-                                                 METH_COEXIST,
+     (PyCFunction)PL_FeatureMatrixType_new,      METH_COEXIST  |
+                                                 METH_STATIC   |
+                                                 METH_KEYWORDS |
+                                                 METH_VARARGS,
      PL_FeatureMatrixType_new__doc__},
 #endif
 

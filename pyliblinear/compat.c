@@ -31,7 +31,7 @@ pl_file_open(PyObject *filename, const char *mode)
 
     if (!(io = PyImport_ImportModule("io")))
         return NULL;
-    result = PyObject_CallMethod(io, "open", "Os", filename, mode);
+    result = PyObject_CallMethod(io, "open", "(Os)", filename, mode);
     Py_DECREF(io);
 
     return result;

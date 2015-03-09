@@ -613,8 +613,10 @@ static struct PyMethodDef PL_SolverType_methods[] = {
 
 #ifdef METH_COEXIST
     {"__new__",
-     (PyCFunction)PL_SolverType_new,          METH_KEYWORDS | METH_COEXIST |
-                                              METH_STATIC,
+     (PyCFunction)PL_SolverType_new,          METH_COEXIST  |
+                                              METH_STATIC   |
+                                              METH_KEYWORDS |
+                                              METH_VARARGS,
      PL_SolverType_new__doc__},
 #endif
 

@@ -312,7 +312,7 @@ pl_tokread_iter_next(void *ctx_, void *tok__)
             }
 
             res = pl_buf_new(&ctx->buf,
-                             PyObject_CallFunction(ctx->read, "i",
+                             PyObject_CallFunction(ctx->read, "(i)",
                                                    PL_TOKREADER_BUF_SIZE));
             if (res == -1)
                 return -1;

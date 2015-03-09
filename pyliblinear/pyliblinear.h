@@ -374,7 +374,7 @@ PyObject *
 pl_file_open(PyObject *, const char *);
 #else
 #define pl_file_open(filename, mode) \
-    PyObject_CallFunction((PyObject*)&PyFile_Type, "Os", filename, mode)
+    PyObject_CallFunction((PyObject*)&PyFile_Type, "(Os)", filename, mode)
 #endif
 
 

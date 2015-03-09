@@ -910,7 +910,7 @@ PL_ModelType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
 
 error_close:
     if (close_) {
-        PyObject_CallFunction(close_, "");
+        PyObject_CallFunction(close_, "()");
         Py_DECREF(close_);
     }
 error_stream:
@@ -983,7 +983,7 @@ PL_ModelType_save(pl_model_t *self, PyObject *args, PyObject *kwds)
 
 error_close:
     if (close_) {
-        PyObject_CallFunction(close_, "");
+        PyObject_CallFunction(close_, "()");
         Py_DECREF(close_);
     }
 error_stream:
@@ -1048,19 +1048,23 @@ PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)
 
 static struct PyMethodDef PL_ModelType_methods[] = {
     {"train",
-     (PyCFunction)PL_ModelType_train,           METH_KEYWORDS | METH_CLASS,
+     (PyCFunction)PL_ModelType_train,           METH_CLASS    |
+                                                METH_KEYWORDS |
+                                                METH_VARARGS,
      PL_ModelType_train__doc__},
 
     {"load",
-     (PyCFunction)PL_ModelType_load,            METH_KEYWORDS | METH_CLASS,
+     (PyCFunction)PL_ModelType_load,            METH_CLASS    |
+                                                METH_KEYWORDS |
+                                                METH_VARARGS,
      PL_ModelType_load__doc__},
 
     {"save",
-     (PyCFunction)PL_ModelType_save,            METH_KEYWORDS,
+     (PyCFunction)PL_ModelType_save,            METH_KEYWORDS | METH_VARARGS,
      PL_ModelType_save__doc__},
 
     {"predict",
-     (PyCFunction)PL_ModelType_predict,         METH_KEYWORDS,
+     (PyCFunction)PL_ModelType_predict,         METH_KEYWORDS | METH_VARARGS,
      PL_ModelType_predict__doc__},
 
     {NULL, NULL}  /* Sentinel */
