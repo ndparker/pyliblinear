@@ -1348,7 +1348,15 @@ PL_FeatureMatrixType_save(pl_matrix_t *self, PyObject *args, PyObject *kwds)
 
 error_close:
     if (close_) {
-        PyObject_CallFunction(close_, "()");
+        PyObject *ptype, *pvalue, *ptraceback, *tmp;
+
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        if ((tmp = PyObject_CallFunction(close_, "()")))
+            Py_DECREF(tmp);
+        else
+            res = -1;
+        if (ptype)
+            PyErr_Restore(ptype, pvalue, ptraceback);
         Py_DECREF(close_);
     }
 error_stream:
@@ -1435,7 +1443,15 @@ PL_FeatureMatrixType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
 
 error_close:
     if (close_) {
-        PyObject_CallFunction(close_, "()");
+        PyObject *ptype, *pvalue, *ptraceback, *tmp;
+
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        if ((tmp = PyObject_CallFunction(close_, "()")))
+            Py_DECREF(tmp);
+        else
+            Py_CLEAR(self);
+        if (ptype)
+            PyErr_Restore(ptype, pvalue, ptraceback);
         Py_DECREF(close_);
     }
 error_stream:

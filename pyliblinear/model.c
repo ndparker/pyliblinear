@@ -418,7 +418,7 @@ error:
                           | SEEN_BIAS | SEEN_W)
 
 #ifdef EXT3
-#define PyString_FromStringAndSize PyBytes_FromStringAndSize
+#define PyString_FromStringAndSize PyUnicode_FromStringAndSize
 #endif
 
 static pl_model_t *
@@ -427,7 +427,6 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
     PyObject *tmp;
     pl_tok_t *tok;
     pl_iter_t *tokread;
-    pl_model_t *self = NULL;
     struct model *model;
     char *end;
     double longfloat;
@@ -596,7 +595,7 @@ error_model:
     free(model);
 error_tokread:
     pl_iter_clear(&tokread);
-    return self;
+    return NULL;
 }
 
 #ifdef EXT3
@@ -910,7 +909,15 @@ PL_ModelType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
 
 error_close:
     if (close_) {
-        PyObject_CallFunction(close_, "()");
+        PyObject *ptype, *pvalue, *ptraceback, *tmp;
+
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        if ((tmp = PyObject_CallFunction(close_, "()")))
+            Py_DECREF(tmp);
+        else
+            Py_CLEAR(self);
+        if (ptype)
+            PyErr_Restore(ptype, pvalue, ptraceback);
         Py_DECREF(close_);
     }
 error_stream:
@@ -983,7 +990,15 @@ PL_ModelType_save(pl_model_t *self, PyObject *args, PyObject *kwds)
 
 error_close:
     if (close_) {
-        PyObject_CallFunction(close_, "()");
+        PyObject *ptype, *pvalue, *ptraceback, *tmp;
+
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        if ((tmp = PyObject_CallFunction(close_, "()")))
+            Py_DECREF(tmp);
+        else
+            res = -1;
+        if (ptype)
+            PyErr_Restore(ptype, pvalue, ptraceback);
         Py_DECREF(close_);
     }
 error_stream:
