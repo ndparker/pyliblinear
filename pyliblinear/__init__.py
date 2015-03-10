@@ -31,7 +31,7 @@ if __doc__:
 __author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
 __docformat__ = "restructuredtext en"
 __license__ = "Apache License, Version 2.0"
-__version__ = ('1.96.0', True, 2)
+__version__ = ('1.96.0', True, 3)
 
 # pylint: disable = W0622, W0614, W0611, W0401, E0611
 from pyliblinear import _util

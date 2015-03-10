@@ -1,4 +1,4 @@
-Changes with version
+Changes with version 1.96.0.dev3
 
  *) fixed linkage error by adding missing extern declarations
 
