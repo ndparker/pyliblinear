@@ -1,5 +1,7 @@
 Changes with version
 
+ *) fixed linkage error by adding missing extern declarations
+
  *) Added python 3 support
 
 
