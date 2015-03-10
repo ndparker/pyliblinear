@@ -48,6 +48,7 @@ typedef struct {
     PyObject *weakreflist;
 
     struct model *model;
+    PyObject *mmap;
 } pl_model_t;
 
 
@@ -69,7 +70,7 @@ typedef struct {
 
 /* Foward declaration */
 static pl_model_t *
-pl_model_new(PyTypeObject *cls, struct model *model);
+pl_model_new(PyTypeObject *cls, struct model *model, PyObject *mmap_);
 
 /* ------------------------ BEGIN Helper Functions ----------------------- */
 
@@ -319,6 +320,7 @@ error_result:
     return NULL;
 }
 
+
 /*
  * Save model to stream
  *
@@ -408,6 +410,76 @@ error:
     return -1;
 }
 
+
+/*
+ * Create new mmap'd buffer
+ *
+ * Return -1 on error
+ */
+static int
+pl_mmap_buf_new(Py_ssize_t size, PyObject **mmap__, void **target_)
+{
+    PyObject *m_tempfile, *m_mmap, *tfile, *tmp, *mmap_;
+    Py_ssize_t buffer_len;
+
+    if (!(m_mmap = PyImport_ImportModule("mmap")))
+        return -1;
+
+    if (!(m_tempfile = PyImport_ImportModule("tempfile")))
+        goto error_mmap;
+
+    tfile = PyObject_CallMethod(m_tempfile, "TemporaryFile", "()");
+    Py_DECREF(m_tempfile);
+    if (!tfile)
+        goto error_mmap;
+
+    if (!(tmp = PyObject_CallMethod(tfile, "seek", "(ii)", size - 1, 0)))
+        goto error_tfile;
+    Py_DECREF(tmp);
+
+    if (!(tmp = PyObject_CallMethod(tfile, "write", "(s#)", "\0",
+                                    (Py_ssize_t)1)))
+        goto error_tfile;
+    Py_DECREF(tmp);
+
+    if (!(tmp = PyObject_CallMethod(tfile, "flush", "()")))
+        goto error_tfile;
+    Py_DECREF(tmp);
+
+    if (!(tmp = PyObject_CallMethod(tfile, "fileno", "()")))
+        goto error_tfile;
+
+    mmap_ = PyObject_CallMethod(m_mmap, "mmap", "(On)", tmp, size);
+    Py_DECREF(tmp);
+    if (!mmap_)
+        goto error_tfile;
+
+    if (-1 == PyObject_AsWriteBuffer(mmap_, target_, &buffer_len))
+        goto error_mapped;
+
+    if (size != buffer_len) {
+        PyErr_SetString(PyExc_AssertionError, "bufsize wrong");
+        goto error_mapped;
+    }
+
+    *mmap__ = mmap_;
+    Py_DECREF(tfile);
+    Py_DECREF(m_mmap);
+
+    return 0;
+
+error_mapped:
+    Py_DECREF(mmap_);
+
+error_tfile:
+    Py_DECREF(tfile);
+
+error_mmap:
+    Py_DECREF(m_mmap);
+    return -1;
+}
+
+
 #define SEEN_SOLVER_TYPE (1 << 0)
 #define SEEN_NR_CLASS    (1 << 1)
 #define SEEN_NR_FEATURE  (1 << 2)
@@ -421,10 +493,17 @@ error:
 #define PyString_FromStringAndSize PyUnicode_FromStringAndSize
 #endif
 
+/*
+ * Create model from stream
+ *
+ * Reference to read is stolen.
+ *
+ * Return NULL on error
+ */
 static pl_model_t *
-pl_model_from_stream(PyTypeObject *cls, PyObject *read)
+pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
 {
-    PyObject *tmp;
+    PyObject *tmp, *mmap_ = NULL;
     pl_tok_t *tok;
     pl_iter_t *tokread;
     struct model *model;
@@ -561,7 +640,12 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
                 goto error_model;
             }
 
-            if (!(model->w = malloc(cols * rows * (sizeof *model->w)))) {
+            if (want_mmap) {
+                if (-1 == pl_mmap_buf_new(cols * rows * (sizeof *model->w),
+                                          &mmap_, (void *)&model->w))
+                    goto error_model;
+            }
+            else if (!(model->w = malloc(cols * rows * (sizeof *model->w)))) {
                 PyErr_SetNone(PyExc_MemoryError);
                 goto error_model;
             }
@@ -584,15 +668,27 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read)
 #undef EXPECT_TOK
 
     pl_iter_clear(&tokread);
-    return pl_model_new(cls, model);
+    return pl_model_new(cls, model, mmap_);
 
 error_format:
     PyErr_SetString(PyExc_ValueError, "Invalid format");
 
 error_model:
+    if (mmap_) {
+        PyObject *ptype, *pvalue, *ptraceback;
+
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        if ((tmp = PyObject_CallMethod(mmap_, "close", "()")))
+            Py_DECREF(tmp);
+        if (ptype)
+            PyErr_Restore(ptype, pvalue, ptraceback);
+        Py_DECREF(mmap_);
+        model->w = NULL;
+    }
     if (model->label) free(model->label);
     if (model->w) free(model->w);
     free(model);
+
 error_tokread:
     pl_iter_clear(&tokread);
     return NULL;
@@ -609,6 +705,7 @@ error_tokread:
 #undef SEEN_NR_FEATURE
 #undef SEEN_NR_CLASS
 #undef SEEN_SOLVER_TYPE
+
 
 /* ------------------------- END Helper Functions ------------------------ */
 
@@ -777,19 +874,32 @@ error_self:
  * Create new PL_ModelType
  *
  * model is stolen and free'd on error.
+ * mmap_ is stolen and free'd on error. mmap_ may be NULL
  *
  * Return NULL on error
  */
 static pl_model_t *
-pl_model_new(PyTypeObject *cls, struct model *model)
+pl_model_new(PyTypeObject *cls, struct model *model, PyObject *mmap_)
 {
     pl_model_t *self;
 
     if (!(self = GENERIC_ALLOC(cls))) {
+        if (mmap_) {
+            PyObject *ptype, *pvalue, *ptraceback, *tmp;
+
+            PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+            if ((tmp = PyObject_CallMethod(mmap_, "close", "()")))
+                Py_DECREF(tmp);
+            if (ptype)
+                PyErr_Restore(ptype, pvalue, ptraceback);
+            Py_DECREF(mmap_);
+            model->w = NULL;
+        }
         free_and_destroy_model(&model);
         return NULL;
     }
 
+    self->mmap = mmap_;
     self->model = model;
 
     return self;
@@ -844,11 +954,11 @@ PL_ModelType_train(PyTypeObject *cls, PyObject *args, PyObject *kwds)
     if (pl_solver_as_parameter(solver_, &param) == -1)
         return NULL;
 
-    return (PyObject *)pl_model_new(cls, train(&prob, &param));
+    return (PyObject *)pl_model_new(cls, train(&prob, &param), NULL);
 }
 
 PyDoc_STRVAR(PL_ModelType_load__doc__,
-"load(cls, file)\n\
+"load(cls, file, mmap=False)\n\
 \n\
 Create `Model` instance from a file (previously created by\n\
 Model.save())\n\
@@ -864,6 +974,9 @@ Note that the exact I/O exceptions depend on the stream passed in.\n\
     accompanying file is opened in text mode, read from the beginning and\n\
     closed afterwards.\n\
 \n\
+  `mmap` : ``bool``\n\
+    Load the model into a file-backed memory area? Default: false\n\
+\n\
 :Return: New model instance\n\
 :Rtype: `Model`\n\
 \n\
@@ -874,12 +987,16 @@ Note that the exact I/O exceptions depend on the stream passed in.\n\
 static PyObject *
 PL_ModelType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"file", NULL};
-    PyObject *file_, *read_, *stream_ = NULL, *close_ = NULL;
+    static char *kwlist[] = {"file", "mmap", NULL};
+    PyObject *file_, *read_, *stream_ = NULL, *close_ = NULL, *mmap_ = NULL;
     pl_model_t *self = NULL;
+    int want_mmap = 0;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
-                                     &file_))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
+                                     &file_, &mmap_))
+        return NULL;
+
+    if (mmap_ && (want_mmap = PyObject_IsTrue(mmap_)) == -1)
         return NULL;
 
     if (pl_attr(file_, "read", &read_) == -1)
@@ -903,7 +1020,7 @@ PL_ModelType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
         }
     }
 
-    self = pl_model_from_stream(cls, read_);
+    self = pl_model_from_stream(cls, read_, want_mmap);
 
     /* fall through */
 
@@ -1186,13 +1303,22 @@ static int
 PL_ModelType_clear(pl_model_t *self)
 {
     struct model *ptr;
+    PyObject *tmp;
 
     if (self->weakreflist)
         PyObject_ClearWeakRefs((PyObject *)self);
 
     if ((ptr = self->model)) {
         self->model = NULL;
+        if (self->mmap)
+            ptr->w = NULL;
         free_and_destroy_model(&ptr);
+    }
+    if (self->mmap) {
+        if (!(tmp = PyObject_CallMethod(self->mmap, "close", "")))
+            PyErr_Clear();
+        Py_XDECREF(tmp);
+        Py_CLEAR(self->mmap);
     }
 
     return 0;
