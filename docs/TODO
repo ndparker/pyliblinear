@@ -1,6 +1,5 @@
 - working cross validation
 - more tests
-- mmap support
 
 
 .. vim:tw=72 syntax=rest
