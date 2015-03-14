@@ -48,7 +48,7 @@ typedef struct {
     PyObject *weakreflist;
 
     struct model *model;
-    PyObject *mview;
+    PyObject *mmap;
 } pl_model_t;
 
 
@@ -70,7 +70,7 @@ typedef struct {
 
 /* Foward declaration */
 static pl_model_t *
-pl_model_new(PyTypeObject *cls, struct model *model, PyObject *mview);
+pl_model_new(PyTypeObject *cls, struct model *model, PyObject *mmap_);
 
 /* ------------------------ BEGIN Helper Functions ----------------------- */
 
@@ -411,15 +411,20 @@ error:
 }
 
 
+#ifdef EXT3
+#define PyInt_FromSsize_t PyLong_FromSsize_t
+#endif
+
 /*
  * Create new mmap'd buffer
  *
  * Return -1 on error
  */
 static int
-pl_mmap_buf_new(Py_ssize_t size, PyObject **mview_)
+pl_mmap_buf_new(Py_ssize_t size, PyObject **mmap__, void **target_)
 {
-    PyObject *m_tempfile, *m_mmap, *tfile, *tmp, *mmap_, *mview;
+    PyObject *m_tempfile, *m_mmap, *tfile, *tmp, *mmap_, *size_;
+    Py_ssize_t buflen;
 
     if (!(m_mmap = PyImport_ImportModule("mmap")))
         return -1;
@@ -432,7 +437,11 @@ pl_mmap_buf_new(Py_ssize_t size, PyObject **mview_)
     if (!tfile)
         goto error_mmap;
 
-    if (!(tmp = PyObject_CallMethod(tfile, "seek", "(ii)", size - 1, 0)))
+    if (!(size_ = PyInt_FromSsize_t(size - 1)))
+        goto error_tfile;
+    tmp = PyObject_CallMethod(tfile, "seek", "(Oi)", size_, (long)0);
+    Py_DECREF(size_);
+    if (!tmp)
         goto error_tfile;
     Py_DECREF(tmp);
 
@@ -459,28 +468,31 @@ pl_mmap_buf_new(Py_ssize_t size, PyObject **mview_)
         goto error_tfile;
 
 #ifdef EXT2
-    if (!(tmp = PyBuffer_FromObject(mmap_, 0, size)))
+    if (-1 == PyObject_AsWriteBuffer(mmap_, target_, &buflen))
         goto error_mapped;
-    mmap_ = tmp;
+#else
+    {
+        Py_buffer view;
+
+        if (-1 == PyObject_GetBuffer(mmap_, &view, PyBUF_SIMPLE))
+            goto error_mapped;
+        *target_ = view.buf;
+        buflen = view.len;
+
+        PyBuffer_Release(&view);
+    }
 #endif
 
-    if (!(mview = PyMemoryView_FromObject(mmap_)))
-        goto error_mapped;
-
-    if (size != PyMemoryView_GET_BUFFER(mview)->len) {
+    if (size != buflen) {
         PyErr_SetString(PyExc_AssertionError, "bufsize wrong");
-        goto error_view;
+        goto error_mapped;
     }
 
-    *mview_ = mview;
-    Py_DECREF(mmap_);
+    *mmap__ = mmap_;
     Py_DECREF(tfile);
     Py_DECREF(m_mmap);
 
     return 0;
-
-error_view:
-    Py_DECREF(mview);
 
 error_mapped:
     Py_DECREF(mmap_);
@@ -492,6 +504,10 @@ error_mmap:
     Py_DECREF(m_mmap);
     return -1;
 }
+
+#ifdef EXT3
+#undef PyInt_FromSsize_t
+#endif
 
 
 #define SEEN_SOLVER_TYPE (1 << 0)
@@ -517,7 +533,7 @@ error_mmap:
 static pl_model_t *
 pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
 {
-    PyObject *tmp, *mview = NULL;
+    PyObject *tmp, *mmap_ = NULL;
     pl_tok_t *tok;
     pl_iter_t *tokread;
     struct model *model;
@@ -655,10 +671,12 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
             }
 
             if (want_mmap) {
+                void *vh;
+
                 if (-1 == pl_mmap_buf_new(cols * rows * (sizeof *model->w),
-                                          &mview))
+                                          &mmap_, &vh))
                     goto error_model;
-                model->w = PyMemoryView_GET_BUFFER(mview)->buf;
+                model->w = vh;
             }
             else if (!(model->w = malloc(cols * rows * (sizeof *model->w)))) {
                 PyErr_SetNone(PyExc_MemoryError);
@@ -683,17 +701,17 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
 #undef EXPECT_TOK
 
     pl_iter_clear(&tokread);
-    return pl_model_new(cls, model, mview);
+    return pl_model_new(cls, model, mmap_);
 
 error_format:
     PyErr_SetString(PyExc_ValueError, "Invalid format");
 
 error_model:
-    if (mview) {
+    if (mmap_) {
         PyObject *ptype, *pvalue, *ptraceback;
 
         PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        Py_DECREF(mview);
+        Py_DECREF(mmap_);
         if (ptype)
             PyErr_Restore(ptype, pvalue, ptraceback);
         model->w = NULL;
@@ -887,21 +905,21 @@ error_self:
  * Create new PL_ModelType
  *
  * model is stolen and free'd on error.
- * mview is stolen and free'd on error. mview may be NULL
+ * mmap_ is stolen and free'd on error. mmap_ may be NULL
  *
  * Return NULL on error
  */
 static pl_model_t *
-pl_model_new(PyTypeObject *cls, struct model *model, PyObject *mview)
+pl_model_new(PyTypeObject *cls, struct model *model, PyObject *mmap_)
 {
     pl_model_t *self;
 
     if (!(self = GENERIC_ALLOC(cls))) {
-        if (mview) {
+        if (mmap_) {
             PyObject *ptype, *pvalue, *ptraceback;
 
             PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-            Py_DECREF(mview);
+            Py_DECREF(mmap_);
             if (ptype)
                 PyErr_Restore(ptype, pvalue, ptraceback);
             model->w = NULL;
@@ -910,7 +928,7 @@ pl_model_new(PyTypeObject *cls, struct model *model, PyObject *mview)
         return NULL;
     }
 
-    self->mview = mview;
+    self->mmap = mmap_;
     self->model = model;
 
     return self;
@@ -1320,11 +1338,11 @@ PL_ModelType_clear(pl_model_t *self)
 
     if ((ptr = self->model)) {
         self->model = NULL;
-        if (self->mview)
+        if (self->mmap)
             ptr->w = NULL;
         free_and_destroy_model(&ptr);
     }
-    Py_CLEAR(self->mview);
+    Py_CLEAR(self->mmap);
 
     return 0;
 }
