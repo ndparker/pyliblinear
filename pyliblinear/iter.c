@@ -77,12 +77,10 @@ pl_iter_clear(pl_iter_t **iter_)
  * Return 0 on success. result will be set to NULL on exhaustion.
  */
 int
-pl_iter_next(pl_iter_t *iter, void *result__)
+pl_iter_next(pl_iter_t *iter, void **result_)
 {
-    char **result_ = result__;
-
     if (iter && iter->next)
-        return iter->next(iter->ctx, result__);
+        return iter->next(iter->ctx, result_);
 
     *result_ = NULL;
     return 0;

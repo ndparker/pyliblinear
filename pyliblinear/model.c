@@ -78,10 +78,9 @@ pl_model_new(PyTypeObject *cls, struct model *model, PyObject *mmap_);
  * iter_iterable -> next()
  */
 static int
-pl_iter_iterable_next(void *ctx_, void *array__)
+pl_iter_iterable_next(void *ctx_, void **array_)
 {
     pl_iterable_iter_ctx_t *ctx = ctx_;
-    struct feature_node **array_ = array__;
     PyObject *vector;
     int size, max = 0;
 
@@ -196,10 +195,9 @@ error_iter:
  * iter_matrix -> next()
  */
 static int
-pl_iter_matrix_next(void *ctx_, void *array__)
+pl_iter_matrix_next(void *ctx_, void **array_)
 {
     pl_matrix_iter_ctx_t *ctx = ctx_;
-    struct feature_node **array_ = array__;
 
     if (ctx && ctx->matrix && ctx->j < ctx->prob.l) {
         *array_ = ctx->prob.x[ctx->j++];
@@ -538,6 +536,7 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
     pl_iter_t *tokread;
     struct model *model;
     char *end;
+    void *vh;
     double longfloat;
     long longint;
     int res, h, w, cols, rows, seen = 0;
@@ -560,14 +559,14 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
     model->param.weight = NULL;
     model->param.weight_label = NULL;
 
-#define EXPECT_TOK do {                                      \
-    if (pl_iter_next(tokread, &tok) == -1) goto error_model; \
-    if (!tok || PL_TOK_IS_EOL(tok)) goto error_format;       \
+#define EXPECT_TOK do {                                       \
+    if (pl_iter_next(tokread, &vh) == -1) goto error_model;   \
+    if (!(tok = vh) || PL_TOK_IS_EOL(tok)) goto error_format; \
 } while(0)
 
-#define EXPECT_EOL do {                                      \
-    if (pl_iter_next(tokread, &tok) == -1) goto error_model; \
-    if (!tok || !PL_TOK_IS_EOL(tok)) goto error_format;      \
+#define EXPECT_EOL do {                                        \
+    if (pl_iter_next(tokread, &vh) == -1) goto error_model;    \
+    if (!(tok = vh) || !PL_TOK_IS_EOL(tok)) goto error_format; \
 } while(0)
 
 #define TOK(str) !strncmp(tok->start, (str), tok->sentinel - tok->start)
@@ -591,8 +590,8 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
 } while(0)
 
     while (1) {
-        if (pl_iter_next(tokread, &tok) == -1) goto error_model;
-        if (!tok) {
+        if (pl_iter_next(tokread, &vh) == -1) goto error_model;
+        if (!(tok = vh)) {
             if ((seen & SEEN_REQUIRED) != SEEN_REQUIRED) goto error_format;
             break;
         }
@@ -671,8 +670,6 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
             }
 
             if (want_mmap) {
-                void *vh;
-
                 if (-1 == pl_mmap_buf_new(cols * rows * (sizeof *model->w),
                                           &mmap_, &vh))
                     goto error_model;
@@ -749,9 +746,10 @@ PL_PredictIteratorType_iternext(pl_predict_iter_t *self)
 {
     PyObject *result, *dict_, *label_;
     struct feature_node *array;
+    void *vh;
     double label;
 
-    if (pl_iter_next(self->iter, &array) == 0 && array) {
+    if (pl_iter_next(self->iter, &vh) == 0 && ((array = vh))) {
         if (self->probability) {
             label = predict_probability(self->model->model, array,
                                         self->dec_values);

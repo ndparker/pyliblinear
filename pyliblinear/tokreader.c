@@ -272,10 +272,9 @@ pl_tokread_scan(pl_tokread_iter_ctx_t *ctx)
 
 
 static int
-pl_tokread_iter_next(void *ctx_, void *tok__)
+pl_tokread_iter_next(void *ctx_, void **tok_)
 {
     pl_tokread_iter_ctx_t *ctx = ctx_;
-    pl_tok_t **tok_ = tok__;
     int res;
 
     if (ctx) {
@@ -417,8 +416,9 @@ static PyObject *
 PL_TokReaderType_iternext(pl_tokreader_iter_t *self)
 {
     pl_tok_t *tok;
+    void *vh;
 
-    if (pl_iter_next(self->iter, &tok) == 0 && tok) {
+    if (pl_iter_next(self->iter, &vh) == 0 && ((tok = vh))) {
         if (PL_TOK_IS_EOL(tok))
             return PyString_FromString("  EOL");
 

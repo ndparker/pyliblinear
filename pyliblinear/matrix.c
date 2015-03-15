@@ -858,11 +858,14 @@ PL_VectorReaderType_iternext(pl_vector_reader_t *self)
     char *end;
     pl_tok_t *tok;
     PyObject *index_, *value_, *tuple_;
+    void *vh;
     double value;
     long index;
 
     if (self->matrix_reader && self->matrix_reader->tokread
-        && pl_iter_next(self->matrix_reader->tokread, &tok) == 0) {
+        && pl_iter_next(self->matrix_reader->tokread, &vh) == 0) {
+        tok = vh;
+
         if (!tok || PL_TOK_IS_EOL(tok)) {
             self->matrix_reader->state = PL_MATRIX_READER_STATE_ROW;
             return NULL;
@@ -996,6 +999,7 @@ PL_MatrixReaderType_iternext(pl_matrix_reader_t *self)
     char *end;
     pl_tok_t *tok;
     PyObject *label_, *vector_, *tuple_;
+    void *vh;
     double label;
 
     if (self->tokread) {
@@ -1006,7 +1010,7 @@ PL_MatrixReaderType_iternext(pl_matrix_reader_t *self)
             break;
 
         case PL_MATRIX_READER_STATE_ROW:
-            if (pl_iter_next(self->tokread, &tok) == 0 && tok) {
+            if (pl_iter_next(self->tokread, &vh) == 0 && ((tok = vh))) {
                 if (PL_TOK_IS_EOL(tok)) {
                     PyErr_SetString(PyExc_ValueError, "Invalid format");
                     break;

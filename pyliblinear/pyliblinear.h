@@ -229,7 +229,7 @@ pl_vector_load(PyObject *, struct feature_node **, int *, int *);
 
 typedef struct pl_iter_t pl_iter_t;
 
-typedef int (pl_iter_next_fn)(void *, void *);
+typedef int (pl_iter_next_fn)(void *, void **);
 typedef void (pl_iter_clear_fn)(void *);
 typedef int (pl_iter_visit_fn)(void *, visitproc, void *);
 
@@ -249,7 +249,7 @@ pl_iter_new(void *, pl_iter_next_fn *, pl_iter_clear_fn *, pl_iter_visit_fn *);
  * Return 0 on success. result will be set to NULL on exhaustion.
  */
 int
-pl_iter_next(pl_iter_t *, void *);
+pl_iter_next(pl_iter_t *, void **);
 
 
 /*
