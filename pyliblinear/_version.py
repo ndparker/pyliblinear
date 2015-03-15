@@ -79,7 +79,7 @@ class Version(tuple):
             Internal revision
 
         :Return: New version instance
-        :Rtype: `version`
+        :Rtype: `Version`
         """
         # pylint: disable = W0613
 
