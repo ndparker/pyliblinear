@@ -7,12 +7,12 @@ Download
     Current Stable Version
     ''''''''''''''''''''''
 
-    - `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-1.96.0.dev3>`_
-    - `pyliblinear-1.96.0.dev3.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev3.tar.xz>`_
-    - `pyliblinear-1.96.0.dev3.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev3.tar.bz2>`_
-    - `pyliblinear-1.96.0.dev3.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev3.tar.gz>`_
-    - `pyliblinear-1.96.0.dev3.zip <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev3.zip>`_
-    - `pyliblinear-1.96.0.dev3.digests <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev3.digests>`_
+    - `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-1.96.0.dev4>`_
+    - `pyliblinear-1.96.0.dev4.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev4.tar.xz>`_
+    - `pyliblinear-1.96.0.dev4.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev4.tar.bz2>`_
+    - `pyliblinear-1.96.0.dev4.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev4.tar.gz>`_
+    - `pyliblinear-1.96.0.dev4.zip <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev4.zip>`_
+    - `pyliblinear-1.96.0.dev4.digests <http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev4.digests>`_
 
     .. end stable
 
@@ -22,12 +22,12 @@ Download
 Current Development Version
 ---------------------------
 
-- `CHANGES file <http://storage.perlig.de/pyliblinear/dev/CHANGES-1.96.0.dev3>`_
-- `pyliblinear-1.96.0.dev3.tar.xz <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev3.tar.xz>`_
-- `pyliblinear-1.96.0.dev3.tar.bz2 <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev3.tar.bz2>`_
-- `pyliblinear-1.96.0.dev3.tar.gz <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev3.tar.gz>`_
-- `pyliblinear-1.96.0.dev3.zip <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev3.zip>`_
-- `pyliblinear-1.96.0.dev3.digests <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev3.digests>`_
+- `CHANGES file <http://storage.perlig.de/pyliblinear/dev/CHANGES-1.96.0.dev4>`_
+- `pyliblinear-1.96.0.dev4.tar.xz <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev4.tar.xz>`_
+- `pyliblinear-1.96.0.dev4.tar.bz2 <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev4.tar.bz2>`_
+- `pyliblinear-1.96.0.dev4.tar.gz <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev4.tar.gz>`_
+- `pyliblinear-1.96.0.dev4.zip <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev4.zip>`_
+- `pyliblinear-1.96.0.dev4.digests <http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev4.digests>`_
 
 .. end dev
 
@@ -37,17 +37,17 @@ Integrity Check
 
 There are hashes (MD5, SHA1 and SHA256) of the download packages stored
 in the `digests file
-<http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev3.digests>`_\.
+<http://storage.perlig.de/pyliblinear/dev/pyliblinear-1.96.0.dev4.digests>`_\.
 In order to check the integrity of the downloaded file, use a tool like
 md5sum (or sha1sum, sha256sum accordingly), e.g.:
 
 .. sourcecode:: console
 
-    $ md5sum -c pyliblinear-1.96.0.dev3.digests
-    pyliblinear-1.96.0.dev3.tar.bz2: OK
-    pyliblinear-1.96.0.dev3.tar.gz: OK
-    pyliblinear-1.96.0.dev3.tar.xz: OK
-    pyliblinear-1.96.0.dev3.zip: OK
+    $ md5sum -c pyliblinear-1.96.0.dev4.digests
+    pyliblinear-1.96.0.dev4.tar.bz2: OK
+    pyliblinear-1.96.0.dev4.tar.gz: OK
+    pyliblinear-1.96.0.dev4.tar.xz: OK
+    pyliblinear-1.96.0.dev4.zip: OK
 
 In order to check the integrity of the digest file itself, you can check
 the PGP signature of that file. The file is signed by André Malo, Key-ID
@@ -55,7 +55,7 @@ the PGP signature of that file. The file is signed by André Malo, Key-ID
 
 .. sourcecode:: console
 
-    $ gpg --verify pyliblinear-1.96.0.dev3.digests
+    $ gpg --verify pyliblinear-1.96.0.dev4.digests
     gpg: Signature made Tue Mar 10 11:01:08 2015 CET using DSA key ID 8103A37E
     gpg: Good signature from "Andre Malo <nd@apache.org>"
     gpg:                 aka "Andr\xe9\x20Malo <nd@perlig.de>"
@@ -66,7 +66,7 @@ Vendor Packages
 ---------------
 
 There's a `Gentoo Linux Ebuild
-<http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev3.ebuild>`_
+<http://storage.perlig.de/pyliblinear/pyliblinear-1.96.0.dev4.ebuild>`_
 available.
 
 
