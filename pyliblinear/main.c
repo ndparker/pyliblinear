@@ -42,7 +42,7 @@ PyDoc_STRVAR(EXT_DOCS_VAR,
 ":Copyright:\n\
 \n\
  Copyright 2015\n\
- Andr\xe9 Malo or his licensors, as applicable\n\
+ Andr\xc3\xa9 Malo or his licensors, as applicable\n\
 \n\
 :License:\n\
 \n\
@@ -74,6 +74,8 @@ EXT_INIT_FUNC {
     /* Create the module and populate stuff */
     if (!(m = EXT_CREATE(&EXT_DEFINE_VAR)))
         EXT_INIT_ERROR(NULL);
+
+    EXT_DOC_UNICODE(m);
 
     EXT_ADD_STRING(m, "__docformat__", "restructuredtext en");
     EXT_ADD_UNICODE(m, "__author__", "Andr\xe9 Malo", "latin-1");
