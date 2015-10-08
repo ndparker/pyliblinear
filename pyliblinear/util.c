@@ -170,7 +170,6 @@ pl_as_index(PyObject *obj, int *result)
  * filled from the right side. The function returns the pointer to start of the
  * result. The buffer is expected to be PL_INT_AS_CHAR_BUF_SIZE bytes long.
  */
-#define PL_INT_AS_CHAR_BUF_SIZE (sizeof(long)*CHAR_BIT/3+6)
 
 char *
 pl_int_as_char(char *buf, int value)

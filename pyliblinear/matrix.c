@@ -1293,7 +1293,7 @@ PyDoc_STRVAR(PL_FeatureMatrixType_save__doc__,
 \n\
 Save `FeatureMatrix` instance to a file.\n\
 \n\
-Each line of the line of the file contains the label and the accompanying\n\
+Each line of the file contains the label and the accompanying\n\
 sparse feature vector, separated by a space. The feature vector consists of\n\
 index/value pairs. The index and the value are separated by a colon (``:``).\n\
 The pairs are separated by a space again. The line ending is ``\\n``.\n\

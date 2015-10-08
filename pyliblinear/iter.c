@@ -19,7 +19,7 @@
 
 
 /*
- * Structure for vector iterator
+ * Structure for iterator
  */
 struct pl_iter_t {
     pl_iter_next_fn *next;

@@ -75,6 +75,7 @@ typedef struct {
 
     double *weight;
     int *weight_label;
+    double *init_sol;
 
     double eps;
     double C;
@@ -121,6 +122,7 @@ pl_solver_as_parameter(PyObject *self, struct parameter *param)
     param->weight_label = solver->weight_label;
     param->weight = solver->weight;
     param->p = solver->p;
+    param->init_sol = solver->init_sol;
 
     Py_DECREF(self);
     return 0;
@@ -727,6 +729,10 @@ PL_SolverType_clear(pl_solver_t *self)
         self->weight_label = NULL;
         PyMem_Free(ptr);
     }
+    if ((ptr = self->init_sol)) {
+        self->init_sol = NULL;
+        PyMem_Free(ptr);
+    }
 
     return 0;
 }
@@ -806,6 +812,7 @@ PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->nr_weight = nr_weight;
     self->weight = weight;
     self->weight_label = weight_label;
+    self->init_sol = NULL;
 
     return (PyObject *)self;
 }
