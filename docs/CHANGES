@@ -1,6 +1,11 @@
+Changes with version 2.1.0.dev1
+
+ *) Upgrade to liblinear 2.1
+
+
 Changes with version 1.96.0.dev4
 
- * Added support for mmap'ing loaded models
+ *) Added support for mmap'ing loaded models
 
 
 Changes with version 1.96.0.dev3
