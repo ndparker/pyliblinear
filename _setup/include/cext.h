@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 - 2014
+ * Copyright 2006 - 2016
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,6 +60,10 @@
 /* Py3K Support */
 #if PY_MAJOR_VERSION >= 3
 
+#if PY_VERSION_HEX >= 0x03040000
+#define TEXT_SIGNATURE
+#endif
+
 #define EXT3
 
 #ifndef Py_TPFLAGS_HAVE_CLASS
@@ -72,6 +76,14 @@
 
 #ifndef Py_TPFLAGS_HAVE_ITER
 #define Py_TPFLAGS_HAVE_ITER (0)
+#endif
+
+#ifndef Py_TPFLAGS_HAVE_RICHCOMPARE
+#define Py_TPFLAGS_HAVE_RICHCOMPARE (0)
+#endif
+
+#ifndef Py_TPFLAGS_HAVE_SEQUENCE_IN
+#define Py_TPFLAGS_HAVE_SEQUENCE_IN (0)
 #endif
 
 #ifndef PyMODINIT_FUNC
