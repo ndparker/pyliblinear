@@ -54,6 +54,7 @@ pl_unpack2(PyObject *obj, PyObject **one, PyObject **two)
     else if (PyErr_Occurred())
         goto error_two;
 
+    Py_DECREF(iter);
     return 0;
 
 error_two:
