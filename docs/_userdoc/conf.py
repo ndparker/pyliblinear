@@ -15,13 +15,15 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.append(os.path.abspath('.'))
+sys.path.append(os.path.abspath('../../'))
 
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['epydoc_sphinx']
+extensions = [
+    'sphinx.ext.autodoc',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -37,7 +39,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyliblinear'
-copyright = u'2015 Andr\xe9 Malo'
+copyright = u'2015 - 2017 Andr\xe9 Malo'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -97,12 +99,6 @@ rst_prolog = """
 
 .. |**pyliblinear**| replace:: :productb:`pyliblinear`
 """
-
-# -- Options for epydoc extension-----------------------------------------------
-
-epydoc = dict(
-    pyliblinear=os.path.join(os.path.abspath(os.path.pardir), 'apidoc'),
-)
 
 # -- Options for HTML output ---------------------------------------------------
 

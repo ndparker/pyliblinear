@@ -1,8 +1,8 @@
 # -*- coding: ascii -*-
-r"""
+u"""
 :Copyright:
 
- Copyright 2015
+ Copyright 2015 - 2017
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -25,23 +25,15 @@ r"""
 
 pyliblinear - a liblinear python API
 """
-if __doc__:
-    # pylint: disable = redefined-builtin
-    __doc__ = __doc__.encode('ascii').decode('unicode_escape')
-__author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
+__author__ = u"Andr\xe9 Malo"
 __docformat__ = "restructuredtext en"
 __license__ = "Apache License, Version 2.0"
-__version__ = ('2.1.0', True, 1)
+__version__ = '2.1.0.dev1'
 
-# pylint: disable = W0622, W0614, W0611, W0401, E0611
 from pyliblinear import _util
-from pyliblinear import _version
 from pyliblinear._liblinear import FeatureMatrix  # noqa
 from pyliblinear._liblinear import Model  # noqa
 from pyliblinear._liblinear import Solver  # noqa
 from pyliblinear._liblinear import SOLVER_TYPES  # noqa
-
-#: Version of the package
-version = _version.Version(*__version__)
 
 __all__ = _util.find_public(globals())

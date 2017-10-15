@@ -5,8 +5,6 @@
 # be loaded. Extensions are loading into the active Python interpreter and may
 # run arbitrary code
 extension-pkg-whitelist=
-    pyliblinear._liblinear
-
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
@@ -60,12 +58,9 @@ disable=
     locally-disabled,
     file-ignored,
 
-    too-many-ancestors,
-
-    wrong-import-position,
-    using-constant-test,
-    redefined-variable-type,
-    duplicate-code,
+    invalid-name,
+    redefined-argument-from-local,
+    attribute-defined-outside-init,
 
 
 # Enable the message, report, category or checker with the given id(s). You can

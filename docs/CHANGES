@@ -1,3 +1,10 @@
+Changes with version
+
+ *) Add support for Python 3.5 and 3.6. Drop support for Python 3.2 and 3.3.
+
+ *) Upgrade packaging and development boilerplate
+
+
 Changes with version 2.1.0.dev1
 
  *) Upgrade to liblinear 2.1

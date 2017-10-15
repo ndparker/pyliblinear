@@ -1,8 +1,8 @@
 # -*- coding: ascii -*-
-r"""
+u"""
 :Copyright:
 
- Copyright 2015
+ Copyright 2015 - 2017
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -23,11 +23,8 @@ r"""
  pyliblinear Unit Tests
 ========================
 
-pyliblinear unit Tests.
+pyliblinear Unit Tests.
 """
-if __doc__:
-    # pylint: disable = redefined-builtin
-    __doc__ = __doc__.encode('ascii').decode('unicode_escape')
-__author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
+__author__ = u"Andr\xe9 Malo"
 __docformat__ = "restructuredtext en"
 __license__ = "Apache License, Version 2.0"

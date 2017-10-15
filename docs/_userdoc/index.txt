@@ -1,5 +1,5 @@
 .. license:
-    Copyright 2015
+    Copyright 2015 - 2017
     André Malo or his licensors, as applicable
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@
 It aims for more pythonic access to liblinear's features, especially
 featuring streams of data and lazy evaluations whereever possible.
 
-Supported python versions are Python 2.7 and Python 3.2 and above.
+Supported python versions are Python 2.7 and Python 3.4 and above.
 
 
 Documentation
@@ -33,9 +33,11 @@ Documentation
 .. toctree::
     :hidden:
 
+    apidoc/index
+
 
 - :ref:`Documentation Search <search>` (needs javascript)
-- :pyliblinear:`API Documentation </>` (generated)
+- :ref:`API Documentation <apidoc>` (generated)
 
 
 .. comment:

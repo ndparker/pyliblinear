@@ -2,7 +2,7 @@
 r"""
 :Copyright:
 
- Copyright 2015
+ Copyright 2015 - 2017
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -25,15 +25,8 @@ r"""
 
 Tests for pyliblinear.Solver.
 """
-if __doc__:
-    # pylint: disable = redefined-builtin
-    __doc__ = __doc__.encode('ascii').decode('unicode_escape')
-__author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
+__author__ = u"Andr\xe9 Malo"
 __docformat__ = "restructuredtext en"
-
-from nose.tools import (
-    assert_equals
-)
 
 import pyliblinear as _pyliblinear
 
@@ -42,11 +35,11 @@ def test_solver_default():
     """ Solver initializes with default arguments """
     solver = _pyliblinear.Solver()
 
-    assert_equals(solver.type, 'L2R_L2LOSS_SVC_DUAL')
-    assert_equals(solver.C, 1.0)
-    assert_equals(solver.eps, 0.1)
-    assert_equals(solver.p, 0.1)
-    assert_equals(solver.weights(), {})
+    assert solver.type == 'L2R_L2LOSS_SVC_DUAL'
+    assert solver.C == 1.0
+    assert solver.eps == 0.1
+    assert solver.p == 0.1
+    assert solver.weights() == {}
 
 
 def test_solver_types():
@@ -66,10 +59,10 @@ def test_solver_types():
     ]
     for stype in tests:
         solver = _pyliblinear.Solver(_pyliblinear.SOLVER_TYPES[stype])
-        assert_equals(solver.type, stype)
+        assert solver.type == stype
 
         solver = _pyliblinear.Solver(stype)
-        assert_equals(solver.type, stype)
+        assert solver.type == stype
 
 
 def test_solver_eps_defaults():
@@ -90,11 +83,11 @@ def test_solver_eps_defaults():
     for solver_type, eps in tests:
         solver = _pyliblinear.Solver(solver_type)
 
-        assert_equals(solver.type, solver_type)
-        assert_equals(solver.C, 1.0)
-        assert_equals(solver.eps, eps)
-        assert_equals(solver.p, 0.1)
-        assert_equals(solver.weights(), {})
+        assert solver.type == solver_type
+        assert solver.C == 1.0
+        assert solver.eps == eps
+        assert solver.p == 0.1
+        assert solver.weights() == {}
 
 
 def test_solver_param():
@@ -102,8 +95,8 @@ def test_solver_param():
     solver = _pyliblinear.Solver('L1R_LR', C=0.25, eps=0.0001, p=3,
                                  weights={2: 5, 3: 4, 6: 9.5})
 
-    assert_equals(solver.type, 'L1R_LR')
-    assert_equals(solver.C, 0.25)
-    assert_equals(solver.eps, 0.0001)
-    assert_equals(solver.p, 3.0)
-    assert_equals(solver.weights(), {2: 5.0, 3: 4.0, 6: 9.5})
+    assert solver.type == 'L1R_LR'
+    assert solver.C == 0.25
+    assert solver.eps == 0.0001
+    assert solver.p == 3.0
+    assert solver.weights() == {2: 5.0, 3: 4.0, 6: 9.5}

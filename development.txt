@@ -1,0 +1,14 @@
+# Requirements file for local development
+
+pip == 9.0.1
+setuptools == 36.6.0
+
+tox == 2.9.1
+-r tests/requirements.txt
+
+pylint == 1.7.4
+astroid == 1.5.3
+
+invoke == 0.21.0
+
+Sphinx == 1.6.4

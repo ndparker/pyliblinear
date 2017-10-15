@@ -1,8 +1,8 @@
 # -*- coding: ascii -*-
-r"""
+u"""
 :Copyright:
 
- Copyright 2015
+ Copyright 2014 - 2017
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -25,89 +25,31 @@ r"""
 
 Test utilities.
 """
-if __doc__:
-    # pylint: disable = redefined-builtin
-    __doc__ = __doc__.encode('ascii').decode('unicode_escape')
-__author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
+__author__ = u"Andr\xe9 Malo"
 __docformat__ = "restructuredtext en"
 
 import contextlib as _contextlib
-import functools as _functools
+import functools as _ft
+import sys as _sys
+import types as _types
 
-import mock as _mock
+from pytest import skip
+
+try:
+    from unittest import mock  # pylint: disable = unused-import
+except ImportError:
+    import mock  # noqa
+
+try:
+    reload
+except NameError:
+    # pylint: disable = redefined-builtin
+    try:
+        from importlib import reload
+    except ImportError:
+        from imp import reload
 
 unset = object()
-
-
-@_contextlib.contextmanager
-def mocked(where, what, how=unset):
-    """
-    Context manager which replaces a symbol temporarily
-
-    :Parameters:
-      `where` : any
-        Namespace, where `what` resides
-
-      `what` : ``str``
-        Name of the symbol, which should be replaced
-
-      `how` : any
-        How should it be replaced? If omitted or `unset`, a new MagicMock
-        instance is created. The result is yielded as context.
-    """
-    old = getattr(where, what)
-    try:
-        if how is unset:
-            how = _mock.MagicMock()
-        setattr(where, what, how)
-        yield how
-    finally:
-        setattr(where, what, old)
-
-
-def mock(where, what, how=unset, name=None):
-    """
-    Decorator-Configurator for pre-creating mocks
-
-    :Parameters:
-      `where` : any
-        Namespace, where `what` resides
-
-      `what` : ``str``
-        Name of the symbol, which should be replaced
-
-      `how` : any
-        How should it be replaced? If omitted or `unset`, a new MagicMock
-        instance is created.
-
-      `name` : ``str``
-        The keyword argument name, which should be used to pass the fake
-        object to the decorated function. If omitted or ``None``, the fake
-        object won't be passed.
-
-    :Return: Decorator function
-    :Rtype: callable
-    """
-    def inner(func):
-        """
-        Actual decorator
-
-        :Parameters:
-          `func` : callable
-            Function to decorate
-
-        :Return: Proxy function wrapping `func`
-        :Rtype: callable
-        """
-        @_functools.wraps(func)
-        def proxy(*args, **kwargs):
-            """ Function proxy """
-            with mocked(where, what, how=how) as fake:
-                if name is not None:
-                    kwargs[name] = fake
-                return func(*args, **kwargs)
-        return proxy
-    return inner
 
 
 class Bunch(object):
@@ -116,3 +58,268 @@ class Bunch(object):
     def __init__(self, **kw):
         """ Initialization """
         self.__dict__.update(kw)
+
+
+@_contextlib.contextmanager
+def patched_import(what, how=unset):
+    """
+    Context manager to mock an import statement temporarily
+
+    :Parameters:
+      `what` : ``str``
+        Name of the module to mock
+
+      `how` : any
+        How should it be replaced? If omitted or `unset`, a new MagicMock
+        instance is created. The result is yielded as context.
+    """
+    _is_exc = lambda obj: isinstance(obj, BaseException) or (
+        isinstance(obj, (type, _types.ClassType))
+        and issubclass(obj, BaseException)
+    )
+
+    class FinderLoader(object):
+        """ Finder / Loader for meta path """
+
+        def __init__(self, fullname, module):
+            self.module = module
+            self.name = fullname
+            extra = '%s.' % fullname
+            for key in list(_sys.modules.keys()):
+                if key.startswith(extra):
+                    del _sys.modules[key]
+            if fullname in _sys.modules:
+                del _sys.modules[fullname]
+
+        def find_module(self, fullname, path=None):
+            """ Find the module """
+            # pylint: disable = unused-argument
+            if fullname == self.name:
+                return self
+            return None
+
+        def load_module(self, fullname):
+            """ Load the module """
+            if _is_exc(self.module):
+                raise self.module
+            _sys.modules[fullname] = self.module
+            return self.module
+
+    realmodules = _sys.modules
+    try:
+        _sys.modules = dict(realmodules)
+        obj = FinderLoader(what, mock.MagicMock() if how is unset else how)
+        realpath = _sys.meta_path
+        try:
+            _sys.meta_path = [obj] + _sys.meta_path
+            old, parts = unset, what.rsplit('.', 1)
+            if len(parts) == 2:
+                parent, base = parts[0], parts[1]
+                if parent in _sys.modules:
+                    parent = _sys.modules[parent]
+                    if hasattr(parent, base):
+                        old = getattr(parent, base)
+                        setattr(parent, base, obj.module)
+            try:
+                yield obj.module
+            finally:
+                if old is not unset:
+                    setattr(parent, base, old)
+        finally:
+            _sys.meta_path = realpath
+    finally:
+        _sys.modules = realmodules
+
+
+def python_impl(*module):
+    """
+    Decorator to ensure python implementation usage in module(s)
+
+    :Parameters:
+      `module` : ``tuple``
+        Modules to set up (at least one)
+
+    :Return: Decorator function
+    :Rtype: callable
+    """
+    assert module
+
+    def inner(func):
+        """ Actual decorator """
+        @_ft.wraps(func)
+        def proxy(*args, **kwargs):
+            """ Proxy function, mocking c loader and stuff """
+            try:
+                with patched_import('tdi.c') as c:
+                    c.load.side_effect = lambda *x: None
+                    c.impl.side_effect = lambda x: x
+                    for mod in module:
+                        reload(mod)
+                    return func(*args, **kwargs)
+            finally:
+                for mod in module:
+                    reload(mod)
+        return proxy
+    return inner
+
+
+def c_impl(*module, **kwargs):
+    """
+    c_impl(*module, test=None)
+
+    Decorator to ensure c implementation usage in module(s)
+
+    if c loader doesn't load, the test will be skipped.
+
+    :Parameters:
+      `module` : ``tuple``
+        Modules to set up (at least one)
+
+      `test` : ``str``
+        Module name (part) to pass to the loader in order to test it. If
+        omitted or ``None``, 'impl' is used.
+
+    :Return: Decorator
+    :Rtype: callable
+    """
+    assert module
+    test = kwargs.pop('test', None)
+    if kwargs:
+        raise TypeError("Unrecognized arguments")
+    if test is None:
+        test = 'impl'
+
+    def inner(func):
+        """ Actual decorator """
+        @_ft.wraps(func)
+        def proxy(*args, **kwargs):
+            """ Proxy function """
+            from tdi import c
+            if c.load(test) is None:
+                skip("c extension not found")
+            for mod in module:
+                reload(mod)
+            return func(*args, **kwargs)
+        return proxy
+    return inner
+
+
+def multi_impl(space, *module, **kwargs):
+    """
+    multi_impl(space, *module, test=None, name=None)
+
+    Decorator to create test functions for all implementations
+
+    :Parameters:
+      `space` : ``dict``
+        Namespace to create these functions in
+
+      `module` : ``tuple``
+        Modules to set up (at least one)
+
+      `test` : ``str``
+        Module name (part) to test - passed to c_impl. If omitted or ``None``,
+        a default is picked (by c_impl)
+
+      `name` : ``str``
+        test function argument name to pass the current implementation name
+        ('py' or 'c'). If omitted or ``None``, the info is not passed.
+
+    :Return: Decorator function
+    :Rtype: callable
+    """
+    assert module
+
+    test = kwargs.pop('test', None)
+    arg = kwargs.pop('name', None)
+    if kwargs:
+        raise TypeError("Unrecognized arguments")
+
+    if arg is None:
+        arger = lambda x, y: y
+    else:
+        def arger(impl, func):
+            """ Decorator function to inject impl as arg """
+            @_ft.wraps(func)
+            def proxy(*args, **kwargs):
+                """ Proxy function """
+                kwargs[arg] = impl
+                return func(*args, **kwargs)
+            return proxy
+
+    def inner(func):
+        """ Actual decorator """
+        name = func.__name__
+        if name.startswith('test'):
+            name = name[4:]
+        while name.startswith('_'):
+            name = name[1:]
+
+        space['test_py__' + name] = pfunc = arger(
+            'py', python_impl(*module)(func)
+        )
+        space['test_c__' + name] = cfunc = arger(
+            'c', c_impl(*module, **{'test': test})(func)
+        )
+        func.__test__ = False
+        if pfunc.__doc__:
+            pfunc.__doc__ = '[py] %s' % pfunc.__doc__.lstrip()
+        if cfunc.__doc__:
+            cfunc.__doc__ = '[c] %s' % cfunc.__doc__.lstrip()
+        return func
+    return inner
+
+
+def uni(value):
+    """
+    Create unicode from raw string with unicode escapes
+
+    :Parameters:
+      `value` : ``str``
+        String, which encodes to ascii and decodes as unicode_escape
+
+    :Return: The decoded string
+    :Rtype: ``unicode``
+    """
+    return value.encode('ascii').decode('unicode_escape')
+
+
+class badstr(object):  # pylint: disable = invalid-name
+    """ bad string """
+    def __str__(self):
+        raise RuntimeError("yo")
+badstr = badstr()
+
+
+class badbytes(object):  # pylint: disable = invalid-name
+    """ bad bytes """
+    def __bytes__(self):
+        raise RuntimeError("yoyo")
+    if str is bytes:
+        __str__ = __bytes__
+badbytes = badbytes()
+
+
+class badbool(object):  # pylint: disable = invalid-name
+    """ bad bool """
+    def __bool__(self):
+        raise RuntimeError("yoyo")
+    if str is bytes:
+        __nonzero__ = __bool__
+badbool = badbool()
+
+
+class baditer(object):  # pylint: disable = invalid-name
+    """ bad iter """
+    def __init__(self, *what):
+        self._what = iter(what)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        for item in self._what:
+            if isinstance(item, Exception):
+                raise item
+            return item
+    next = __next__

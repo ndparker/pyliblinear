@@ -1,8 +1,8 @@
 # -*- coding: ascii -*-
-r"""
+u"""
 :Copyright:
 
- Copyright 2015
+ Copyright 2015 - 2017
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -25,17 +25,10 @@ r"""
 
 Tests for pyliblinear._util
 """
-if __doc__:
-    # pylint: disable = redefined-builtin
-    __doc__ = __doc__.encode('ascii').decode('unicode_escape')
-__author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
+__author__ = u"Andr\xe9 Malo"
 __docformat__ = "restructuredtext en"
 
 import types as _types
-
-from nose.tools import (
-    assert_equals,
-)
 
 from pyliblinear import _util
 
@@ -49,7 +42,7 @@ def test_find_public_symbols():
     mod.a = 1
     mod._b = 2
 
-    assert_equals(_util.find_public(vars(mod)), ['a'])
+    assert _util.find_public(vars(mod)) == ['a']
 
 
 def test_find_public_all():
@@ -57,4 +50,4 @@ def test_find_public_all():
     mod = _types.ModuleType('lala')
     mod.__all__ = ['_b', 'c']
 
-    assert_equals(_util.find_public(vars(mod)), ['_b', 'c'])
+    assert _util.find_public(vars(mod)) == ['_b', 'c']

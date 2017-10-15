@@ -1,8 +1,8 @@
 # -*- coding: ascii -*-
-r"""
+u"""
 :Copyright:
 
- Copyright 2015
+ Copyright 2015 - 2017
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -25,15 +25,10 @@ r"""
 
 Tests for pyliblinear.FeatureMatrix
 """
-if __doc__:
-    # pylint: disable = redefined-builtin
-    __doc__ = __doc__.encode('ascii').decode('unicode_escape')
-__author__ = r"Andr\xe9 Malo".encode('ascii').decode('unicode_escape')
+__author__ = u"Andr\xe9 Malo"
 __docformat__ = "restructuredtext en"
 
-from nose.tools import (
-    assert_equals, assert_raises
-)
+from pytest import raises
 
 import pyliblinear as _pyliblinear
 
@@ -47,10 +42,10 @@ def test_matrix_dict():
         [(1, {3: 4, 1: 7}), (2, {2: 1})],
     )
 
-    assert_equals(matrix.width, 3)
-    assert_equals(matrix.height, 2)
-    assert_equals(list(matrix.labels()), [1.0, 2.0])
-    assert_equals(list(matrix.features()), [{1: 7.0, 3: 4.0}, {2: 1.0}])
+    assert matrix.width == 3
+    assert matrix.height == 2
+    assert list(matrix.labels()) == [1.0, 2.0]
+    assert list(matrix.features()) == [{1: 7.0, 3: 4.0}, {2: 1.0}]
 
 
 def test_matrix_dict_assign():
@@ -60,10 +55,10 @@ def test_matrix_dict_assign():
         assign_labels=4,
     )
 
-    assert_equals(matrix.width, 3)
-    assert_equals(matrix.height, 2)
-    assert_equals(list(matrix.labels()), [4.0, 4.0])
-    assert_equals(list(matrix.features()), [{1: 7.0, 3: 4.0}, {2: 1.0}])
+    assert matrix.width == 3
+    assert matrix.height == 2
+    assert list(matrix.labels()) == [4.0, 4.0]
+    assert list(matrix.features()) == [{1: 7.0, 3: 4.0}, {2: 1.0}]
 
 
 def test_matrix_tuple():
@@ -72,10 +67,10 @@ def test_matrix_tuple():
         [(1, (4, 6)), (2, (1,))],
     )
 
-    assert_equals(matrix.width, 2)
-    assert_equals(matrix.height, 2)
-    assert_equals(list(matrix.labels()), [1.0, 2.0])
-    assert_equals(list(matrix.features()), [{1: 4.0, 2: 6.0}, {1: 1.0}])
+    assert matrix.width == 2
+    assert matrix.height == 2
+    assert list(matrix.labels()) == [1.0, 2.0]
+    assert list(matrix.features()) == [{1: 4.0, 2: 6.0}, {1: 1.0}]
 
 
 def test_matrix_tuple_assign():
@@ -85,12 +80,18 @@ def test_matrix_tuple_assign():
         assign_labels=4,
     )
 
-    assert_equals(matrix.width, 3)
-    assert_equals(matrix.height, 2)
-    assert_equals(list(matrix.labels()), [4.0, 4.0])
-    assert_equals(list(matrix.features()), [
+    assert matrix.width == 3
+    assert matrix.height == 2
+    assert list(matrix.labels()) == [4.0, 4.0]
+    assert list(matrix.features()) == [
         {1: 5.0, 2: 8.0}, {1: 1.0, 2: 3.0, 3: 6.0}
-    ])
+    ]
+
+
+try:
+    xrange
+except NameError:
+    xrange = range  # pylint: disable = redefined-builtin
 
 
 class KeyIterator(object):
@@ -113,12 +114,12 @@ def test_matrix_keys():
         [(3, KeyIterator((5, 8))), (4, KeyIterator((1, 3, 6)))]
     )
 
-    assert_equals(matrix.width, 3)
-    assert_equals(matrix.height, 2)
-    assert_equals(list(matrix.labels()), [3.0, 4.0])
-    assert_equals(list(matrix.features()), [
+    assert matrix.width == 3
+    assert matrix.height == 2
+    assert list(matrix.labels()) == [3.0, 4.0]
+    assert list(matrix.features()) == [
         {1: 5.0, 2: 8.0}, {1: 1.0, 2: 3.0, 3: 6.0}
-    ])
+    ]
 
 
 def test_matrix_keys_assign():
@@ -128,12 +129,12 @@ def test_matrix_keys_assign():
         assign_labels=2.0,
     )
 
-    assert_equals(matrix.width, 3)
-    assert_equals(matrix.height, 2)
-    assert_equals(list(matrix.labels()), [2.0, 2.0])
-    assert_equals(list(matrix.features()), [
+    assert matrix.width == 3
+    assert matrix.height == 2
+    assert list(matrix.labels()) == [2.0, 2.0]
+    assert list(matrix.features()) == [
         {1: 5.0, 2: 8.0}, {1: 1.0, 2: 3.0, 3: 6.0}
-    ])
+    ]
 
 
 def test_matrix_from_iterables_dict():
@@ -142,15 +143,15 @@ def test_matrix_from_iterables_dict():
         [2, 3], [{3: 4, 1: 7}, {2: 1}],
     )
 
-    assert_equals(matrix.width, 3)
-    assert_equals(matrix.height, 2)
-    assert_equals(list(matrix.labels()), [2.0, 3.0])
-    assert_equals(list(matrix.features()), [{1: 7.0, 3: 4.0}, {2: 1.0}])
+    assert matrix.width == 3
+    assert matrix.height == 2
+    assert list(matrix.labels()) == [2.0, 3.0]
+    assert list(matrix.features()) == [{1: 7.0, 3: 4.0}, {2: 1.0}]
 
 
 def test_matrix_from_iterables_exc():
     """ FeatureMatrix.from_iterables raises exception on different lengths """
-    with assert_raises(ValueError):
+    with raises(ValueError):
         _pyliblinear.FeatureMatrix.from_iterables(
             [2, 3], [{3: 4, 1: 7}, {2: 1}, {2, 1}],
         )
