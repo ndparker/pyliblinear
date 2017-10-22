@@ -1,3 +1,10 @@
+Changes with version
+
+ *) Use twine for uploading
+
+ *) Fix PKG-INFO file
+
+
 Changes with version 2.1.0.dev2
 
  *) Add support for Python 3.5 and 3.6. Drop support for Python 3.2 and 3.3.

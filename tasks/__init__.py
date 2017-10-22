@@ -53,6 +53,11 @@ def namespace():
                 source='docs/_userdoc',
             ),
         ),
+        pypi=adict(
+            # repository='https://test.pypi.org/legacy/',
+            repository='https://upload.pypi.org/legacy/',
+            username='ndparker',
+        ),
 
         shell=adict((key, value) for key, value in vars(_shell).items()
                     if not key.startswith('_')),
@@ -74,6 +79,7 @@ def namespace():
             compile,
             doc,
             test,
+            upload,
         )
 
     import invoke as _invoke
