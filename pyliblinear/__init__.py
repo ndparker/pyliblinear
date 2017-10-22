@@ -28,7 +28,7 @@ pyliblinear - a liblinear python API
 __author__ = u"Andr\xe9 Malo"
 __docformat__ = "restructuredtext en"
 __license__ = "Apache License, Version 2.0"
-__version__ = '2.1.0.dev2'
+__version__ = '211.dev1'
 
 from pyliblinear import _util
 from pyliblinear._liblinear import FeatureMatrix  # noqa
