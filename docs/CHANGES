@@ -1,5 +1,7 @@
 Changes with version
 
+ *) Update liblinear to version 211
+
  *) Use twine for uploading
 
  *) Fix PKG-INFO file
