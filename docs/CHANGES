@@ -1,4 +1,6 @@
-Changes with version
+Changes with version 220.dev1
+
+ *) Update liblinear to version 2.20
 
  *) Add support for python 3.7
 
