@@ -33,7 +33,7 @@ The API is not stabilized yet. There also may be a few kinks here and there.
 
 ## COPYRIGHT AND LICENSE
 
-Copyright 2015 - 2017
+Copyright 2015 - 2018
 André Malo or his licensors, as applicable.
 
 The whole package is distributed under the Apache License Version 2.0.

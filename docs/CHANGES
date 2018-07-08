@@ -1,3 +1,10 @@
+Changes with version
+
+ *) Add support for python 3.7
+
+ *) Update setup + build system
+
+
 Changes with version 211.dev1
 
  *) Update liblinear to version 211

@@ -3,7 +3,7 @@
 u"""
 :Copyright:
 
- Copyright 2015 - 2017
+ Copyright 2015 - 2018
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -32,6 +32,7 @@ __docformat__ = "restructuredtext en"
 import os as _os
 import posixpath as _posixpath
 
+# pylint: disable = no-name-in-module, import-error
 from distutils import ccompiler as _ccompiler
 from distutils import core as _core
 from distutils import log as _log
@@ -184,28 +185,32 @@ def setup():
         else:
             raise RuntimeError("Version not found")
 
-    gcov = False
-    if _os.environ.get('CFLAGS') is None:
-        compiler = _ccompiler.get_default_compiler()
-        try:
-            with open("debug.%s.cflags" % compiler) as fp:
-                cflags = ' '.join([
-                    line for line in (line.strip() for line in fp)
-                    if line and not line.startswith('#')
-                ]) or None
-        except IOError:
-            pass
-        else:
-            if cflags is not None:
-                # pylint: disable = unsupported-membership-test
-                if 'coverage' in cflags:
-                    gcov = True
-                _log.info("Setting CFLAGS to %r", cflags)
-                _os.environ['CFLAGS'] = cflags
+    # if 'java' in _sys.platform.lower():
+    #     EXTENSIONS[:] = []
 
-    if gcov:
-        for ext in EXTENSIONS:
-            ext.libraries.append('gcov')
+    if EXTENSIONS:
+        gcov = False
+        if _os.environ.get('CFLAGS') is None:
+            compiler = _ccompiler.get_default_compiler()
+            try:
+                with open("debug.%s.cflags" % compiler) as fp:
+                    cflags = ' '.join([
+                        line for line in (line.strip() for line in fp)
+                        if line and not line.startswith('#')
+                    ]) or None
+            except IOError:
+                pass
+            else:
+                if cflags is not None:
+                    # pylint: disable = unsupported-membership-test
+                    if 'coverage' in cflags:
+                        gcov = True
+                    _log.info("Setting CFLAGS to %r", cflags)
+                    _os.environ['CFLAGS'] = cflags
+
+        if gcov:
+            for ext in EXTENSIONS:
+                ext.libraries.append('gcov')
 
     packages = [package['top']] + [
         '%s.%s' % (package['top'], item)

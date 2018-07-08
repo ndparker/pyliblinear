@@ -83,7 +83,9 @@ def _sphinx(ctx, build, source, target):
             apidoc=apidoc,
             source=source,
             package=ctx.package,
-        )), echo=True)
+        )), env=dict(
+            SPHINX_APIDOC_OPTIONS='members,undoc-members,special-members',
+        ), echo=True)
         ctx.run(ctx.c(r'''
             %(sphinx)s -a -d %(doctrees)s -b html %(source)s %(target)s
         ''', **dict(

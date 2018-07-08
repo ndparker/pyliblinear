@@ -2,7 +2,7 @@
 u"""
 :Copyright:
 
- Copyright 2015 - 2017
+ Copyright 2015 - 2018
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -29,11 +29,9 @@ __author__ = u"Andr\xe9 Malo"
 __docformat__ = "restructuredtext en"
 __license__ = "Apache License, Version 2.0"
 __version__ = '211.dev1'
+__all__ = ['FeatureMatrix', 'Model', 'Solver', 'SOLVER_TYPES']
 
-from pyliblinear import _util
 from pyliblinear._liblinear import FeatureMatrix  # noqa
 from pyliblinear._liblinear import Model  # noqa
 from pyliblinear._liblinear import Solver  # noqa
 from pyliblinear._liblinear import SOLVER_TYPES  # noqa
-
-__all__ = _util.find_public(globals())

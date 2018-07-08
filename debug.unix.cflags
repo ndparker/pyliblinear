@@ -7,21 +7,21 @@
 
 # don't compile on weird code
 -std=c89 -pedantic -fno-strict-aliasing -Werror
--Wnested-externs
--Wcast-align
--Wbad-function-cast
--Wshadow
--Wundef
--Wdeclaration-after-statement
--Wstrict-overflow=4
--Wmissing-include-dirs
--Winit-self
--Wextra
 -Wall
--Wno-overlength-strings
+-Wbad-function-cast
+-Wcast-align
+-Wdeclaration-after-statement
+-Wextra
+-Winit-self
+-Wmissing-include-dirs
+-Wnested-externs
 -Wno-long-long
--Wno-unused-parameter
 -Wno-missing-field-initializers
+-Wno-overlength-strings
+-Wno-unused-parameter
+-Wshadow
+-Wstrict-overflow=4
+-Wundef
 
 # -Wcast-qual
 # -Wmissing-declarations

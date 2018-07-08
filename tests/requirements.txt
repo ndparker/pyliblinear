@@ -1,5 +1,5 @@
 # Requirements file for tests
 
-pytest == 3.2.3
+pytest == 3.6.3
 pytest-cov == 2.5.1
-pytest-mock == 1.6.3
+pytest-mock == 1.10.0

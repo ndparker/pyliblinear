@@ -49,7 +49,7 @@ def version(ctx):
         _version.update(ctx)
 
 
-@_invoke.task()
+@_invoke.task(_doc.doc)
 def release(ctx):
     """ Release """
     with ctx.shell.root_dir():
@@ -57,5 +57,6 @@ def release(ctx):
         version(ctx)
         _release.add_tag(ctx)
 
-    _doc.doc(ctx)
+    # _doc.doc(ctx)  # dependencies are not called, hence put as regular
+    # dep here
     dist(ctx)

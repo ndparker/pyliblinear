@@ -1,4 +1,4 @@
-# pylint-version: 1.7.2
+# pylint-version: 1.8.1
 [MASTER]
 
 # A comma-separated list of package or module names from where C extensions may
@@ -36,6 +36,10 @@ persistent=no
 # Specify a configuration file.
 #rcfile=
 
+# When enabled, pylint would attempt to guess common misconfiguration and emit
+# user-friendly hints instead of false-positive error messages
+suggestion-mode=yes
+
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=no
@@ -58,9 +62,6 @@ confidence=
 # --disable=W"
 disable=
     locally-disabled,
-    file-ignored,
-
-    too-many-ancestors,
 
     wrong-import-position,
     using-constant-test,
@@ -106,36 +107,163 @@ score=no
 max-nested-blocks=5
 
 
-[SPELLING]
+[LOGGING]
 
-# Spelling dictionary name. Available dictionaries: none. To make it working
-# install python-enchant package.
-spelling-dict=
-
-# List of comma separated words that should not be checked.
-spelling-ignore-words=
-
-# A path to a file that contains private dictionary; one word per line.
-spelling-private-dict-file=
-
-# Tells whether to store unknown words to indicated private dictionary in
-# --spelling-private-dict-file option instead of raising a message.
-spelling-store-unknown-words=no
+# Logging modules to check that the string format arguments are in logging
+# function parameter format
+logging-modules=logging
 
 
-[SIMILARITIES]
+[FORMAT]
 
-# Ignore comments when computing similarities.
-ignore-comments=no
+# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
+expected-line-ending-format=
 
-# Ignore docstrings when computing similarities.
-ignore-docstrings=yes
+# Regexp for a line that is allowed to be longer than the limit.
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 
-# Ignore imports when computing similarities.
-ignore-imports=yes
+# Number of spaces of indent required inside a hanging  or continued line.
+indent-after-paren=4
 
-# Minimum lines number of a similarity.
-min-similarity-lines=10
+# String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1
+# tab).
+indent-string='    '
+
+# Maximum number of characters on a single line.
+max-line-length=78
+
+# Maximum number of lines in a module
+max-module-lines=1500
+
+# List of optional constructs for which whitespace checking is disabled. `dict-
+# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
+# `trailing-comma` allows a space between comma and closing bracket: (a, ).
+# `empty-line` allows space-only lines.
+no-space-check=trailing-comma,
+               dict-separator
+
+# Allow the body of a class to be on the same line as the declaration if body
+# contains single statement.
+single-line-class-stmt=no
+
+# Allow the body of an if to be on the same line as the test if there is no
+# else.
+single-line-if-stmt=no
+
+
+[BASIC]
+
+# Naming style matching correct argument names
+argument-naming-style=snake_case
+
+# Regular expression matching correct argument names. Overrides argument-
+# naming-style
+argument-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Naming style matching correct attribute names
+attr-naming-style=snake_case
+
+# Regular expression matching correct attribute names. Overrides attr-naming-
+# style
+attr-rgx=(?:[A-Z][A-Z0-9_]{2,30}|[a-z_][a-z0-9_]{2,30})$
+
+# Bad variable names which should always be refused, separated by a comma
+bad-names=foo,
+          bar,
+          baz,
+          toto,
+          tutu,
+          tata
+
+# Naming style matching correct class attribute names
+class-attribute-naming-style=any
+
+# Regular expression matching correct class attribute names. Overrides class-
+# attribute-naming-style
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+
+# Naming style matching correct class names
+class-naming-style=PascalCase
+
+# Regular expression matching correct class names. Overrides class-naming-style
+class-rgx=(?x)
+    (?:_?[A-Z][a-zA-Z0-9]+|_[a-z][a-z0-9]+)$
+
+
+# Naming style matching correct constant names
+const-naming-style=UPPER_CASE
+
+# Regular expression matching correct constant names. Overrides const-naming-
+# style
+const-rgx=(?x)
+    (?:
+    _?[A-Z][A-Z0-9_]{1,30}|
+    _?[A-Z][a-zA-Z0-9]{2,30}|
+    _?[a-z_][a-z0-9_]{2,30}|
+    __.*__
+    )$
+
+
+# Minimum line length for functions/classes that require docstrings, shorter
+# ones are exempt.
+docstring-min-length=0
+
+# Naming style matching correct function names
+function-naming-style=snake_case
+
+# Regular expression matching correct function names. Overrides function-
+# naming-style
+function-rgx=(?:__[a-z]+__|_?[a-z_][a-z0-9_]*)$
+
+# Good variable names which should always be accepted, separated by a comma
+good-names=
+    _, j, e, c, fp
+
+
+# Include a hint for the correct naming format with invalid-name
+include-naming-hint=no
+
+# Naming style matching correct inline iteration names
+inlinevar-naming-style=any
+
+# Regular expression matching correct inline iteration names. Overrides
+# inlinevar-naming-style
+inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]{,10}$
+
+# Naming style matching correct method names
+method-naming-style=snake_case
+
+# Regular expression matching correct method names. Overrides method-naming-
+# style
+method-rgx=(?:__[a-z]+__|_?[a-z_][a-z0-9_]*)$
+
+# Naming style matching correct module names
+module-naming-style=snake_case
+
+# Regular expression matching correct module names. Overrides module-naming-
+# style
+module-rgx=[a-z_][a-z0-9_]*$
+
+# Colon-delimited sets of names that determine each other's naming style when
+# the name regexes allow several styles.
+name-group=
+
+# Regular expression which should only match function or class names that do
+# not require a docstring.
+no-docstring-rgx=(?x)
+    (?:__.*__|_[a-z0-9]|test_.*)
+
+
+# List of decorators that produce properties, such as abc.abstractproperty. Add
+# to this list to register other decorators that produce valid properties.
+property-classes=abc.abstractproperty
+
+# Naming style matching correct variable names
+variable-naming-style=snake_case
+
+# Regular expression matching correct variable names. Overrides variable-
+# naming-style
+variable-rgx=(?:[A-Z_][A-Z0-9_]{1,30}|[a-z_][a-z0-9_]{2,30})$
 
 
 [TYPECHECK]
@@ -186,146 +314,6 @@ missing-member-hint-distance=1
 missing-member-max-choices=1
 
 
-[BASIC]
-
-# Naming hint for argument names
-argument-name-hint=[a-z_][a-z0-9_]{2,30}$
-
-# Regular expression matching correct argument names
-argument-rgx=[a-z_][a-z0-9_]{2,30}$
-
-# Naming hint for attribute names
-attr-name-hint=[a-z_][a-z0-9_]{2,30}$
-
-# Regular expression matching correct attribute names
-attr-rgx=(?:[A-Z][A-Z0-9_]{2,30}|[a-z_][a-z0-9_]{2,30})$
-
-# Bad variable names which should always be refused, separated by a comma
-bad-names=foo,bar,baz,toto,tutu,tata
-
-# Naming hint for class attribute names
-class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
-
-# Regular expression matching correct class attribute names
-class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
-
-# Naming hint for class names
-class-name-hint=[A-Z_][a-zA-Z0-9]+$
-
-# Regular expression matching correct class names
-class-rgx=(?x)
-    (?:_?[A-Z][a-zA-Z0-9]+|_[a-z][a-z0-9]+)$
-
-
-# Naming hint for constant names
-const-name-hint=(([A-Z_][A-Z0-9_]*)|(__.*__))$
-
-# Regular expression matching correct constant names
-const-rgx=(?x)
-    (?:
-    _?[A-Z][A-Z0-9_]{1,30}|
-    _?[A-Z][a-zA-Z0-9]{2,30}|
-    _?[a-z_][a-z0-9_]{2,30}|
-    __.*__
-    )$
-
-
-# Minimum line length for functions/classes that require docstrings, shorter
-# ones are exempt.
-docstring-min-length=0
-
-# Naming hint for function names
-function-name-hint=[a-z_][a-z0-9_]{2,30}$
-
-# Regular expression matching correct function names
-function-rgx=(?:__[a-z]+__|_?[a-z_][a-z0-9_]*)$
-
-# Good variable names which should always be accepted, separated by a comma
-good-names=
-    _, j, e, c, fp
-
-
-# Include a hint for the correct naming format with invalid-name
-include-naming-hint=no
-
-# Naming hint for inline iteration names
-inlinevar-name-hint=[A-Za-z_][A-Za-z0-9_]*$
-
-# Regular expression matching correct inline iteration names
-inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]{,10}$
-
-# Naming hint for method names
-method-name-hint=[a-z_][a-z0-9_]{2,30}$
-
-# Regular expression matching correct method names
-method-rgx=(?:__[a-z]+__|_?[a-z_][a-z0-9_]*)$
-
-# Naming hint for module names
-module-name-hint=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
-
-# Regular expression matching correct module names
-module-rgx=[a-z_][a-z0-9_]*$
-
-# Colon-delimited sets of names that determine each other's naming style when
-# the name regexes allow several styles.
-name-group=
-
-# Regular expression which should only match function or class names that do
-# not require a docstring.
-no-docstring-rgx=(?x)
-    (?:__.*__|_[a-z0-9]|test_.*)
-
-
-# List of decorators that produce properties, such as abc.abstractproperty. Add
-# to this list to register other decorators that produce valid properties.
-property-classes=abc.abstractproperty
-
-# Naming hint for variable names
-variable-name-hint=[a-z_][a-z0-9_]{2,30}$
-
-# Regular expression matching correct variable names
-variable-rgx=(?:[A-Z_][A-Z0-9_]{1,30}|[a-z_][a-z0-9_]{2,30})$
-
-
-[FORMAT]
-
-# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
-expected-line-ending-format=
-
-# Regexp for a line that is allowed to be longer than the limit.
-ignore-long-lines=^\s*(# )?<?https?://\S+>?$
-
-# Number of spaces of indent required inside a hanging  or continued line.
-indent-after-paren=4
-
-# String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1
-# tab).
-indent-string='    '
-
-# Maximum number of characters on a single line.
-max-line-length=78
-
-# Maximum number of lines in a module
-max-module-lines=1500
-
-# List of optional constructs for which whitespace checking is disabled. `dict-
-# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
-# `trailing-comma` allows a space between comma and closing bracket: (a, ).
-# `empty-line` allows space-only lines.
-no-space-check=
-    trailing-comma,
-    dict-separator,
-
-
-# Allow the body of a class to be on the same line as the declaration if body
-# contains single statement.
-single-line-class-stmt=no
-
-# Allow the body of an if to be on the same line as the test if there is no
-# else.
-single-line-if-stmt=no
-
-
 [VARIABLES]
 
 # List of additional names supposed to be defined in builtins. Remember that
@@ -337,7 +325,8 @@ allow-global-unused-variables=yes
 
 # List of strings which can identify a callback function by name. A callback
 # name must start or end with one of those strings.
-callbacks=cb_,_cb
+callbacks=cb_,
+          _cb
 
 # A regular expression matching the name of dummy variables (i.e. expectedly
 # not used).
@@ -359,17 +348,47 @@ init-import=no
 redefining-builtins-modules=six.moves,future.builtins
 
 
+[SPELLING]
+
+# Limits count of emitted suggestions for spelling mistakes
+max-spelling-suggestions=4
+
+# Spelling dictionary name. Available dictionaries: none. To make it working
+# install python-enchant package.
+spelling-dict=
+
+# List of comma separated words that should not be checked.
+spelling-ignore-words=
+
+# A path to a file that contains private dictionary; one word per line.
+spelling-private-dict-file=
+
+# Tells whether to store unknown words to indicated private dictionary in
+# --spelling-private-dict-file option instead of raising a message.
+spelling-store-unknown-words=no
+
+
 [MISCELLANEOUS]
 
 # List of note tags to take in consideration, separated by a comma.
-notes=FIXME,XXX,TODO
+notes=FIXME,
+      XXX,
+      TODO
 
 
-[LOGGING]
+[SIMILARITIES]
 
-# Logging modules to check that the string format arguments are in logging
-# function parameter format
-logging-modules=logging
+# Ignore comments when computing similarities.
+ignore-comments=no
+
+# Ignore docstrings when computing similarities.
+ignore-docstrings=yes
+
+# Ignore imports when computing similarities.
+ignore-imports=yes
+
+# Minimum lines number of a similarity.
+min-similarity-lines=10
 
 
 [DESIGN]
@@ -416,7 +435,10 @@ allow-wildcard-with-all=no
 analyse-fallback-blocks=no
 
 # Deprecated modules which should not be used, separated by a comma
-deprecated-modules=regsub,TERMIOS,Bastion,rexec
+deprecated-modules=regsub,
+                   TERMIOS,
+                   Bastion,
+                   rexec
 
 # Create a graph of external dependencies in the given file (report RP0402 must
 # not be disabled)
@@ -448,7 +470,11 @@ defining-attr-methods=
 
 # List of member names, which should be excluded from the protected access
 # warning.
-exclude-protected=_asdict,_fields,_replace,_source,_make
+exclude-protected=_asdict,
+                  _fields,
+                  _replace,
+                  _source,
+                  _make
 
 # List of valid names for the first argument in a class method.
 valid-classmethod-first-arg=cls

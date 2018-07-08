@@ -19,6 +19,7 @@ _website/
 MANIFEST
 
 .tox
+.pytest_cache
 .cache
 .coverage*
 gcov.out

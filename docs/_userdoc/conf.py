@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-  # flake8: noqa  pylint: skip-file
 #
 # pyliblinear documentation build configuration file
 #
@@ -39,7 +39,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyliblinear'
-copyright = u'2015 - 2017 Andr\xe9 Malo'
+copyright = u'2015 - 2018 Andr\xe9 Malo'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
