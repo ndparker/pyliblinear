@@ -1,3 +1,8 @@
+Changes with version
+
+ *) Fix setup in C locale
+
+
 Changes with version 220.dev1
 
  *) Update liblinear to version 2.20
