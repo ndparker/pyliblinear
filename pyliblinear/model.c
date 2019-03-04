@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2018
+ * Copyright 2015 - 2019
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1207,23 +1207,23 @@ PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)
 
 static struct PyMethodDef PL_ModelType_methods[] = {
     {"train",
-     (PyCFunction)PL_ModelType_train,           METH_CLASS    |
-                                                METH_KEYWORDS |
-                                                METH_VARARGS,
+     EXT_CFUNC(PL_ModelType_train),           METH_CLASS    |
+                                              METH_KEYWORDS |
+                                              METH_VARARGS,
      PL_ModelType_train__doc__},
 
     {"load",
-     (PyCFunction)PL_ModelType_load,            METH_CLASS    |
-                                                METH_KEYWORDS |
-                                                METH_VARARGS,
+     EXT_CFUNC(PL_ModelType_load),            METH_CLASS    |
+                                              METH_KEYWORDS |
+                                              METH_VARARGS,
      PL_ModelType_load__doc__},
 
     {"save",
-     (PyCFunction)PL_ModelType_save,            METH_KEYWORDS | METH_VARARGS,
+     EXT_CFUNC(PL_ModelType_save),            METH_KEYWORDS | METH_VARARGS,
      PL_ModelType_save__doc__},
 
     {"predict",
-     (PyCFunction)PL_ModelType_predict,         METH_KEYWORDS | METH_VARARGS,
+     EXT_CFUNC(PL_ModelType_predict),         METH_KEYWORDS | METH_VARARGS,
      PL_ModelType_predict__doc__},
 
     {NULL, NULL}  /* Sentinel */
