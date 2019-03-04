@@ -140,6 +140,7 @@ expected-line-ending-format=
 ignore-long-lines=(?x)(?:
     ^\s*([#][ ])?<?https?://\S+>?$
     | [#][ ].*type:[ ].*$
+    | [#][ ].*pragma:[ ]no.*$
     )
 
 
