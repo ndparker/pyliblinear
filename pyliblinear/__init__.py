@@ -26,7 +26,6 @@ u"""
 pyliblinear - a liblinear python API
 """
 __author__ = u"Andr\xe9 Malo"
-__docformat__ = "restructuredtext en"
 __license__ = "Apache License, Version 2.0"
 __version__ = '220.dev2'
 __all__ = ['FeatureMatrix', 'Model', 'Solver', 'SOLVER_TYPES']

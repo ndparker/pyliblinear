@@ -26,7 +26,6 @@ r"""
 Tests for pyliblinear.Solver.
 """
 __author__ = u"Andr\xe9 Malo"
-__docformat__ = "restructuredtext en"
 
 import pyliblinear as _pyliblinear
 

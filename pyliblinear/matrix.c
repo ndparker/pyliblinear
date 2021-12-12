@@ -1135,8 +1135,8 @@ PyDoc_STRVAR(PL_FeatureMatrixType_features__doc__,
 \n\
 Return the features as iterator of dicts.\n\
 \n\
-:Return: The feature vectors\n\
-:Rtype: iterable");
+Returns:\n\
+  iterable: The feature vectors");
 
 static PyObject *
 PL_FeatureMatrixType_features(pl_matrix_t *self, PyObject *args)
@@ -1149,8 +1149,8 @@ PyDoc_STRVAR(PL_FeatureMatrixType_labels__doc__,
 \n\
 Return the labels as iterator.\n\
 \n\
-:Return: The labels\n\
-:Rtype: iterable");
+Returns:\n\
+  iterable: The labels");
 
 static PyObject *
 PL_FeatureMatrixType_labels(pl_matrix_t *self, PyObject *args)
@@ -1164,18 +1164,18 @@ PyDoc_STRVAR(PL_FeatureMatrixType_from_iterables__doc__,
 Create `FeatureMatrix` instance from a two separated iterables - labels and\n\
 features.\n\
 \n\
-:Parameters:\n\
-  `labels` : iterable\n\
+Parameters:\n\
+  labels (iterable):\n\
     Iterable providing the labels per feature vector (assigned by order)\n\
 \n\
-  `features` : iterable\n\
+  features (iterable):\n\
     Iterable providing the feature vector per label (assigned by order)\n\
 \n\
-:Return: New feature matrix instance\n\
-:Rtype: `FeatureMatrix`\n\
+Returns:\n\
+  FeatureMatrix: New feature matrix instance\n\
 \n\
-:Exceptions:\n\
-  - `ValueError` : The lengths of the iterables differ");
+Raises:\n\
+  ValueError: The lengths of the iterables differ");
 
 static PyObject *
 PL_FeatureMatrixType_from_iterables(PyTypeObject *cls, PyObject *args,
@@ -1203,23 +1203,23 @@ PyDoc_STRVAR(PL_FeatureMatrixType_xval__doc__,
 \n\
 Run cross-validation of a solver using the matrix instance.\n\
 \n\
-:Parameters:\n\
+Parameters:\n\
 \n\
-  `nr_fold` : ``int``\n\
+  nr_fold (int):\n\
     Number of folds. ``nr_folds > 1``\n\
 \n\
-  `solver` : `pyliblinear.Solver`\n\
+  solver (pyliblinear.Solver):\n\
     Solver instance. If omitted or ``None``, a default solver is picked.\n\
 \n\
-  `bias` : ``float``\n\
+  bias (float):\n\
     Bias to the hyperplane. Of omitted or ``None``, no bias is applied.\n\
     ``bias >= 0``.\n\
 \n\
-:Return: A tuple of accuracy, mean squared error and squared correlation\n\
+Returns:\n\
+  tuple: A tuple of accuracy, mean squared error and squared correlation\n\
          coefficient. Pick the value(s) suitable for your solver. Basically\n\
          for SVR solvers MSE and SCC are interesting, accuracy for the other\n\
-         ones.\n\
-:Rtype: ``tuple``");
+         ones.");
 
 static PyObject *
 PL_FeatureMatrixType_xval(pl_matrix_t *self, PyObject *args, PyObject *kwds)
@@ -1305,8 +1305,8 @@ or doubles (for values and labels).\n\
 \n\
 Note that the exact I/O exceptions depend on the stream passed in.\n\
 \n\
-:Parameters:\n\
-  `file` : ``file`` or ``str``\n\
+Parameters:\n\
+  file (file or str):\n\
     Either a writeable stream or a filename. If the passed object provides a\n\
     ``write`` attribute/method, it's treated as writeable stream, as a\n\
     filename otherwise. If it's a stream, the stream is written to the current\n\
@@ -1314,8 +1314,8 @@ Note that the exact I/O exceptions depend on the stream passed in.\n\
     accompanying file is opened in text mode, truncated, written from the\n\
     beginning and closed afterwards.\n\
 \n\
-:Exceptions:\n\
-  - `IOError` : Error writing the file");
+Raises:\n\
+  IOError: Error writing the file");
 
 static PyObject *
 PL_FeatureMatrixType_save(pl_matrix_t *self, PyObject *args, PyObject *kwds)
@@ -1391,8 +1391,8 @@ or doubles (for values and labels).\n\
 \n\
 Note that the exact I/O exceptions depend on the stream passed in.\n\
 \n\
-:Parameters:\n\
-  `file` : ``file`` or ``str``\n\
+Parameters:\n\
+  file (file or str):\n\
     Either a readable stream or a filename. If the passed object provides a\n\
     ``read`` attribute/method, it's treated as readable file stream, as a\n\
     filename otherwise. If it's a stream, the stream is read from the current\n\
@@ -1400,12 +1400,12 @@ Note that the exact I/O exceptions depend on the stream passed in.\n\
     accompanying file is opened in text mode, read from the beginning and\n\
     closed afterwards.\n\
 \n\
-:Return: New feature matrix instance\n\
-:Rtype: `FeatureMatrix`\n\
+Returns:\n\
+  FeatureMatrix: New feature matrix instance\n\
 \n\
-:Exceptions:\n\
-  - `IOError` : Error reading the file\n\
-  - `ValueError` : Error parsing the file");
+Raises:\n\
+  IOError: Error reading the file\n\
+  ValueError: Error parsing the file");
 
 static PyObject *
 PL_FeatureMatrixType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
@@ -1477,17 +1477,17 @@ containing the label and the accompanying feature vector. If\n\
 provide the feature vectors. All labels are then assigned to the value of\n\
 `assign_labels`.\n\
 \n\
-:Parameters:\n\
-  `iterable` : iterable\n\
+Parameters:\n\
+  iterable (iterable):\n\
     Iterable providing the feature vectors and/or tuples of label and\n\
     feature vector. See description.\n\
 \n\
-  `assign_labels` : ``int``\n\
+  assign_labels (int):\n\
     Value to be assigned to all labels. In this case the iterable is\n\
     expected to provide only the feature vectors.\n\
 \n\
-:Return: New feature matrix instance\n\
-:Rtype: `FeatureMatrix`");
+Returns:\n\
+  FeatureMatrix: New feature matrix instance");
 
 static PyObject *
 PL_FeatureMatrixType_new(PyTypeObject *cls, PyObject *args, PyObject *kwds);

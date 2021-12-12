@@ -529,8 +529,8 @@ PyDoc_STRVAR(PL_SolverType_weights__doc__,
 \n\
 Return the configured weights as a dict (label -> weight).\n\
 \n\
-:Return: The weights (maybe empty)\n\
-:Rtype: ``dict``");
+Returns:\n\
+  dict: The weights (maybe empty)");
 
 #ifdef EXT3
 #define PyInt_FromLong PyLong_FromLong
@@ -576,33 +576,33 @@ PyDoc_STRVAR(PL_SolverType_new__doc__,
 \n\
 Construct new solver instance.\n\
 \n\
-:Parameters:\n\
-  `type` : ``str`` or ``int``\n\
+Parameters:\n\
+  type (str or int):\n\
     The solver type. One of the keys or values of the ``SOLVER_TYPES`` dict.\n\
     If omitted or ``None``, the default solver type is applied\n\
     (``L2R_L2LOSS_SVC_DUAL == 1``)\n\
 \n\
-  `C` : ``float``\n\
+  C (float):\n\
     Cost parameter, if omitted or ``None``, it defaults to ``1``. ``C > 0``.\n\
 \n\
-  `eps` : ``float``\n\
+  eps (float):\n\
     Tolerance of termination criterion. If omitted or ``None``, a default is\n\
     applied, depending on the solver type. ``eps > 0``\n\
 \n\
-  `p` : ``float``\n\
+  p (float):\n\
      Epsilon in loss function of epsilon-SVR. If omitted or ``None`` it\n\
      defaults to ``0.1``. ``p >= 0``.\n\
 \n\
-  `weights` : mapping\n\
+  weights (mapping):\n\
     Iterator over label weights. This is either a ``dict``, mapping labels to\n\
     weights (``{int: float, ...}``) or an iterable of 2-tuples doing the same\n\
     (``[(int, float), ...]``). If omitted or ``None``, no weight is applied.\n\
 \n\
-:Return: New Solver instance\n\
-:Rtype: `Solver`\n\
+Returns:\n\
+  Solver: New Solver instance\n\
 \n\
-:Exceptions:\n\
-  - `ValueError` : Some invalid parameter");
+Raises:\n\
+  ValueError: Some invalid parameter");
 
 static PyObject *
 PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds);

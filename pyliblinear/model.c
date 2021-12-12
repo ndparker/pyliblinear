@@ -943,19 +943,19 @@ PyDoc_STRVAR(PL_ModelType_train__doc__,
 \n\
 Create model instance from a training run\n\
 \n\
-:Parameters:\n\
-  `matrix` : `pyliblinear.FeatureMatrix`\n\
+Parameters:\n\
+  matrix (pyliblinear.FeatureMatrix):\n\
     Feature matrix to use for training\n\
 \n\
-  `solver` : `pyliblinear.Solver`\n\
+  solver (pyliblinear.Solver):\n\
     Solver instance. If omitted or ``None``, a default solver is picked.\n\
 \n\
-  `bias` : ``float``\n\
+  bias (float):\n\
     Bias to the hyperplane. Of omitted or ``None``, no bias is applied.\n\
     ``bias >= 0``.\n\
 \n\
-:Return: New model instance\n\
-:Rtype: `Model`");
+Returns:\n\
+  Model: New model instance");
 
 static PyObject *
 PL_ModelType_train(PyTypeObject *cls, PyObject *args, PyObject *kwds)
@@ -997,8 +997,8 @@ Model.save())\n\
 \n\
 Note that the exact I/O exceptions depend on the stream passed in.\n\
 \n\
-:Parameters:\n\
-  `file` : ``file`` or ``str``\n\
+Parameters:\n\
+  file (file or str):\n\
     Either a readable stream or a filename. If the passed object provides a\n\
     ``read`` attribute/method, it's treated as readable file stream, as a\n\
     filename otherwise. If it's a stream, the stream is read from the current\n\
@@ -1006,15 +1006,15 @@ Note that the exact I/O exceptions depend on the stream passed in.\n\
     accompanying file is opened in text mode, read from the beginning and\n\
     closed afterwards.\n\
 \n\
-  `mmap` : ``bool``\n\
+  mmap (bool):\n\
     Load the model into a file-backed memory area? Default: false\n\
 \n\
-:Return: New model instance\n\
-:Rtype: `Model`\n\
+Returns:\n\
+  Model: New model instance\n\
 \n\
-:Exceptions:\n\
-  - `IOError` : Error reading the file\n\
-  - `ValueError` : Error parsing the file");
+Raises:\n\
+  IOError: Error reading the file\n\
+  ValueError: Error parsing the file");
 
 static PyObject *
 PL_ModelType_load(PyTypeObject *cls, PyObject *args, PyObject *kwds)
@@ -1090,8 +1090,8 @@ dimensions and labels) or doubles (other values).\n\
 \n\
 Note that the exact I/O exceptions depend on the stream passed in.\n\
 \n\
-:Parameters:\n\
-  `file` : ``file`` or ``str``\n\
+Parameters:\n\
+  file (file or str):\n\
     Either a writeable stream or a filename. If the passed object provides a\n\
     ``write`` attribute/method, it's treated as writeable stream, as a\n\
     filename otherwise. If it's a stream, the stream is written to the current\n\
@@ -1099,8 +1099,8 @@ Note that the exact I/O exceptions depend on the stream passed in.\n\
     accompanying file is opened in text mode, truncated, written from the\n\
     beginning and closed afterwards.\n\
 \n\
-:Exceptions:\n\
-  - `IOError` : Error writing the file");
+Raises:\n\
+  IOError: Error writing the file");
 
 static PyObject *
 PL_ModelType_save(pl_model_t *self, PyObject *args, PyObject *kwds)
@@ -1164,21 +1164,21 @@ PyDoc_STRVAR(PL_ModelType_predict__doc__,
 \n\
 Run the model on `matrix` and predict labels.\n\
 \n\
-:Parameters:\n\
-  `matrix` : `pyliblinear.FeatureMatrix` or iterable\n\
+Parameters:\n\
+  matrix (pyliblinear.FeatureMatrix or iterable):\n\
     Either a feature matrix or a simple iterator over feature vectors to\n\
     inspect and predict upon.\n\
 \n\
-  `label_only` : ``bool``\n\
+  label_only (bool):\n\
     Return the label only? If false, the decision dict for all labels is\n\
     returned as well.\n\
 \n\
-  `probability` : ``bool``\n\
+  probability (bool):\n\
     Use probability estimates?\n\
 \n\
-:Return: Result iterator. Either over labels or over label/decision dict\n\
-         tuples.\n\
-:Rtype: iterable");
+Returns:\n\
+  iterable: Result iterator. Either over labels or over label/decision dict\n\
+            tuples.");
 
 static PyObject *
 PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)

@@ -1,5 +1,7 @@
 Changes with version
 
+ *) Update doc format
+
  *) Ensure the extension is versioned as expected
 
  *) Increase compiler happiness
