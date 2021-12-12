@@ -377,6 +377,10 @@ pl_model_to_stream(pl_model_t *self, PyObject *write)
     WRITE_INT(self->model->nr_feature);
     WRITE_STR("\nbias ");
     WRITE_DBL(self->model->bias);
+    if (self->model->param.solver_type == ONECLASS_SVM) {
+        WRITE_STR("\nrho ");
+        WRITE_DBL(self->model->rho);
+    }
     WRITE_STR("\nw\n");
 
     cols = self->model->nr_feature;
@@ -513,10 +517,11 @@ error_mmap:
 #define SEEN_NR_CLASS    (1 << 1)
 #define SEEN_NR_FEATURE  (1 << 2)
 #define SEEN_BIAS        (1 << 3)
-#define SEEN_LABEL       (1 << 4)
-#define SEEN_W           (1 << 5)
+#define SEEN_RHO         (1 << 4)
+#define SEEN_LABEL       (1 << 5)
+#define SEEN_W           (1 << 6)
 #define SEEN_REQUIRED    (SEEN_SOLVER_TYPE | SEEN_NR_CLASS | SEEN_NR_FEATURE \
-                          | SEEN_BIAS | SEEN_W)
+                          | SEEN_W)
 
 #ifdef EXT3
 #define PyString_FromStringAndSize PyUnicode_FromStringAndSize
@@ -551,6 +556,7 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
     }
     model->label = NULL;
     model->w = NULL;
+    model->rho = 0;
 
     /* Not used, but be on the safe side here: */
     model->param.C = -1.0;
@@ -593,7 +599,12 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
     while (1) {
         if (pl_iter_next(tokread, &vh) == -1) goto error_model;
         if (!(tok = vh)) {
-            if ((seen & SEEN_REQUIRED) != SEEN_REQUIRED) goto error_format;
+            if ((seen & SEEN_REQUIRED) != SEEN_REQUIRED)
+                goto error_format;
+            if (model->param.solver_type == ONECLASS_SVM && !(seen & SEEN_RHO))
+                goto error_format;
+            if (model->param.solver_type != ONECLASS_SVM && !(seen & SEEN_BIAS))
+                goto error_format;
             break;
         }
         if (PL_TOK_IS_EOL(tok)) goto error_format;
@@ -632,6 +643,13 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
             seen |= SEEN_BIAS;
 
             LOAD_DOUBLE(model->bias);
+            EXPECT_EOL;
+        }
+        else if (TOK("rho")) {
+            if (seen & SEEN_RHO) goto error_format;
+            seen |= SEEN_RHO;
+
+            LOAD_DOUBLE(model->rho);
             EXPECT_EOL;
         }
         else if (TOK("label")) {
@@ -1234,6 +1252,20 @@ static struct PyMethodDef PL_ModelType_methods[] = {
     {NULL, NULL}  /* Sentinel */
 };
 
+PyDoc_STRVAR(PL_ModelType_is_oneclass_doc,
+"Is model a oneclass SVM model?\n\
+\n\
+:Type: ``bool``");
+
+static PyObject *
+PL_ModelType_is_oneclass_get(pl_model_t *self, void *closure)
+{
+    if (check_oneclass_model(self->model))
+        Py_RETURN_TRUE;
+
+    Py_RETURN_FALSE;
+}
+
 PyDoc_STRVAR(PL_ModelType_is_probability_doc,
 "Is model a probability model?\n\
 \n\
@@ -1290,20 +1322,43 @@ PL_ModelType_solver_type_get(pl_model_t *self, void *closure)
 PyDoc_STRVAR(PL_ModelType_bias_doc,
 "Bias used to create the model\n\
 \n\
-``None`` if no bias was applied.\n\
+``None`` if no bias was applied or applicable.\n\
 \n\
 :Type: ``double``");
 
 static PyObject *
 PL_ModelType_bias_get(pl_model_t *self, void *closure)
 {
-    if (self->model->bias < 0)
+    if (self->model->param.solver_type == ONECLASS_SVM
+        || self->model->bias < 0)
         Py_RETURN_NONE;
 
     return PyFloat_FromDouble(self->model->bias);
 }
 
+PyDoc_STRVAR(PL_ModelType_rho_doc,
+"Rho value of the model\n\
+\n\
+``None`` if not applicable.\n\
+\n\
+:Type: ``double``");
+
+static PyObject *
+PL_ModelType_rho_get(pl_model_t *self, void *closure)
+{
+    if (self->model->param.solver_type != ONECLASS_SVM)
+        Py_RETURN_NONE;
+
+    return PyFloat_FromDouble(self->model->rho);
+}
+
 static PyGetSetDef PL_ModelType_getset[] = {
+    {"is_oneclass",
+     (getter)PL_ModelType_is_oneclass_get,
+     NULL,
+     PL_ModelType_is_oneclass_doc,
+     NULL},
+
     {"is_probability",
      (getter)PL_ModelType_is_probability_get,
      NULL,
@@ -1326,6 +1381,12 @@ static PyGetSetDef PL_ModelType_getset[] = {
      (getter)PL_ModelType_bias_get,
      NULL,
      PL_ModelType_bias_doc,
+     NULL},
+
+    {"rho",
+     (getter)PL_ModelType_rho_get,
+     NULL,
+     PL_ModelType_rho_doc,
      NULL},
 
     {NULL}  /* Sentinel */

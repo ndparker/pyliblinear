@@ -1,5 +1,7 @@
 Changes with version
 
+ *) Update liblinear to 2.43
+
  *) Add tests to source distribution
 
  *) Update doc format

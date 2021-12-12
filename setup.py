@@ -175,12 +175,12 @@ EXTENSIONS = lambda v: [
         "pyliblinear/liblinear/blas/dnrm2.c",
         "pyliblinear/liblinear/blas/daxpy.c",
         "pyliblinear/liblinear/linear.cpp",
-        "pyliblinear/liblinear/tron.cpp",
+        "pyliblinear/liblinear/newton.cpp",
     ], depends=[
         "pyliblinear/pyliblinear.h",
 
         "pyliblinear/liblinear/linear.h",
-        "pyliblinear/liblinear/tron.h",
+        "pyliblinear/liblinear/newton.h",
         "pyliblinear/liblinear/blas/blasp.h",
         "pyliblinear/liblinear/blas/blas.h",
         "pyliblinear/liblinear/blas/blas-missing-decl.h",

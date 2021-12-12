@@ -59,6 +59,7 @@ static pl_solver_type_t pl_solver_type_list[] = {
     PL_SOLVER(L2R_L2LOSS_SVR,      0.001),
     PL_SOLVER(L2R_L2LOSS_SVR_DUAL, 0.1  ),
     PL_SOLVER(L2R_L1LOSS_SVR_DUAL, 0.1  ),
+    PL_SOLVER(ONECLASS_SVM,        0.01 ),
 
     {NULL, 0} /* sentinel */
 };
@@ -80,6 +81,7 @@ typedef struct {
     double eps;
     double C;
     double p;
+    double nu;
 
     int nr_weight;
     int solver_type;
@@ -122,6 +124,7 @@ pl_solver_as_parameter(PyObject *self, struct parameter *param)
     param->weight_label = solver->weight_label;
     param->weight = solver->weight;
     param->p = solver->p;
+    param->nu = solver->nu;
     param->init_sol = solver->init_sol;
 
     Py_DECREF(self);
@@ -572,7 +575,7 @@ error_result:
 
 #ifdef METH_COEXIST
 PyDoc_STRVAR(PL_SolverType_new__doc__,
-"__new__(cls, type=None, C=None, eps=None, p=None, weights=None)\n\
+"__new__(cls, type=None, C=None, eps=None, p=None, nu=None, weights=None)\n\
 \n\
 Construct new solver instance.\n\
 \n\
@@ -592,6 +595,10 @@ Parameters:\n\
   p (float):\n\
      Epsilon in loss function of epsilon-SVR. If omitted or ``None`` it\n\
      defaults to ``0.1``. ``p >= 0``.\n\
+\n\
+  nu (float):\n\
+    approximates the fraction of data as outliers (only for ONECLASS_SVM\n\
+    solver). If omitted or ``None`` it defaults to ``0.5``.\n\
 \n\
   weights (mapping):\n\
     Iterator over label weights. This is either a ``dict``, mapping labels to\n\
@@ -624,6 +631,17 @@ static struct PyMethodDef PL_SolverType_methods[] = {
 
     {NULL, NULL}  /* Sentinel */
 };
+
+PyDoc_STRVAR(PL_SolverType_nu_doc,
+"The configured nu parameter.\n\
+\n\
+:Type: ``float``");
+
+static PyObject *
+PL_SolverType_nu_get(pl_solver_t *self, void *closure)
+{
+    return PyFloat_FromDouble(self->nu);
+}
 
 PyDoc_STRVAR(PL_SolverType_p_doc,
 "The configured p parameter.\n\
@@ -684,6 +702,12 @@ PL_SolverType_type_get(pl_solver_t *self, void *closure)
 #endif
 
 static PyGetSetDef PL_SolverType_getset[] = {
+    {"nu",
+     (getter)PL_SolverType_nu_get,
+     NULL,
+     PL_SolverType_nu_doc,
+     NULL},
+
     {"p",
      (getter)PL_SolverType_p_get,
      NULL,
@@ -740,17 +764,17 @@ PL_SolverType_clear(pl_solver_t *self)
 static PyObject *
 PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"type", "C", "eps", "p", "weights", NULL};
-    PyObject *type_ = NULL, *C_ = NULL, *eps_ = NULL, *p_ = NULL,
+    static char *kwlist[] = {"type", "C", "eps", "p", "nu", "weights", NULL};
+    PyObject *type_ = NULL, *C_ = NULL, *eps_ = NULL, *p_ = NULL, *nu_ = NULL,
              *weights_ = NULL;
     pl_solver_t *self;
     double *weight;
     int *weight_label;
-    double C, eps, p;
+    double C, eps, p, nu;
     int int_type, nr_weight;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOOO", kwlist,
-                                     &type_, &C_, &eps_, &p_, &weights_))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOOOO", kwlist,
+                                     &type_, &C_, &eps_, &p_, &nu_, &weights_))
         return NULL;
 
     if (pl_solver_type_as_int(type_, &int_type) == -1)
@@ -790,6 +814,16 @@ PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         }
     }
 
+    if (!nu_ || nu_ == Py_None) nu = 0.5; else {
+        Py_INCREF(nu_);
+        if (pl_as_double(nu_, &nu) == -1)
+            return NULL;
+        if (nu <= 0) {
+            PyErr_SetString(PyExc_ValueError, "nu must be > 0");
+            return NULL;
+        }
+    }
+
     if (!weights_ || weights_ == Py_None) {
         weight = NULL;
         weight_label = NULL;
@@ -809,6 +843,7 @@ PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->C = C;
     self->eps = eps;
     self->p = p;
+    self->nu = nu;
     self->nr_weight = nr_weight;
     self->weight = weight;
     self->weight_label = weight_label;
