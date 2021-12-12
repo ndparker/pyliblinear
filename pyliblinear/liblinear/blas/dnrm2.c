@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include "blas-missing-decl.h"
+
 double dnrm2_(int *n, double *x, int *incx)
 {
   long int ix, nn, iincx;

@@ -528,11 +528,11 @@ Solver_MCSVM_CS::~Solver_MCSVM_CS()
 	delete[] G;
 }
 
-int compare_double(const void *a, const void *b)
+static int compare_double(const void *a, const void *b)
 {
-	if(*(double *)a > *(double *)b)
+	if(*(const double *)a > *(const double *)b)
 		return -1;
-	if(*(double *)a < *(double *)b)
+	if(*(const double *)a < *(const double *)b)
 		return 1;
 	return 0;
 }
@@ -1225,7 +1225,7 @@ static void solve_l2r_l1l2_svr(
 #define GETI(i) (y[i]+1)
 // To support weights for instances, use GETI(i) (i)
 
-void solve_l2r_lr_dual(const problem *prob, double *w, double eps, double Cp, double Cn)
+static void solve_l2r_lr_dual(const problem *prob, double *w, double eps, double Cp, double Cn)
 {
 	int l = prob->l;
 	int w_size = prob->n;
@@ -2849,7 +2849,7 @@ struct model *load_model(const char *model_file_name)
 	// parameters for training only won't be assigned, but arrays are assigned as NULL for safety
 	param.nr_weight = 0;
 	param.weight_label = NULL;
-	param.weight = NULL;	
+	param.weight = NULL;
 	param.init_sol = NULL;
 
 	model_->label = NULL;

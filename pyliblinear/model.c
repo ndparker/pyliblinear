@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2018
+ * Copyright 2015 - 2021
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -328,6 +328,7 @@ static int
 pl_model_to_stream(pl_model_t *self, PyObject *write)
 {
     char *r;
+    const char *rc;
     pl_bufwriter_t *buf;
     char intbuf[PL_INT_AS_CHAR_BUF_SIZE];
     int h, w, res, cols, rows;
@@ -357,11 +358,11 @@ pl_model_to_stream(pl_model_t *self, PyObject *write)
 } while(0)
 
     WRITE_STR("solver_type ");
-    if (!(r = (char *)pl_solver_name(self->model->param.solver_type))) {
+    if (!(rc = pl_solver_name(self->model->param.solver_type))) {
         PyErr_SetString(PyExc_AssertionError, "Unknown solver type");
         goto error;
     }
-    WRITE_STR(r);
+    WRITE_STR(rc);
     WRITE_STR("\nnr_class ");
     WRITE_INT(self->model->nr_class);
 
@@ -569,7 +570,7 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
     if (!(tok = vh) || !PL_TOK_IS_EOL(tok)) goto error_format; \
 } while(0)
 
-#define TOK(str) !strncmp(tok->start, (str), tok->sentinel - tok->start)
+#define TOK(str) !strncmp(tok->start, (str), (size_t)(tok->sentinel - tok->start))
 
 #define LOAD_DOUBLE(target) do {                                 \
     EXPECT_TOK;                                                  \
@@ -640,7 +641,7 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
                 goto error_format;
 
             if (model->nr_class > 0) {
-                if (!(model->label = malloc(model->nr_class
+                if (!(model->label = malloc(((unsigned int)model->nr_class)
                                             * (sizeof *model->label)))) {
                     PyErr_SetNone(PyExc_MemoryError);
                     goto error_model;
@@ -670,12 +671,16 @@ pl_model_from_stream(PyTypeObject *cls, PyObject *read, int want_mmap)
             }
 
             if (want_mmap) {
-                if (-1 == pl_mmap_buf_new(cols * rows * (sizeof *model->w),
+                if (-1 == pl_mmap_buf_new(((unsigned int)cols)
+                                          * ((unsigned int)rows)
+                                          * (sizeof *model->w),
                                           &mmap_, &vh))
                     goto error_model;
                 model->w = vh;
             }
-            else if (!(model->w = malloc(cols * rows * (sizeof *model->w)))) {
+            else if (!(model->w = malloc(((unsigned int)cols)
+                                         * ((unsigned int)rows)
+                                         * (sizeof *model->w)))) {
                 PyErr_SetNone(PyExc_MemoryError);
                 goto error_model;
             }
@@ -869,7 +874,7 @@ pl_predict_iter_new(pl_model_t *model, PyObject *matrix, int label_only,
     self->probability = probability;
 
     if (model->model->nr_class > 0) {
-        self->dec_values = PyMem_Malloc(model->model->nr_class
+        self->dec_values = PyMem_Malloc((unsigned int)model->model->nr_class
                                         * (sizeof *self->dec_values));
         if (!self->dec_values)
             goto error_self;
@@ -1207,23 +1212,23 @@ PL_ModelType_predict(pl_model_t *self, PyObject *args, PyObject *kwds)
 
 static struct PyMethodDef PL_ModelType_methods[] = {
     {"train",
-     (PyCFunction)PL_ModelType_train,           METH_CLASS    |
-                                                METH_KEYWORDS |
-                                                METH_VARARGS,
+     EXT_CFUNC(PL_ModelType_train),           METH_CLASS    |
+                                              METH_KEYWORDS |
+                                              METH_VARARGS,
      PL_ModelType_train__doc__},
 
     {"load",
-     (PyCFunction)PL_ModelType_load,            METH_CLASS    |
-                                                METH_KEYWORDS |
-                                                METH_VARARGS,
+     EXT_CFUNC(PL_ModelType_load),            METH_CLASS    |
+                                              METH_KEYWORDS |
+                                              METH_VARARGS,
      PL_ModelType_load__doc__},
 
     {"save",
-     (PyCFunction)PL_ModelType_save,            METH_KEYWORDS | METH_VARARGS,
+     EXT_CFUNC(PL_ModelType_save),            METH_KEYWORDS | METH_VARARGS,
      PL_ModelType_save__doc__},
 
     {"predict",
-     (PyCFunction)PL_ModelType_predict,         METH_KEYWORDS | METH_VARARGS,
+     EXT_CFUNC(PL_ModelType_predict),         METH_KEYWORDS | METH_VARARGS,
      PL_ModelType_predict__doc__},
 
     {NULL, NULL}  /* Sentinel */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2018
+ * Copyright 2015 - 2021
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -433,7 +433,7 @@ pl_weight_node_block_as_array(pl_weight_node_block_t **nodes,
 
     *weights_ = warray;
     *labels_ = larray;
-    *weight_size_ = no_weights;
+    *weight_size_ = (int)no_weights;
 
     for (block = *nodes; block; block = block->prev) {
         for (idx_weight = block->size; idx_weight > 0; ) {
@@ -610,15 +610,15 @@ PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
 static struct PyMethodDef PL_SolverType_methods[] = {
     {"weights",
-     (PyCFunction)PL_SolverType_weights,      METH_NOARGS,
+     EXT_CFUNC(PL_SolverType_weights),      METH_NOARGS,
      PL_SolverType_weights__doc__},
 
 #ifdef METH_COEXIST
     {"__new__",
-     (PyCFunction)PL_SolverType_new,          METH_COEXIST  |
-                                              METH_STATIC   |
-                                              METH_KEYWORDS |
-                                              METH_VARARGS,
+     EXT_CFUNC(PL_SolverType_new),          METH_COEXIST  |
+                                            METH_STATIC   |
+                                            METH_KEYWORDS |
+                                            METH_VARARGS,
      PL_SolverType_new__doc__},
 #endif
 

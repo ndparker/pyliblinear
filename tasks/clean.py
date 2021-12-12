@@ -34,7 +34,9 @@ def clean(ctx, so=False, cache=False):
         'docs/gcov',
         'build',
         'dist',
+        'wheel/dist',
         ctx.doc.userdoc,
+        ctx.doc.sphinx.build,
         ctx.doc.website.source,
         ctx.doc.website.target,
     )
@@ -51,6 +53,8 @@ def cacheclean(ctx):
         '.tox',
         '.cache',
         'tests/.cache',
+        'tests/.pytest_cache',
+        '.mypy_cache',
     )
 
 

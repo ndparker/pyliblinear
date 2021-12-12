@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2018
+ * Copyright 2015 - 2021
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -168,7 +168,7 @@ pl_tokread_tok(pl_tokread_iter_ctx_t *ctx, Py_ssize_t pos)
         ctx->tok.start = PyString_AS_STRING(ctx->toko);
         ctx->tok.sentinel = ctx->tok.start + size;
         t = ctx->tok.sentinel - pos;
-        (void)memcpy(t, b, pos);
+        (void)memcpy(t, b, (size_t)pos);
         for (buf = ctx->buf; (buf = buf->prev); ) {
             size = PyString_GET_SIZE(buf->string);
             b = PyString_AS_STRING(buf->string);
@@ -177,7 +177,7 @@ pl_tokread_tok(pl_tokread_iter_ctx_t *ctx, Py_ssize_t pos)
                 b += buf->pos - 1;
             }
             t -= size;
-            (void)memcpy(t, b, size);
+            (void)memcpy(t, b, (size_t)size);
         }
         pl_buf_clear(&ctx->buf->prev);
     }

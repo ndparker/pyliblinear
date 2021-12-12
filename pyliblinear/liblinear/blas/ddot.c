@@ -4,6 +4,8 @@
 extern "C" {
 #endif
 
+#include "blas-missing-decl.h"
+
 double ddot_(int *n, double *sx, int *incx, double *sy, int *incy)
 {
   long int i, m, nn, iincx, iincy;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2018
+ * Copyright 2015 - 2021
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ EXT_METHODS = {
 PyDoc_STRVAR(EXT_DOCS_VAR,
 ":Copyright:\n\
 \n\
- Copyright 2015 - 2018\n\
+ Copyright 2015 - 2021\n\
  Andr\xc3\xa9 Malo or his licensors, as applicable\n\
 \n\
 :License:\n\
@@ -73,13 +73,13 @@ EXT_INIT_FUNC {
 
     /* Create the module and populate stuff */
     if (!(m = EXT_CREATE(&EXT_DEFINE_VAR)))
-        EXT_INIT_ERROR(NULL);
+        EXT_INIT_ERROR(LCOV_EXCL_LINE(NULL));
 
     EXT_DOC_UNICODE(m);
 
-    EXT_ADD_STRING(m, "__docformat__", "restructuredtext en");
     EXT_ADD_UNICODE(m, "__author__", "Andr\xe9 Malo", "latin-1");
     EXT_ADD_UNICODE(m, "__license__", "Apache License, Version 2.0", "ascii");
+    EXT_ADD_STRING(m, "__version__", STRINGIFY(EXT_VERSION));
 
     EXT_INIT_TYPE(m, &PL_FeatureViewType);
     EXT_INIT_TYPE(m, &PL_LabelViewType);
@@ -102,9 +102,9 @@ EXT_INIT_FUNC {
 #endif
 
     if (!(solvers = pl_solver_types()))
-        EXT_INIT_ERROR(m);
+        EXT_INIT_ERROR(LCOV_EXCL_LINE(m));
     if (PyModule_AddObject(m, "SOLVER_TYPES", solvers) < 0)
-        EXT_INIT_ERROR(m);
+        EXT_INIT_ERROR(LCOV_EXCL_LINE(m));
 
     EXT_INIT_RETURN(m);
 }

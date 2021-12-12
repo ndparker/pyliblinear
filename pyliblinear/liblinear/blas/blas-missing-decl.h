@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2021
+ * Copyright 2021
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,25 +15,7 @@
  * limitations under the License.
  */
 
-#include "pyliblinear.h"
+/* Compiler complains about missing declations. Here they are: */
 
-
-#ifdef EXT3
-/*
- * Open a file
- *
- * Return NULL on error
- */
-PyObject *
-pl_file_open(PyObject *filename, const char *mode)
-{
-   PyObject *io, *result;
-
-    if (!(io = PyImport_ImportModule("io")))
-        return NULL;
-    result = PyObject_CallMethod(io, "open", "(Os)", filename, mode);
-    Py_DECREF(io);
-
-    return result;
-}
-#endif
+extern double dnrm2_(int *, double *, int *);
+extern double ddot_(int *, double *, int *, double *, int *);

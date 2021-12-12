@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2018
+ * Copyright 2015 - 2021
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -177,7 +177,7 @@ pl_matrix_as_problem(PyObject *self, double bias, struct problem *prob)
     else {
         if (!matrix->biased_vectors) {
             matrix->biased_vectors = PyMem_Malloc(
-                matrix->height * (sizeof *matrix->biased_vectors)
+                ((unsigned int)matrix->height) * (sizeof *matrix->biased_vectors)
             );
             if (!matrix->biased_vectors) {
                 PyErr_SetNone(PyExc_MemoryError);
@@ -291,7 +291,7 @@ pl_vectors_as_array(pl_vector_block_t **vectors_,
     int j;
 
     for (j = 0, block = *vectors_; block; block = block->prev)
-        j += block->size;
+        j += (int)block->size;
 
     if (j != height) {
         pl_vector_block_clear(vectors_);
@@ -301,12 +301,14 @@ pl_vectors_as_array(pl_vector_block_t **vectors_,
     }
 
     if (height > 0) {
-        if (!(array = PyMem_Malloc(height * (sizeof *array)))) {
+        if (!(array = PyMem_Malloc(((unsigned int)height)
+                                   * (sizeof *array)))) {
             PyErr_SetNone(PyExc_MemoryError);
             return -1;
         }
 
-        if (!(labels = PyMem_Malloc(height * (sizeof *labels)))) {
+        if (!(labels = PyMem_Malloc(((unsigned int)height)
+                                    * (sizeof *labels)))) {
             PyMem_Free(array);
             PyErr_SetNone(PyExc_MemoryError);
             return -1;
@@ -841,7 +843,7 @@ PL_VectorReaderType_iteritems(PyObject *self, PyObject *args)
 
 static struct PyMethodDef PL_VectorReaderType_methods[] = {
     {"iteritems",
-     (PyCFunction)PL_VectorReaderType_iteritems, METH_NOARGS,
+     EXT_CFUNC(PL_VectorReaderType_iteritems), METH_NOARGS,
      NULL},
 
     {NULL, NULL}  /* Sentinel */
@@ -1494,41 +1496,41 @@ PL_FeatureMatrixType_new(PyTypeObject *cls, PyObject *args, PyObject *kwds);
 static struct PyMethodDef PL_FeatureMatrixType_methods[] = {
 #ifdef PL_CROSS_VALIDATE
     {"cross_validate",
-     (PyCFunction)PL_FeatureMatrixType_xval,     METH_KEYWORDS | METH_VARARGS,
+     EXT_CFUNC(PL_FeatureMatrixType_xval),     METH_KEYWORDS | METH_VARARGS,
      PL_FeatureMatrixType_xval__doc__},
 #endif
 
     {"features",
-     (PyCFunction)PL_FeatureMatrixType_features, METH_NOARGS,
+     EXT_CFUNC(PL_FeatureMatrixType_features), METH_NOARGS,
      PL_FeatureMatrixType_features__doc__},
 
     {"labels",
-     (PyCFunction)PL_FeatureMatrixType_labels,   METH_NOARGS,
+     EXT_CFUNC(PL_FeatureMatrixType_labels),   METH_NOARGS,
      PL_FeatureMatrixType_labels__doc__},
 
     {"save",
-     (PyCFunction)PL_FeatureMatrixType_save,     METH_KEYWORDS | METH_VARARGS,
+     EXT_CFUNC(PL_FeatureMatrixType_save),     METH_KEYWORDS | METH_VARARGS,
      PL_FeatureMatrixType_save__doc__},
 
     {"load",
-     (PyCFunction)PL_FeatureMatrixType_load,     METH_CLASS    |
-                                                 METH_KEYWORDS |
-                                                 METH_VARARGS,
+     EXT_CFUNC(PL_FeatureMatrixType_load),     METH_CLASS    |
+                                               METH_KEYWORDS |
+                                               METH_VARARGS,
      PL_FeatureMatrixType_load__doc__},
 
     {"from_iterables",
-     (PyCFunction)PL_FeatureMatrixType_from_iterables,
-                                                 METH_CLASS    |
-                                                 METH_KEYWORDS |
-                                                 METH_VARARGS,
+     EXT_CFUNC(PL_FeatureMatrixType_from_iterables),
+                                               METH_CLASS    |
+                                               METH_KEYWORDS |
+                                               METH_VARARGS,
      PL_FeatureMatrixType_from_iterables__doc__},
 
 #ifdef METH_COEXIST
     {"__new__",
-     (PyCFunction)PL_FeatureMatrixType_new,      METH_COEXIST  |
-                                                 METH_STATIC   |
-                                                 METH_KEYWORDS |
-                                                 METH_VARARGS,
+     EXT_CFUNC(PL_FeatureMatrixType_new),      METH_COEXIST  |
+                                               METH_STATIC   |
+                                               METH_KEYWORDS |
+                                               METH_VARARGS,
      PL_FeatureMatrixType_new__doc__},
 #endif
 

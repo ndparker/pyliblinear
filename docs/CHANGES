@@ -1,3 +1,14 @@
+Changes with version
+
+ *) Increase compiler happiness
+
+ *) Add x86_64, i686 and aarch64 wheels
+
+ *) Update python support: 2.7, 3.6+
+
+ *) Update project boilerplate
+
+
 Changes with version 220.dev2
 
  *) Fix setup in C locale

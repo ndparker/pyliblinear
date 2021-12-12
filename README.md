@@ -33,7 +33,7 @@ The API is not stabilized yet. There also may be a few kinks here and there.
 
 ## COPYRIGHT AND LICENSE
 
-Copyright 2015 - 2018
+Copyright 2015 - 2021
 André Malo or his licensors, as applicable.
 
 The whole package is distributed under the Apache License Version 2.0.
@@ -48,7 +48,7 @@ license](http://opensource.org/licenses/BSD-3-Clause).
 
 ## SYSTEM REQUIREMENTS
 
-You need at least python 2.7 or Python 3 starting with version 3.4.
+You need at least python 2.7 or Python 3.6+.
 
 You also need a build environment for python C/C++ extensions (i.e. a compiler
 and the python development files).
@@ -95,7 +95,7 @@ send a mail to <pyliblinear-bugs@perlig.de>.
 
 ## AUTHOR INFORMATION
 
-André "nd" Malo <nd@perlig.de>, GPG: 0x8103A37E
+André "nd" Malo <nd@perlig.de>, GPG: 0x029C942244325167
 
 
 >  If God intended people to be naked, they would be born that way.

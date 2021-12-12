@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2018
+ * Copyright 2015 - 2021
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -180,7 +180,7 @@ pl_int_as_char(char *buf, int value)
     unsigned long absn;
 
     p = bufend = buf + PL_INT_AS_CHAR_BUF_SIZE;
-    absn = n < 0 ? 0UL - n : (unsigned long)n;
+    absn = n < 0 ? (unsigned long)(-n) : (unsigned long)n;
     do {
         *--p = '0' + (char)(absn % 10);
         absn /= 10;
