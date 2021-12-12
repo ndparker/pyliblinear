@@ -31,6 +31,18 @@ __license__ = "Apache License, Version 2.0"
 __version__ = '220.dev2'
 __all__ = ['FeatureMatrix', 'Model', 'Solver', 'SOLVER_TYPES']
 
+try:
+    from pyliblinear._liblinear import __version__ as _c_version
+except ImportError:
+    _c_version = None
+if _c_version != __version__:
+    raise ImportError(
+        "Could not import pyliblinear C extension version %r. Found: %r" % (
+            __version__, _c_version
+        )
+    )
+del _c_version
+
 from pyliblinear._liblinear import FeatureMatrix
 from pyliblinear._liblinear import Model
 from pyliblinear._liblinear import Solver
