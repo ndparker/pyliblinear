@@ -27,6 +27,8 @@ Tests for pyliblinear.FeatureMatrix
 """
 __author__ = u"Andr\xe9 Malo"
 
+import os as _os
+
 from pytest import raises
 
 import pyliblinear as _pyliblinear
@@ -40,6 +42,21 @@ def test_matrix_dict():
     matrix = _pyliblinear.FeatureMatrix(
         [(1, {3: 4, 1: 7}), (2, {2: 1})],
     )
+
+    assert matrix.width == 3
+    assert matrix.height == 2
+    assert list(matrix.labels()) == [1.0, 2.0]
+    assert list(matrix.features()) == [{1: 7.0, 3: 4.0}, {2: 1.0}]
+
+
+def test_matrix_load_save(tmpdir):
+    """ FeatureMatrix load / save """
+    matrix = _pyliblinear.FeatureMatrix(
+        [(1, {3: 4, 1: 7}), (2, {2: 1})],
+    )
+    filename = _os.path.join(str(tmpdir), 'matrix_load_save.matrix')
+    matrix.save(filename)
+    matrix = _pyliblinear.FeatureMatrix.load(filename)
 
     assert matrix.width == 3
     assert matrix.height == 2
