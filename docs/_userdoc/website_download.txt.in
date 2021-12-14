@@ -1,35 +1,35 @@
 Download
 ~~~~~~~~
 
+.. begin stable
+
+Current Stable Version
+''''''''''''''''''''''
+
+- `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-@@VERSION@@>`_
+- `pyliblinear-@@VERSION@@.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.xz>`_
+- `pyliblinear-@@VERSION@@.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.bz2>`_
+- `pyliblinear-@@VERSION@@.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.gz>`_
+- `pyliblinear-@@VERSION@@.zip <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.zip>`_
+- `pyliblinear-@@VERSION@@.digests <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.digests>`_
+
+.. end stable
+
+
 .. comment
-    .. begin stable
+    .. begin dev
 
-    Current Stable Version
-    ''''''''''''''''''''''
+    Current Development Version
+    ---------------------------
 
-    - `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-@@VERSION@@>`_
-    - `pyliblinear-@@VERSION@@.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.xz>`_
-    - `pyliblinear-@@VERSION@@.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.bz2>`_
-    - `pyliblinear-@@VERSION@@.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.tar.gz>`_
-    - `pyliblinear-@@VERSION@@.zip <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.zip>`_
-    - `pyliblinear-@@VERSION@@.digests <http://storage.perlig.de/pyliblinear/pyliblinear-@@VERSION@@.digests>`_
+    - `CHANGES file <http://storage.perlig.de/pyliblinear/@@PATH@@CHANGES-@@DEVVERSION@@>`_
+    - `pyliblinear-@@DEVVERSION@@.tar.xz <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.xz>`_
+    - `pyliblinear-@@DEVVERSION@@.tar.bz2 <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.bz2>`_
+    - `pyliblinear-@@DEVVERSION@@.tar.gz <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.gz>`_
+    - `pyliblinear-@@DEVVERSION@@.zip <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.zip>`_
+    - `pyliblinear-@@DEVVERSION@@.digests <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.digests>`_
 
-    .. end stable
-
-
-.. begin dev
-
-Current Development Version
----------------------------
-
-- `CHANGES file <http://storage.perlig.de/pyliblinear/@@PATH@@CHANGES-@@DEVVERSION@@>`_
-- `pyliblinear-@@DEVVERSION@@.tar.xz <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.xz>`_
-- `pyliblinear-@@DEVVERSION@@.tar.bz2 <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.bz2>`_
-- `pyliblinear-@@DEVVERSION@@.tar.gz <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.tar.gz>`_
-- `pyliblinear-@@DEVVERSION@@.zip <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.zip>`_
-- `pyliblinear-@@DEVVERSION@@.digests <http://storage.perlig.de/pyliblinear/@@PATH@@pyliblinear-@@DEVVERSION@@.digests>`_
-
-.. end dev
+    .. end dev
 
 
 Integrity Check
@@ -51,12 +51,12 @@ md5sum (or sha1sum, sha256sum accordingly), e.g.:
 
 In order to check the integrity of the digest file itself, you can check
 the PGP signature of that file. The file is signed by André Malo, Key-ID
-0x8103A37E:
+0x029C942244325167:
 
 .. sourcecode:: console
 
     $ gpg --verify pyliblinear-@@VERSION@@.digests
-    gpg: Signature made Sat Dec 11 17:32:43 2021 CET
+    gpg: Signature made Tue Dec 14 21:17:04 2021 CET
     gpg:                using RSA key 21B65583FF640D34E8662B6B3DED446369F2EE1A
     gpg: Good signature from "André Malo <nd@perlig.de>"
 

@@ -1,20 +1,19 @@
 Download
 ~~~~~~~~
 
-.. comment
-    .. begin stable
+.. begin stable
 
-    Current Stable Version
-    ''''''''''''''''''''''
+Current Stable Version
+''''''''''''''''''''''
 
-    - `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-243.0>`_
-    - `pyliblinear-243.0.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.xz>`_
-    - `pyliblinear-243.0.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.bz2>`_
-    - `pyliblinear-243.0.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.gz>`_
-    - `pyliblinear-243.0.zip <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.zip>`_
-    - `pyliblinear-243.0.digests <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.digests>`_
+- `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-243.0>`_
+- `pyliblinear-243.0.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.xz>`_
+- `pyliblinear-243.0.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.bz2>`_
+- `pyliblinear-243.0.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.gz>`_
+- `pyliblinear-243.0.zip <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.zip>`_
+- `pyliblinear-243.0.digests <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.digests>`_
 
-    .. end stable
+.. end stable
 
 
 .. begin dev
@@ -40,12 +39,12 @@ md5sum (or sha1sum, sha256sum accordingly), e.g.:
 
 In order to check the integrity of the digest file itself, you can check
 the PGP signature of that file. The file is signed by André Malo, Key-ID
-0x8103A37E:
+0x029C942244325167:
 
 .. sourcecode:: console
 
     $ gpg --verify pyliblinear-243.0.digests
-    gpg: Signature made Sat Dec 11 17:32:43 2021 CET
+    gpg: Signature made Tue Dec 14 21:17:04 2021 CET
     gpg:                using RSA key 21B65583FF640D34E8662B6B3DED446369F2EE1A
     gpg: Good signature from "André Malo <nd@perlig.de>"
 
