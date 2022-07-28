@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2021
+ * Copyright 2015 - 2022
  * Andr\xe9 Malo or his licensors, as applicable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ EXT_METHODS = {
 PyDoc_STRVAR(EXT_DOCS_VAR,
 ":Copyright:\n\
 \n\
- Copyright 2015 - 2021\n\
+ Copyright 2015 - 2022\n\
  Andr\xc3\xa9 Malo or his licensors, as applicable\n\
 \n\
 :License:\n\
