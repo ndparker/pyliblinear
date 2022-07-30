@@ -6,18 +6,30 @@ Download
 Current Stable Version
 ''''''''''''''''''''''
 
-- `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-243.0>`_
-- `pyliblinear-243.0.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.xz>`_
-- `pyliblinear-243.0.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.bz2>`_
-- `pyliblinear-243.0.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.tar.gz>`_
-- `pyliblinear-243.0.zip <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.zip>`_
-- `pyliblinear-243.0.digests <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.digests>`_
+- `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-244.0>`_
+- `pyliblinear-244.0.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-244.0.tar.xz>`_
+- `pyliblinear-244.0.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-244.0.tar.bz2>`_
+- `pyliblinear-244.0.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-244.0.tar.gz>`_
+- `pyliblinear-244.0.zip <http://storage.perlig.de/pyliblinear/pyliblinear-244.0.zip>`_
+- `pyliblinear-244.0.digests <http://storage.perlig.de/pyliblinear/pyliblinear-244.0.digests>`_
 
 .. end stable
 
 
-.. begin dev
-.. end dev
+.. comment
+    .. begin dev
+
+    Current Development Version
+    ---------------------------
+
+    - `CHANGES file <http://storage.perlig.de/pyliblinear/CHANGES-@@DEVVERSION@@>`_
+    - `pyliblinear-@@DEVVERSION@@.tar.xz <http://storage.perlig.de/pyliblinear/pyliblinear-@@DEVVERSION@@.tar.xz>`_
+    - `pyliblinear-@@DEVVERSION@@.tar.bz2 <http://storage.perlig.de/pyliblinear/pyliblinear-@@DEVVERSION@@.tar.bz2>`_
+    - `pyliblinear-@@DEVVERSION@@.tar.gz <http://storage.perlig.de/pyliblinear/pyliblinear-@@DEVVERSION@@.tar.gz>`_
+    - `pyliblinear-@@DEVVERSION@@.zip <http://storage.perlig.de/pyliblinear/pyliblinear-@@DEVVERSION@@.zip>`_
+    - `pyliblinear-@@DEVVERSION@@.digests <http://storage.perlig.de/pyliblinear/pyliblinear-@@DEVVERSION@@.digests>`_
+
+    .. end dev
 
 
 Integrity Check
@@ -25,17 +37,17 @@ Integrity Check
 
 There are hashes (MD5, SHA1 and SHA256) of the download packages stored
 in the `digests file
-<http://storage.perlig.de/pyliblinear/pyliblinear-243.0.digests>`_\.
+<http://storage.perlig.de/pyliblinear/pyliblinear-244.0.digests>`_\.
 In order to check the integrity of the downloaded file, use a tool like
 md5sum (or sha1sum, sha256sum accordingly), e.g.:
 
 .. sourcecode:: console
 
-    $ md5sum -c pyliblinear-243.0.digests
-    pyliblinear-243.0.tar.bz2: OK
-    pyliblinear-243.0.tar.gz: OK
-    pyliblinear-243.0.tar.xz: OK
-    pyliblinear-243.0.zip: OK
+    $ md5sum -c pyliblinear-244.0.digests
+    pyliblinear-244.0.tar.bz2: OK
+    pyliblinear-244.0.tar.gz: OK
+    pyliblinear-244.0.tar.xz: OK
+    pyliblinear-244.0.zip: OK
 
 In order to check the integrity of the digest file itself, you can check
 the PGP signature of that file. The file is signed by André Malo, Key-ID
@@ -43,7 +55,7 @@ the PGP signature of that file. The file is signed by André Malo, Key-ID
 
 .. sourcecode:: console
 
-    $ gpg --verify pyliblinear-243.0.digests
+    $ gpg --verify pyliblinear-244.0.digests
     gpg: Signature made Tue Dec 14 21:17:04 2021 CET
     gpg:                using RSA key 21B65583FF640D34E8662B6B3DED446369F2EE1A
     gpg: Good signature from "André Malo <nd@perlig.de>"
@@ -54,7 +66,7 @@ the PGP signature of that file. The file is signed by André Malo, Key-ID
     ---------------
 
     There's a `Gentoo Linux Ebuild
-    <http://storage.perlig.de/pyliblinear/pyliblinear-243.0.ebuild>`_
+    <http://storage.perlig.de/pyliblinear/pyliblinear-244.0.ebuild>`_
     available.
 
 

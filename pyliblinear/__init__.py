@@ -27,7 +27,7 @@ pyliblinear - a liblinear python API
 """
 __author__ = u"Andr\xe9 Malo"
 __license__ = "Apache License, Version 2.0"
-__version__ = '243.0'
+__version__ = '244.0'
 __all__ = ['FeatureMatrix', 'Model', 'Solver', 'SOLVER_TYPES']
 
 try:
