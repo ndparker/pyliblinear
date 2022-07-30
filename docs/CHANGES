@@ -1,7 +1,11 @@
 Changes with version
 
+ *) Update liblinear to 2.44
+
  *) Explicitly close the mmap'd temporary file instead of relying on
     close-on-destruction
+
+ *) Update project boilerplate
 
 
 Changes with version 243.0

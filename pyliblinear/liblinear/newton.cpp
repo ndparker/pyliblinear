@@ -16,8 +16,8 @@ template <class T> static inline T max(T x,T y) { return (x>y)?x:y; }
 extern "C" {
 #endif
 
-#include "blas/blas-missing-decl.h"
-
+extern double dnrm2_(int *, double *, int *);
+extern double ddot_(int *, double *, int *, double *, int *);
 extern int daxpy_(int *, double *, double *, int *, double *, int *);
 extern int dscal_(int *, double *, double *, int *);
 

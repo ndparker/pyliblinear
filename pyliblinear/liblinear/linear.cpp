@@ -2702,7 +2702,7 @@ static void train_one(const problem *prob, const parameter *param, double *w, do
 		{
 			iter = solve_l2r_l1l2_svc(prob, param, w, Cp, Cn, dual_solver_max_iter);
 			if(iter >= dual_solver_max_iter)
-				info("\nWARNING: reaching max number of iterations\nUsing -s 2 may be faster (also see FAQ)\n\n");			
+				info("\nWARNING: reaching max number of iterations\nUsing -s 2 may be faster (also see FAQ)\n\n");
 			break;
 		}
 		case L1R_L2LOSS_SVC:
@@ -2754,7 +2754,7 @@ static void train_one(const problem *prob, const parameter *param, double *w, do
 		{
 			iter = solve_l2r_l1l2_svr(prob, param, w, dual_solver_max_iter);
 			if(iter >= dual_solver_max_iter)
-				info("\nWARNING: reaching max number of iterations\nUsing -s 11 may be faster (also see FAQ)\n\n");			
+				info("\nWARNING: reaching max number of iterations\nUsing -s 11 may be faster (also see FAQ)\n\n");
 
 			break;
 		}
@@ -3712,7 +3712,7 @@ const char *check_parameter(const problem *prob, const parameter *param)
 	if(param->C <= 0)
 		return "C <= 0";
 
-	if(param->p < 0)
+	if(param->p < 0 && param->solver_type == L2R_L2LOSS_SVR)
 		return "p < 0";
 
 	if(prob->bias >= 0 && param->solver_type == ONECLASS_SVM)
