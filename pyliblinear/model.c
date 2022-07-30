@@ -491,8 +491,13 @@ pl_mmap_buf_new(Py_ssize_t size, PyObject **mmap__, void **target_)
         goto error_mapped;
     }
 
-    *mmap__ = mmap_;
+    tmp = PyObject_CallMethod(tfile, "close", "()");
     Py_DECREF(tfile);
+    if (!tmp)
+        goto error_mmap;
+    Py_DECREF(tmp);
+
+    *mmap__ = mmap_;
     Py_DECREF(m_mmap);
 
     return 0;
@@ -501,6 +506,8 @@ error_mapped:
     Py_DECREF(mmap_);
 
 error_tfile:
+    tmp = PyObject_CallMethod(tfile, "close", "()");
+    Py_XDECREF(tmp);
     Py_DECREF(tfile);
 
 error_mmap:
