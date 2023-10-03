@@ -7,7 +7,10 @@
 
 # don't compile on weird code
 # -std=c99
--pedantic -fno-strict-aliasing -Werror
+# Beta... will be fixed...? (anon union)
+# https://github.com/python/cpython/issues/105059
+-pedantic
+-fno-strict-aliasing -Werror
 -Wall
 -Wbad-function-cast
 -Wcast-align
