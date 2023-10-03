@@ -1,5 +1,7 @@
 Changes with version
 
+ *) Add python 3.12 support
+
  *) Add support for musllinux wheels
 
  *) Update liblinear to 2.47
