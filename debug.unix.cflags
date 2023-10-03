@@ -16,7 +16,7 @@
 -Wcast-align
 -Wcast-qual
 -Wconversion
--Wdeclaration-after-statement
+# -Wdeclaration-after-statement
 -Wextra
 -Winit-self
 -Wmissing-declarations

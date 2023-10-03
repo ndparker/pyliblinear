@@ -1,6 +1,10 @@
 Changes with version
 
+ *) Add support for musllinux wheels
+
  *) Update liblinear to 2.47
+
+ *) Update project boilerplate
 
 
 Changes with version 244.0
