@@ -34,14 +34,15 @@ import pyliblinear as _pyliblinear
 
 
 def fix_path(name):
-    """ Find fixture """
+    """Find fixture"""
     return _os.path.join(_os.path.dirname(__file__), 'fixtures', name)
 
 
 def test_model_train_save_load_predict(tmpdir):
-    """ Model train / save / load / predict """
-    filename = _os.path.join(str(tmpdir),
-                             'model_train_save_load_predict.model')
+    """Model train / save / load / predict"""
+    filename = _os.path.join(
+        str(tmpdir), 'model_train_save_load_predict.model'
+    )
 
     with _bz2.BZ2File(fix_path('a1a.bz2')) as fp:
         matrix = _pyliblinear.FeatureMatrix.load(fp)

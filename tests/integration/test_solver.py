@@ -31,7 +31,7 @@ import pyliblinear as _pyliblinear
 
 
 def test_solver_default():
-    """ Solver initializes with default arguments """
+    """Solver initializes with default arguments"""
     solver = _pyliblinear.Solver()
 
     assert solver.type == 'L2R_L2LOSS_SVC_DUAL'
@@ -42,7 +42,7 @@ def test_solver_default():
 
 
 def test_solver_types():
-    """ Solver accepts different solver types """
+    """Solver accepts different solver types"""
     tests = [
         'L2R_LR',
         'L2R_L2LOSS_SVC',
@@ -65,7 +65,7 @@ def test_solver_types():
 
 
 def test_solver_eps_defaults():
-    """ Solver initializes eps depending on the solver type """
+    """Solver initializes eps depending on the solver type"""
     tests = [
         ('L2R_LR', 0.01),
         ('L2R_L2LOSS_SVC', 0.01),
@@ -90,9 +90,10 @@ def test_solver_eps_defaults():
 
 
 def test_solver_param():
-    """ Solver accepts different parameters """
-    solver = _pyliblinear.Solver('L1R_LR', C=0.25, eps=0.0001, p=3,
-                                 weights={2: 5, 3: 4, 6: 9.5})
+    """Solver accepts different parameters"""
+    solver = _pyliblinear.Solver(
+        'L1R_LR', C=0.25, eps=0.0001, p=3, weights={2: 5, 3: 4, 6: 9.5}
+    )
 
     assert solver.type == 'L1R_LR'
     assert solver.C == 0.25
