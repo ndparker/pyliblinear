@@ -6,7 +6,9 @@
 -fprofile-arcs
 
 # don't compile on weird code
-# -std=c99
+# (was: c99) https://github.com/python/cpython/issues/120293
+# Also g++ doesn't like it...
+# -std=c11
 # Beta... will be fixed...? (anon union)
 # https://github.com/python/cpython/issues/105059
 -pedantic
@@ -14,7 +16,8 @@
 -Wall
 -Wbad-function-cast
 -Wcast-align
--Wcast-qual
+# https://github.com/python/cpython/issues/120293
+# -Wcast-qual
 -Wconversion
 # -Wdeclaration-after-statement
 -Wextra
@@ -27,6 +30,7 @@
 -Wno-missing-field-initializers
 -Wno-overlength-strings
 -Wno-unused-parameter
+# liblinear issue
 # -Wshadow
 -Wstrict-overflow=4
 -Wundef
