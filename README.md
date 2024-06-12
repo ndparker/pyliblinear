@@ -20,7 +20,7 @@ TABLE OF CONTENTS
 It aims for more pythonic access to liblinear's features, especially featuring
 streams of data and lazy evaluations whereever possible.
 
-* [Change Log](docs/CHANGES)
+* [Change Log](CHANGES)
 * [Development](docs/DEVELOPMENT.md)
 
 
