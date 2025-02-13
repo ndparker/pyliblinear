@@ -2,7 +2,7 @@
 u"""
 :Copyright:
 
- Copyright 2015 - 2024
+ Copyright 2015 - 2025
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -54,7 +54,7 @@ def test_matrix_load_save(tmpdir):
     matrix = _pyliblinear.FeatureMatrix(
         [(1, {3: 4, 1: 7}), (2, {2: 1})],
     )
-    filename = _os.path.join(str(tmpdir), 'matrix_load_save.matrix')
+    filename = _os.path.join(str(tmpdir), "matrix_load_save.matrix")
     matrix.save(filename)
     matrix = _pyliblinear.FeatureMatrix.load(filename)
 

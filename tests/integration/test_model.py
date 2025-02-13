@@ -2,7 +2,7 @@
 u"""
 :Copyright:
 
- Copyright 2021 - 2024
+ Copyright 2021 - 2025
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -35,23 +35,23 @@ import pyliblinear as _pyliblinear
 
 def fix_path(name):
     """Find fixture"""
-    return _os.path.join(_os.path.dirname(__file__), 'fixtures', name)
+    return _os.path.join(_os.path.dirname(__file__), "fixtures", name)
 
 
 def test_model_train_save_load_predict(tmpdir):
     """Model train / save / load / predict"""
     filename = _os.path.join(
-        str(tmpdir), 'model_train_save_load_predict.model'
+        str(tmpdir), "model_train_save_load_predict.model"
     )
 
-    with _bz2.BZ2File(fix_path('a1a.bz2')) as fp:
+    with _bz2.BZ2File(fix_path("a1a.bz2")) as fp:
         matrix = _pyliblinear.FeatureMatrix.load(fp)
 
     model = _pyliblinear.Model.train(matrix)
     model.save(filename)
 
     model = _pyliblinear.Model.load(filename)
-    with _bz2.BZ2File(fix_path('a1a.t.bz2')) as fp:
+    with _bz2.BZ2File(fix_path("a1a.t.bz2")) as fp:
         matrix = _pyliblinear.FeatureMatrix.load(fp)
 
     result = {}

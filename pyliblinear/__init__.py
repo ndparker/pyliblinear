@@ -2,7 +2,7 @@
 u"""
 :Copyright:
 
- Copyright 2015 - 2024
+ Copyright 2015 - 2025
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -27,8 +27,8 @@ pyliblinear - a liblinear python API
 """
 __author__ = u"Andr\xe9 Malo"
 __license__ = "Apache License, Version 2.0"
-__version__ = '247.1'
-__all__ = ['FeatureMatrix', 'Model', 'Solver', 'SOLVER_TYPES']
+__version__ = "247.1"
+__all__ = ["FeatureMatrix", "Model", "Solver", "SOLVER_TYPES"]
 
 try:
     from pyliblinear._liblinear import __version__ as _c_version

@@ -1,8 +1,8 @@
 # -*- coding: ascii -*-
-r"""
+u"""
 :Copyright:
 
- Copyright 2015 - 2024
+ Copyright 2015 - 2025
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -34,7 +34,7 @@ def test_solver_default():
     """Solver initializes with default arguments"""
     solver = _pyliblinear.Solver()
 
-    assert solver.type == 'L2R_L2LOSS_SVC_DUAL'
+    assert solver.type == "L2R_L2LOSS_SVC_DUAL"
     assert solver.C == 1.0
     assert solver.eps == 0.1
     assert solver.p == 0.1
@@ -44,17 +44,17 @@ def test_solver_default():
 def test_solver_types():
     """Solver accepts different solver types"""
     tests = [
-        'L2R_LR',
-        'L2R_L2LOSS_SVC',
-        'L2R_L2LOSS_SVR',
-        'L2R_L2LOSS_SVC_DUAL',
-        'L2R_L1LOSS_SVC_DUAL',
-        'MCSVM_CS',
-        'L2R_LR_DUAL',
-        'L1R_L2LOSS_SVC',
-        'L1R_LR',
-        'L2R_L2LOSS_SVR_DUAL',
-        'L2R_L1LOSS_SVR_DUAL',
+        "L2R_LR",
+        "L2R_L2LOSS_SVC",
+        "L2R_L2LOSS_SVR",
+        "L2R_L2LOSS_SVC_DUAL",
+        "L2R_L1LOSS_SVC_DUAL",
+        "MCSVM_CS",
+        "L2R_LR_DUAL",
+        "L1R_L2LOSS_SVC",
+        "L1R_LR",
+        "L2R_L2LOSS_SVR_DUAL",
+        "L2R_L1LOSS_SVR_DUAL",
     ]
     for stype in tests:
         solver = _pyliblinear.Solver(_pyliblinear.SOLVER_TYPES[stype])
@@ -67,17 +67,17 @@ def test_solver_types():
 def test_solver_eps_defaults():
     """Solver initializes eps depending on the solver type"""
     tests = [
-        ('L2R_LR', 0.01),
-        ('L2R_L2LOSS_SVC', 0.01),
-        ('L2R_L2LOSS_SVR', 0.001),
-        ('L2R_L2LOSS_SVC_DUAL', 0.1),
-        ('L2R_L1LOSS_SVC_DUAL', 0.1),
-        ('MCSVM_CS', 0.1),
-        ('L2R_LR_DUAL', 0.1),
-        ('L1R_L2LOSS_SVC', 0.01),
-        ('L1R_LR', 0.01),
-        ('L2R_L2LOSS_SVR_DUAL', 0.1),
-        ('L2R_L1LOSS_SVR_DUAL', 0.1),
+        ("L2R_LR", 0.01),
+        ("L2R_L2LOSS_SVC", 0.01),
+        ("L2R_L2LOSS_SVR", 0.001),
+        ("L2R_L2LOSS_SVC_DUAL", 0.1),
+        ("L2R_L1LOSS_SVC_DUAL", 0.1),
+        ("MCSVM_CS", 0.1),
+        ("L2R_LR_DUAL", 0.1),
+        ("L1R_L2LOSS_SVC", 0.01),
+        ("L1R_LR", 0.01),
+        ("L2R_L2LOSS_SVR_DUAL", 0.1),
+        ("L2R_L1LOSS_SVR_DUAL", 0.1),
     ]
     for solver_type, eps in tests:
         solver = _pyliblinear.Solver(solver_type)
@@ -92,10 +92,10 @@ def test_solver_eps_defaults():
 def test_solver_param():
     """Solver accepts different parameters"""
     solver = _pyliblinear.Solver(
-        'L1R_LR', C=0.25, eps=0.0001, p=3, weights={2: 5, 3: 4, 6: 9.5}
+        "L1R_LR", C=0.25, eps=0.0001, p=3, weights={2: 5, 3: 4, 6: 9.5}
     )
 
-    assert solver.type == 'L1R_LR'
+    assert solver.type == "L1R_LR"
     assert solver.C == 0.25
     assert solver.eps == 0.0001
     assert solver.p == 3.0
