@@ -55,7 +55,13 @@ def clean(ctx, so=False, cache=False):
         gpath = ctx.shell.glob_escape(path.rstrip("/")) + "/**/"
         ctx.shell.rm_rf(ctx.shell.glob(gpath + "*.auto.tfvars.json"))
         ctx.shell.rm_rf(ctx.shell.glob(gpath + "*.tf.json"))
+    path = ctx.paths.get("cloudformation")
+    if path:
+        gpath = ctx.shell.glob_escape(path.rstrip("/")) + "/**/"
+        ctx.shell.rm_rf(ctx.shell.glob(gpath + "*.auto.*.yaml"))
+        ctx.shell.rm_rf(ctx.shell.glob(gpath + "*.zip"))
 
+    ctx.shell.rm_rf(ctx.shell.glob("tasks/**/*.generated*"))
     ctx.shell.rm_rf(
         "gcov.out",
         "setup.cfg",

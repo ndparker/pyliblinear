@@ -45,7 +45,7 @@ def pylint(ctx):
     Returns:
       bool: pylint checker enabled?
     """
-    if ctx.get("package") and _shell.frompath("pylint") is not None:
+    if _shell.frompath("pylint") is not None:
         return _os.path.exists(_shell.native("pylintrc"))
     return False
 
@@ -58,7 +58,7 @@ def flake8(ctx):
     Returns:
       bool: flake8 checker enabled?
     """
-    if ctx.get("package") and _shell.frompath("flake8") is not None:
+    if _shell.frompath("flake8") is not None:
         return _os.path.exists(_shell.native(".flake8"))
     return False
 
@@ -143,6 +143,6 @@ def sam(ctx):
       bool: is sam enabled?
     """
     if _shell.frompath("sam") is not None:
-        path = ctx.get("cloudformation", {}).get("template")
+        path = ctx.paths.get("cloudformation")
         return path and _os.path.exists(_shell.native(path))
     return False

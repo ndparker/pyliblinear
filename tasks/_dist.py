@@ -7,6 +7,8 @@ Dist building code
 
 import os as _os
 
+# pylint: disable = import-outside-toplevel
+
 
 def compress(ctx, filename, cmd, ext):
     """Compress tar file"""

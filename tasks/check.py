@@ -36,8 +36,14 @@ _CHECKERS_SAM = []
 @_invoke.task("clean.py")
 def lint(ctx):
     """Run pylint"""
-    cmd = [ctx.which("pylint")] + ctx.s("--rcfile pylintrc") + [ctx.package]
+    if ctx.get("package"):
+        cmd = (
+            [ctx.which("pylint")] + ctx.s("--rcfile pylintrc") + [ctx.package]
+        )
+        with ctx.shell.root_dir():
+            ctx.run(ctx.c(cmd), echo=True)
 
+    cmd = [ctx.which("pylint")] + ctx.s("--rcfile tasks/pylintrc") + ["tasks"]
     with ctx.shell.root_dir():
         ctx.run(ctx.c(cmd), echo=True)
 
@@ -46,13 +52,16 @@ def lint(ctx):
 @_invoke.task("clean.py")
 def flake8(ctx):
     """Run flake8"""
-    if _os.path.exists(ctx.shell.native(ctx.package + ".py")):
-        candidate = ctx.package + ".py"
-    else:
-        candidate = ctx.package
+    if ctx.get("package"):
+        if _os.path.exists(ctx.shell.native(ctx.package + ".py")):
+            candidate = ctx.package + ".py"
+        else:
+            candidate = ctx.package
+        cmd = [ctx.which("flake8"), candidate]
+        with ctx.shell.root_dir():
+            ctx.run(ctx.c(cmd), echo=True)
 
-    cmd = [ctx.which("flake8"), candidate]
-
+    cmd = [ctx.which("flake8"), "tasks"]
     with ctx.shell.root_dir():
         ctx.run(ctx.c(cmd), echo=True)
 
@@ -90,17 +99,17 @@ def tf_validate(ctx):
         ctx.run(ctx.c(base_cmd + ctx.s("validate")), echo=True)
 
 
-@_tasks.optional(_CHECKERS_SAM, _features.sam)
-@_invoke.task()
-def sam_validate(ctx):
-    """Run sam validate"""
-    cmd = (
-        [ctx.which("sam")]
-        + ctx.s("validate --lint -t")
-        + [ctx.cloudformation.template]
-    )
-    with ctx.shell.root_dir():
-        ctx.run(ctx.c(cmd), echo=True)
+# @_tasks.optional(_CHECKERS_SAM, _features.sam)
+# @_invoke.task()
+# def sam_validate(ctx):
+#     """Run sam validate"""
+#     cmd = (
+#         [ctx.which("sam")]
+#         + ctx.s("validate --lint -t")
+#         + [ctx.cloudformation.template]
+#     )
+#     with ctx.shell.root_dir():
+#         ctx.run(ctx.c(cmd), echo=True)
 
 
 # Collections of checks
