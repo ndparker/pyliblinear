@@ -20,16 +20,63 @@ Inspect package versions in index
 
 """
 
+import json as _json
 import logging as _logging
 
-from setuptools import package_index as _pkg_index
 import pkg_resources as _pkg_resources
 
 from .. import _parse
+from ..._inv import tasks as _tasks
 
 # pylint: disable = import-outside-toplevel
 
 logger = _logging.getLogger("deps.inspect.index")
+
+
+class PipIndex(_pkg_resources.Environment):
+    """Query the index using pip"""
+
+    def __init__(self, *args, **kwargs):
+        super(PipIndex, self).__init__(*args, **kwargs)
+        self._ctx = _tasks.new_context()
+        self._cache = set()
+
+    def find_packages(self, requirement):
+        """Find packages"""
+        if requirement.key in self._cache:
+            return
+
+        ctx = self._ctx
+        index_info = _json.loads(
+            ctx.run(
+                ctx.c(
+                    [
+                        "pip",
+                        "index",
+                        "versions",
+                        "--json",
+                        requirement.project_name,
+                    ]
+                ),
+                hide=True,
+            ).stdout.strip()
+        )
+        for version in index_info.get("versions", ()):
+            self.add(
+                _pkg_resources.Distribution(
+                    project_name=requirement.project_name,
+                    version=version,
+                    precedence=_pkg_resources.EGG_DIST + 1,
+                )
+            )
+        self._cache.add(requirement.key)
+
+    def obtain(self, requirement, installer=None):
+        self.find_packages(requirement)
+        for dist in self[requirement.key]:
+            if dist in requirement:
+                return dist
+        return super().obtain(requirement, installer)
 
 
 class Index(object):
@@ -37,7 +84,7 @@ class Index(object):
 
     def __init__(self):
         """Initialization"""
-        self._index = _pkg_index.PackageIndex(search_path=[])
+        self._index = PipIndex(search_path=[])
         self._wset = _pkg_resources.WorkingSet([])
 
     def lookup(self, req):
@@ -132,7 +179,7 @@ class PackageScanner(object):
             The requirement to look up
         """
         # we want a specifically typed copy
-        req = _pkg_index.Requirement.parse(str(req))
+        req = _pkg_resources.Requirement.parse(str(req))
         self._update_field("unchanged", req)
         self._find_compat(req)
         self._find_latest(req)

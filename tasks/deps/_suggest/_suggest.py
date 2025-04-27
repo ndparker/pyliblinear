@@ -73,7 +73,7 @@ def suggest_updates(ctx, config, upgrade=False, verbose=True, debug=False):
     }
     if not candidates:
         logger.debug("No dependencies found to update")
-        return changes
+        return {"latest": {}, "replace": {}}
 
     latest = {}
     not_latest = set(_parse.normalize(item) for item in config.no_latest)
