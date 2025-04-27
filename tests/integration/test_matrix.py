@@ -33,7 +33,6 @@ from pytest import raises
 
 import pyliblinear as _pyliblinear
 
-
 # pylint: disable = protected-access
 
 

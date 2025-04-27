@@ -41,7 +41,7 @@ if _c_version != __version__:
     )
 del _c_version
 
+from pyliblinear._liblinear import SOLVER_TYPES
 from pyliblinear._liblinear import FeatureMatrix
 from pyliblinear._liblinear import Model
 from pyliblinear._liblinear import Solver
-from pyliblinear._liblinear import SOLVER_TYPES
