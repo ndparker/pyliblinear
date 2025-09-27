@@ -27,7 +27,13 @@ Tests for pyliblinear.Solver.
 """
 __author__ = u"Andr\xe9 Malo"
 
+from pytest import raises
+
 import pyliblinear as _pyliblinear
+
+from .. import _util as _test
+
+# pylint: disable = invalid-name
 
 
 def test_solver_default():
@@ -92,7 +98,12 @@ def test_solver_eps_defaults():
 def test_solver_param():
     """Solver accepts different parameters"""
     solver = _pyliblinear.Solver(
-        "L1R_LR", C=0.25, eps=0.0001, p=3, weights={2: 5, 3: 4, 6: 9.5}
+        "L1R_LR",
+        C=0.25,
+        eps=0.0001,
+        p=3,
+        weights={2: 5, 3: 4, 6: 9.5},
+        regularize_bias=False,
     )
 
     assert solver.type == "L1R_LR"
@@ -100,3 +111,34 @@ def test_solver_param():
     assert solver.eps == 0.0001
     assert solver.p == 3.0
     assert solver.weights() == {2: 5.0, 3: 4.0, 6: 9.5}
+    assert solver.nu == 0.5
+    assert not solver.regularize_bias
+    assert not solver.w_recalc
+
+
+def test_solver_param_w_recalc_solver_error():
+    """Solver accepts different parameters"""
+    with raises(ValueError, match=r'w_recalc not valid for this solver type'):
+        _pyliblinear.Solver("L1R_LR", w_recalc=True)
+
+
+def test_solver_param_bad_bool():
+    """Solver accepts different parameters"""
+    with raises(RuntimeError, match=r'yoyo'):
+        _pyliblinear.Solver("L1R_LR", w_recalc=_test.badbool)
+
+    with raises(RuntimeError, match=r'yoyo'):
+        _pyliblinear.Solver("L1R_LR", regularize_bias=_test.badbool)
+
+
+def test_solver_param_w_recalc_solver():
+    """Solver accepts different parameters"""
+    solver = _pyliblinear.Solver("L2R_L2LOSS_SVC_DUAL", w_recalc=True)
+    assert solver.type == "L2R_L2LOSS_SVC_DUAL"
+    assert solver.C == 1.0
+    assert solver.eps == 0.1
+    assert solver.p == 0.1
+    assert solver.weights() == {}
+    assert solver.nu == 0.5
+    assert solver.regularize_bias
+    assert solver.w_recalc

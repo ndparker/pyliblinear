@@ -1064,6 +1064,21 @@ static int solve_l2r_l1l2_svc(const problem *prob, const parameter *param, doubl
 	info("Objective value = %lf\n",v/2);
 	info("nSV = %d\n",nSV);
 
+	// Reconstruct w from the primal-dual relationship w=sum(\alpha_i y_i x_i)
+	// This may reduce the weight density. Some zero weights become non-zeros
+	// due to the numerical update w <- w + (alpha[i] - alpha_old) y_i x_i.
+	if (param->w_recalc)
+	{
+		for(i=0; i<w_size; i++)
+			w[i] = 0;
+		for(i=0; i<l; i++)
+		{
+			feature_node * const xi = prob->x[i];
+			if(alpha[i] > 0)
+				sparse_operator::axpy(y[i]*alpha[i], xi, w);
+		}
+	}
+
 	delete [] QD;
 	delete [] alpha;
 	delete [] y;
@@ -2157,10 +2172,10 @@ static int solve_l1r_lr(const problem *prob_col, const parameter *param, double 
 
 static int compare_feature_node(const void *a, const void *b)
 {
-	double a_value = (*(const feature_node *)a).value;
-	double b_value = (*(const feature_node *)b).value;
-	int a_index = (*(const feature_node *)a).index;
-	int b_index = (*(const feature_node *)b).index;
+	double a_value = (*(feature_node *)a).value;
+	double b_value = (*(feature_node *)b).value;
+	int a_index = (*(feature_node *)a).index;
+	int b_index = (*(feature_node *)b).index;
 
 	if(a_value < b_value)
 		return -1;
@@ -2194,11 +2209,14 @@ static int partition(feature_node *nodes, int low, int high)
 	return index;
 }
 
-// rearrange nodes so that nodes[:k] contains nodes with the k smallest values.
+// rearrange nodes so that
+// nodes[i] <= nodes[k] for all i < k
+// nodes[k] <= nodes[j] for all j > k
+// low and high are the bounds of the index range during the rearranging process
 static void quick_select_min_k(feature_node *nodes, int low, int high, int k)
 {
 	int pivot;
-	if(low == high)
+	if(low == high || high < k)
 		return;
 	pivot = partition(nodes, low, high);
 	if(pivot == k)
@@ -3717,6 +3735,11 @@ const char *check_parameter(const problem *prob, const parameter *param)
 		&& param->solver_type != L2R_L2LOSS_SVC
 		&& param->solver_type != L2R_L2LOSS_SVR)
 		return "Initial-solution specification supported only for solvers L2R_LR, L2R_L2LOSS_SVC, and L2R_L2LOSS_SVR";
+
+	if(param->w_recalc == true
+		&& param->solver_type != L2R_L2LOSS_SVC_DUAL
+		&& param->solver_type != L2R_L1LOSS_SVC_DUAL)
+		return "Recalculating w in the end is only for dual solvers for L2-regularized L1/L2-loss SVM";
 
 	return NULL;
 }

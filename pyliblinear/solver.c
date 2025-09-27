@@ -83,6 +83,8 @@ typedef struct {
     double p;
     double nu;
 
+    int w_recalc;
+    int regularize_bias;
     int nr_weight;
     int solver_type;
 } pl_solver_t;
@@ -126,6 +128,8 @@ pl_solver_as_parameter(PyObject *self, struct parameter *param)
     param->p = solver->p;
     param->nu = solver->nu;
     param->init_sol = solver->init_sol;
+    param->regularize_bias = solver->regularize_bias;
+    param->w_recalc = (bool)solver->w_recalc;
 
     Py_DECREF(self);
     return 0;
@@ -575,7 +579,8 @@ error_result:
 
 #ifdef METH_COEXIST
 PyDoc_STRVAR(PL_SolverType_new__doc__,
-"__new__(cls, type=None, C=None, eps=None, p=None, nu=None, weights=None)\n\
+"__new__(cls, type=None, C=None, eps=None, p=None, nu=None, weights=None,\n\
+         regularize_bias=True, w_recalc=False)\n\
 \n\
 Construct new solver instance.\n\
 \n\
@@ -605,6 +610,13 @@ Parameters:\n\
     weights (``{int: float, ...}``) or an iterable of 2-tuples doing the same\n\
     (``[(int, float), ...]``). If omitted or ``None``, no weight is applied.\n\
 \n\
+  regularize_bias (bool):\n\
+    Enable bias regularization? Default: true\n\
+\n\
+  w_recalc (bool):\n\
+    Enable w-recalculation after optimization? Only valid for for solvers\n\
+    of type L2R_L2LOSS_SVC_DUAL and L2R_L1LOSS_SVC_DUAL.\n\
+\n\
 Returns:\n\
   Solver: New Solver instance\n\
 \n\
@@ -631,6 +643,32 @@ static struct PyMethodDef PL_SolverType_methods[] = {
 
     {NULL, NULL}  /* Sentinel */
 };
+
+PyDoc_STRVAR(PL_SolverType_w_recalc_doc,
+"The configured w_recalc parameter.\n\
+\n\
+:Type: ``bool``");
+
+static PyObject *
+PL_SolverType_w_recalc_get(pl_solver_t *self, void *closure)
+{
+    if (self->w_recalc) Py_RETURN_TRUE;
+
+    Py_RETURN_FALSE;
+}
+
+PyDoc_STRVAR(PL_SolverType_regularize_bias_doc,
+"The configured regularize_bias parameter.\n\
+\n\
+:Type: ``bool``");
+
+static PyObject *
+PL_SolverType_regularize_bias_get(pl_solver_t *self, void *closure)
+{
+    if (self->regularize_bias) Py_RETURN_TRUE;
+
+    Py_RETURN_FALSE;
+}
 
 PyDoc_STRVAR(PL_SolverType_nu_doc,
 "The configured nu parameter.\n\
@@ -702,6 +740,18 @@ PL_SolverType_type_get(pl_solver_t *self, void *closure)
 #endif
 
 static PyGetSetDef PL_SolverType_getset[] = {
+    {"w_recalc",
+     (getter)PL_SolverType_w_recalc_get,
+     NULL,
+     PL_SolverType_w_recalc_doc,
+     NULL},
+
+    {"regularize_bias",
+     (getter)PL_SolverType_regularize_bias_get,
+     NULL,
+     PL_SolverType_regularize_bias_doc,
+     NULL},
+
     {"nu",
      (getter)PL_SolverType_nu_get,
      NULL,
@@ -764,17 +814,20 @@ PL_SolverType_clear(pl_solver_t *self)
 static PyObject *
 PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"type", "C", "eps", "p", "nu", "weights", NULL};
+    static char *kwlist[] = {"type", "C", "eps", "p", "nu", "weights",
+                             "regularize_bias", "w_recalc", NULL};
     PyObject *type_ = NULL, *C_ = NULL, *eps_ = NULL, *p_ = NULL, *nu_ = NULL,
-             *weights_ = NULL;
+             *weights_ = NULL, *regularize_bias_ = NULL, *w_recalc_ = NULL;
     pl_solver_t *self;
     double *weight;
     int *weight_label;
     double C, eps, p, nu;
     int int_type, nr_weight;
+    int regularize_bias = 1, w_recalc = 0;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOOOO", kwlist,
-                                     &type_, &C_, &eps_, &p_, &nu_, &weights_))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOOOOOO", kwlist,
+                                     &type_, &C_, &eps_, &p_, &nu_, &weights_,
+                                     &regularize_bias_, &w_recalc_))
         return NULL;
 
     if (pl_solver_type_as_int(type_, &int_type) == -1)
@@ -824,6 +877,39 @@ PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         }
     }
 
+    if (regularize_bias_ && regularize_bias_ != Py_None) {
+        Py_INCREF(regularize_bias_);
+        switch (PyObject_IsTrue(regularize_bias_)) {
+        case -1:
+            Py_DECREF(regularize_bias_);
+            return NULL;
+        case 0: regularize_bias = 0;
+        }
+        Py_DECREF(regularize_bias_);
+    }
+
+    if (w_recalc_ && w_recalc_ != Py_None) {
+        Py_INCREF(w_recalc_);
+        switch (PyObject_IsTrue(w_recalc_)) {
+        case -1:
+            Py_DECREF(w_recalc_);
+            return NULL;
+
+        case 1: w_recalc = 1;
+            switch (int_type) {
+            case L2R_L2LOSS_SVC_DUAL:
+            case L2R_L1LOSS_SVC_DUAL:
+                break;
+
+            default:
+                PyErr_SetString(PyExc_ValueError,
+                                "w_recalc not valid for this solver type");
+                return NULL;
+            }
+        }
+        Py_DECREF(w_recalc_);
+    }
+
     if (!weights_ || weights_ == Py_None) {
         weight = NULL;
         weight_label = NULL;
@@ -848,6 +934,8 @@ PL_SolverType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->weight = weight;
     self->weight_label = weight_label;
     self->init_sol = NULL;
+    self->regularize_bias = regularize_bias;
+    self->w_recalc = w_recalc;
 
     return (PyObject *)self;
 }
