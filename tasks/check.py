@@ -48,6 +48,21 @@ def lint(ctx):
         ctx.run(ctx.c(cmd), echo=True)
 
 
+@_tasks.optional(_CHECKERS, _features.mypy)
+@_invoke.task("clean.py")
+def mypy(ctx):
+    """Run mypy"""
+    cmd = [
+        ctx.which("mypy"),
+        "--config-file",
+        "pyproject.toml",
+        "-p",
+        ctx.package,
+    ]
+    with ctx.shell.root_dir():
+        ctx.run(ctx.c(cmd), echo=True)
+
+
 @_tasks.optional(_CHECKERS, _features.flake8)
 @_invoke.task("clean.py")
 def flake8(ctx):

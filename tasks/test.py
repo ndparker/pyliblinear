@@ -92,6 +92,7 @@ def local(
     for ignored in ctx.test.ignore:
         cmd += ["--ignore", ignored]
 
+    cmd += [ctx.package.replace(".", "/")]
     cmd += ["tests"]
 
     with ctx.shell.root_dir():

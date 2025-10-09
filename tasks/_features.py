@@ -49,6 +49,17 @@ def isort(ctx):
 
 
 @_util.cached
+def mypy(ctx):
+    """
+    Check if the mypy checker is enabled
+
+    Returns:
+      bool: mypy checker enabled?
+    """
+    return ctx.get("package") and _shell.frompath("mypy") is not None
+
+
+@_util.cached
 def pylint(ctx):
     """
     Check if the pylint checker is enabled
