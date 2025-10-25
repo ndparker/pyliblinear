@@ -2,7 +2,7 @@
 u"""
 :Copyright:
 
- Copyright 2016 - 2025
+ Copyright 2016 - 2026
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -25,7 +25,9 @@ u"""
 
 pyliblinear Integration Tests.
 """
+
 __author__ = u"Andr\xe9 Malo"
 
-if 0:  # enable to disable integration tests
+# enable to disable integration tests:
+if 0:  # pylint: disable = using-constant-test
     __path__ = []

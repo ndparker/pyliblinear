@@ -2,7 +2,7 @@
 u"""
 :Copyright:
 
- Copyright 2015 - 2025
+ Copyright 2015 - 2026
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -25,4 +25,5 @@ u"""
 
 pyliblinear Unit Tests.
 """
+
 __author__ = u"Andr\xe9 Malo"

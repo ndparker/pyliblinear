@@ -2,7 +2,7 @@
 u"""
 :Copyright:
 
- Copyright 2015 - 2025
+ Copyright 2015 - 2026
  Andr\xe9 Malo or his licensors, as applicable
 
 :License:
@@ -25,6 +25,7 @@ u"""
 
 pyliblinear - a liblinear python API
 """
+
 __author__ = u"Andr\xe9 Malo"
 __license__ = "Apache License, Version 2.0"
 __version__ = "249.1"

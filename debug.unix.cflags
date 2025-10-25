@@ -14,7 +14,7 @@
 -pedantic
 -fno-strict-aliasing -Werror
 -Wall
--Wbad-function-cast
+# -Wbad-function-cast
 -Wcast-align
 # https://github.com/python/cpython/issues/120293
 # -Wcast-qual
@@ -24,8 +24,8 @@
 -Winit-self
 -Wmissing-declarations
 # -Wmissing-include-dirs
--Wmissing-prototypes
--Wnested-externs
+# -Wmissing-prototypes
+# -Wnested-externs
 -Wno-long-long
 -Wno-missing-field-initializers
 -Wno-overlength-strings
