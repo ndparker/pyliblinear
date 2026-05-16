@@ -1,5 +1,5 @@
 # -*- coding: ascii -*-
-u"""
+"""
 :Copyright:
 
  Copyright 2015 - 2026
@@ -26,7 +26,7 @@ u"""
 Tests for pyliblinear.Solver.
 """
 
-__author__ = u"Andr\xe9 Malo"
+__author__ = "Andr\xe9 Malo"
 
 from pytest import raises
 
@@ -119,16 +119,16 @@ def test_solver_param():
 
 def test_solver_param_w_recalc_solver_error():
     """Solver accepts different parameters"""
-    with raises(ValueError, match=r'w_recalc not valid for this solver type'):
+    with raises(ValueError, match=r"w_recalc not valid for this solver type"):
         _pyliblinear.Solver("L1R_LR", w_recalc=True)
 
 
 def test_solver_param_bad_bool():
     """Solver accepts different parameters"""
-    with raises(RuntimeError, match=r'yoyo'):
+    with raises(RuntimeError, match=r"yoyo"):
         _pyliblinear.Solver("L1R_LR", w_recalc=_test.badbool)
 
-    with raises(RuntimeError, match=r'yoyo'):
+    with raises(RuntimeError, match=r"yoyo"):
         _pyliblinear.Solver("L1R_LR", regularize_bias=_test.badbool)
 
 

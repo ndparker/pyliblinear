@@ -47,7 +47,7 @@ license](http://opensource.org/licenses/BSD-3-Clause).
 
 ## SYSTEM REQUIREMENTS
 
-You need at least python 2.7 or Python 3.6+.
+You need at least Python 3.6.
 
 You also need a build environment for python C/C++ extensions (i.e. a compiler
 and the python development files).

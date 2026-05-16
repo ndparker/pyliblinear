@@ -1,5 +1,5 @@
 # -*- coding: ascii -*-
-u"""
+"""
 :Copyright:
 
  Copyright 2014 - 2026
@@ -26,7 +26,7 @@ u"""
 Test utilities.
 """
 
-__author__ = u"Andr\xe9 Malo"
+__author__ = "Andr\xe9 Malo"
 
 import contextlib as _contextlib
 import sys as _sys

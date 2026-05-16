@@ -1,5 +1,5 @@
 # -*- coding: ascii -*-
-u"""
+"""
 :Copyright:
 
  Copyright 2021 - 2026
@@ -26,7 +26,7 @@ u"""
 Tests for pyliblinear.Model
 """
 
-__author__ = u"Andr\xe9 Malo"
+__author__ = "Andr\xe9 Malo"
 
 import bz2 as _bz2
 import os as _os

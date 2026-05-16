@@ -1,5 +1,5 @@
 # -*- coding: ascii -*-
-u"""
+"""
 :Copyright:
 
  Copyright 2023 - 2026
