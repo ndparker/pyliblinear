@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: ascii -*-
-u"""
+"""
 :Copyright:
 
  Copyright 2011 - 2026
@@ -26,7 +26,7 @@ u"""
 
 pyliblinear - a liblinear python API.
 """
-__author__ = u"Andr\xe9 Malo"
+__author__ = "Andr\xe9 Malo"
 
 import os as _os
 import posixpath as _posixpath
@@ -59,11 +59,14 @@ package = dict(
     url="https://opensource.perlig.de/pyliblinear/",
     license="Apache-2.0",
     license_files=["LICENSE"],
+
     packages=True,
     # py_modules=[],
     # version_file='__init__.py',
     install_requires=[],
+
     entry_points={},
+
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -71,8 +74,6 @@ package = dict(
         "Programming Language :: C",
         "Programming Language :: C++",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -83,6 +84,7 @@ package = dict(
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
+        "Programming Language :: Python :: 3.15",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Information Analysis",
